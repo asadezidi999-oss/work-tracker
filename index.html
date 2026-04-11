@@ -7,18 +7,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-body {
-  font-family: Arial;
-  background:#1e1e1e;
-  color:white;
-  margin:0;
-}
-
-.container {
-  max-width:500px;
-  margin:auto;
-  padding:15px;
-}
+body { font-family: Arial; background:#1e1e1e; color:white; margin:0; }
+.container { max-width:500px; margin:auto; padding:15px; }
 
 h2 { text-align:center; }
 
@@ -53,10 +43,7 @@ button {
 
 .total { color:#4da3ff; font-weight:bold; }
 
-.login {
-  text-align:center;
-  margin-top:100px;
-}
+.login { text-align:center; margin-top:100px; }
 </style>
 
 </head>
@@ -65,14 +52,14 @@ button {
 
 <div class="container">
 
-<!-- 🔐 LOGIN -->
+<!-- LOGIN -->
 <div id="login" class="login">
   <h2>Login</h2>
   <input type="password" id="pass" placeholder="Passwort">
   <button onclick="checkPass()">Login</button>
 </div>
 
-<!-- 📱 APP -->
+<!-- APP -->
 <div id="app" style="display:none">
 
 <h2>Arbeitszeit Tracker</h2>
@@ -93,7 +80,7 @@ button {
 
 let PASSWORD="1234";
 
-// 🔐 LOGIN
+// LOGIN
 function checkPass(){
   let p=document.getElementById("pass").value;
   if(p===PASSWORD){
@@ -104,7 +91,7 @@ function checkPass(){
   }
 }
 
-// 📅 DATA
+// DATA
 let allData=JSON.parse(localStorage.getItem("allData"))||{};
 let currentMonth=new Date().toISOString().slice(0,7);
 
@@ -116,7 +103,7 @@ function save(){
   localStorage.setItem("allData",JSON.stringify(allData));
 }
 
-// 📅 MONTH
+// MONTH
 function loadMonths(){
   let s=document.getElementById("monthSelect");
   s.innerHTML="";
@@ -136,7 +123,7 @@ function changeMonth(){
   render();
 }
 
-// ➕ ADD
+// ADD
 function add(){
   let v=document.getElementById("input").value;
   if(!v) return;
@@ -145,13 +132,23 @@ function add(){
   save(); render();
 }
 
-// ⏱️ LOG
+// LOG
 function log(b,t){
   data[b].push({type:t,time:new Date()});
   save(); render();
 }
 
-// 🧮 CALC
+// EDIT TIME
+function editTime(branch,index,newTime){
+  let old=new Date(data[branch][index].time);
+  let [h,m]=newTime.split(":");
+  old.setHours(h);
+  old.setMinutes(m);
+  data[branch][index].time=old;
+  save(); render();
+}
+
+// CALC
 function calc(logs){
   let total=0,start=null,pause=0,pStart=null;
 
@@ -176,7 +173,7 @@ function calc(logs){
   return (total/1000/60/60).toFixed(2);
 }
 
-// 🖥️ RENDER
+// RENDER
 function render(){
   let list=document.getElementById("list");
   list.innerHTML="";
@@ -184,7 +181,10 @@ function render(){
   for(let b in data){
     let logs="";
     data[b].forEach((l,i)=>{
-      logs+=`${l.type} - ${new Date(l.time).toLocaleTimeString()}
+      logs+=`
+      ${l.type} -
+      <input type="time" value="${new Date(l.time).toTimeString().slice(0,5)}"
+      onchange="editTime('${b}',${i},this.value)">
       <button onclick="del('${b}',${i})">❌</button><br>`;
     });
 
@@ -208,13 +208,13 @@ function render(){
   loadMonths();
 }
 
-// ❌ DELETE
+// DELETE
 function del(b,i){
   data[b].splice(i,1);
   save(); render();
 }
 
-// 📤 PDF
+// PDF
 function exportPDF(){
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF();
