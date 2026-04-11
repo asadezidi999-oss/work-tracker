@@ -2,216 +2,107 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Arbeitszeit Tracker PRO</title>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
 <style>
-body {font-family:Arial;background:#1e1e1e;color:white;margin:0;}
-.container{max-width:600px;margin:auto;padding:15px;}
-
-input,button{
-width:100%;
-padding:12px;
-margin-top:6px;
-border-radius:8px;
-}
-
-button{border:none;}
-
-.card{
-background:#2a2a2a;
-padding:10px;
-margin-top:10px;
-border-radius:10px;
-}
-
-.total{
-background:#111;
-padding:10px;
-margin-bottom:10px;
-border-radius:10px;
-}
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial}
+body{background:#f0f2f5;padding:10px}
+.container{max-width:500px;margin:auto;background:#fff;padding:15px;border-radius:12px;box-shadow:0 5px 15px rgba(0,0,0,0.1)}
+h1{text-align:center;margin-bottom:10px}
+input,button{width:100%;padding:10px;margin-top:10px;border-radius:8px;border:1px solid #ccc;font-size:16px}
+button{background:#007bff;color:white;border:none;cursor:pointer}
+button:hover{background:#0056b3}
+.entry{background:#f9f9f9;padding:10px;margin-top:10px;border-radius:8px}
+.total{margin-top:15px;font-weight:bold;text-align:center}
 </style>
 </head>
 
 <body>
-
 <div class="container">
+<h1>Arbeitszeit Tracker</h1>
 
-<h2>Arbeitszeit Tracker</h2>
-
+<label>Datum</label>
 <input type="date" id="date">
 
-<input id="filialeInput" placeholder="Filiale">
-<button onclick="addFiliale()">➕ Hinzufügen</button>
+<label>Startzeit</label>
+<input type="time" id="start">
 
-<div id="totals" class="total"></div>
+<label>Endzeit</label>
+<input type="time" id="end">
+
+<label>Pause (Minuten)</label>
+<input type="number" id="break" value="0">
+
+<button onclick="addEntry()">Speichern</button>
 
 <div id="list"></div>
 
+<div class="total" id="total">Gesamt: 0 Stunden</div>
 </div>
 
 <script>
+let entries = JSON.parse(localStorage.getItem("entries") || "[]");
 
-// 📦 Daten
-let data = JSON.parse(localStorage.getItem("data")) || {};
+function addEntry(){
+  const date = document.getElementById("date").value;
+  const start = document.getElementById("start").value;
+  const end = document.getElementById("end").value;
+  const br = parseInt(document.getElementById("break").value) || 0;
 
-function save(){
-  localStorage.setItem("data", JSON.stringify(data));
-}
-
-// ➕ Filiale (FIXED 🔥)
-function addFiliale(){
-  let input = document.getElementById("filialeInput");
-  let name = input.value.trim();
-
-  if(!name){
-    alert("Bitte Filiale eingeben");
+  if(!date || !start || !end){
+    alert("Bitte alles ausfüllen!");
     return;
   }
 
-  if(!data[name]){
-    data[name] = [];
-  }
+  const startTime = new Date(`1970-01-01T${start}:00`);
+  const endTime = new Date(`1970-01-01T${end}:00`);
 
-  input.value="";
-  save();
-  render();
-}
+  let diff = (endTime - startTime) / 1000 / 60; // minutes
+  diff -= br;
 
-// ⏱️ Log
-function log(branch,type){
-
-  let selected = document.getElementById("date").value;
-
-  if(!selected){
-    alert("Bitte Datum wählen");
+  if(diff < 0){
+    alert("Endzeit ist falsch!");
     return;
   }
 
-  let now = new Date();
-  let d = new Date(selected);
+  entries.push({date, start, end, break: br, minutes: diff});
+  localStorage.setItem("entries", JSON.stringify(entries));
 
-  d.setHours(now.getHours(), now.getMinutes());
-  now = d;
-
-  data[branch].push({
-    type:type,
-    time:now
-  });
-
-  save();
   render();
 }
 
-// ❌ löschen
-function del(branch,i){
-  data[branch].splice(i,1);
-  save();
+function deleteEntry(index){
+  entries.splice(index,1);
+  localStorage.setItem("entries", JSON.stringify(entries));
   render();
 }
 
-// 🗑️ ganze Filiale löschen
-function deleteBranch(branch){
-  if(confirm("Filiale löschen?")){
-    delete data[branch];
-    save();
-    render();
-  }
-}
-
-// 🧮 Berechnung
-function calcDay(logs, selected){
-
-  let total=0, start=null, pause=0, pStart=null;
-
-  logs.forEach(l=>{
-    let t=new Date(l.time);
-
-    if(t.toDateString() !== new Date(selected).toDateString()) return;
-
-    if(l.type==="Start") start=t;
-    if(l.type==="Pause Start") pStart=t;
-
-    if(l.type==="Pause Ende" && pStart){
-      pause += t - pStart;
-      pStart=null;
-    }
-
-    if(l.type==="Ende" && start){
-      total += t - start - pause;
-      start=null;
-      pause=0;
-    }
-  });
-
-  return total;
-}
-
-// 📊 Totals
-function updateTotals(selected){
-
-  let day=0;
-
-  for(let b in data){
-    day += calcDay(data[b], selected);
-  }
-
-  document.getElementById("totals").innerHTML =
-    "📅 Tag: " + (day/3600000).toFixed(2) + " h";
-}
-
-// 🖥️ Render
 function render(){
+  const list = document.getElementById("list");
+  list.innerHTML = "";
 
-  let selected = document.getElementById("date").value;
-  let list = document.getElementById("list");
+  let total = 0;
 
-  list.innerHTML="";
+  entries.forEach((e,i)=>{
+    total += e.minutes;
 
-  if(!selected){
-    list.innerHTML="Bitte Datum wählen";
-    return;
-  }
+    const div = document.createElement("div");
+    div.className = "entry";
+    div.innerHTML = `
+      <b>${e.date}</b><br>
+      ${e.start} - ${e.end} | Pause: ${e.break} min<br>
+      <b>${(e.minutes/60).toFixed(2)} h</b>
+      <button onclick="deleteEntry(${i})">Löschen</button>
+    `;
+    list.appendChild(div);
+  });
 
-  for(let b in data){
-
-    let htmlLogs="";
-
-    data[b].forEach((l,i)=>{
-      let t=new Date(l.time);
-
-      if(t.toDateString() !== new Date(selected).toDateString()) return;
-
-      htmlLogs += `
-      ${l.type} - ${t.toLocaleTimeString()}
-      <button onclick="del('${b}',${i})">❌</button><br>`;
-    });
-
-    list.innerHTML += `
-    <div class="card">
-      <b>${b}</b>
-      <button onclick="deleteBranch('${b}')">🗑️</button><br>
-
-      <button onclick="log('${b}','Start')">Start</button>
-      <button onclick="log('${b}','Pause Start')">Pause</button>
-      <button onclick="log('${b}','Pause Ende')">Weiter</button>
-      <button onclick="log('${b}','Ende')">Ende</button>
-
-      ${htmlLogs}
-    </div>`;
-  }
-
-  updateTotals(selected);
+  document.getElementById("total").innerText =
+    "Gesamt: " + (total/60).toFixed(2) + " Stunden";
 }
-
-// 📅 default heute
-document.getElementById("date").value =
-  new Date().toISOString().split("T")[0];
 
 render();
-
 </script>
 
 </body>
