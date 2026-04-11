@@ -7,34 +7,59 @@
 <style>
 body {
   font-family: Arial;
-  padding: 20px;
-  background: #f0f2f5;
+  background: #f4f6f8;
+  margin: 0;
 }
 
 .container {
   max-width: 500px;
   margin: auto;
+  padding: 15px;
+}
+
+h2 {
+  text-align: center;
 }
 
 input {
   width: 70%;
-  padding: 10px;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
 }
 
 button {
-  padding: 10px;
-  margin: 5px;
-  border-radius: 8px;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  margin-top: 5px;
+  font-size: 16px;
 }
 
-.card {
-  background: white;
-  padding: 10px;
-  margin-top: 10px;
-}
+.add { background: #007bff; color: white; }
 
 .start { background: green; color: white; }
 .end { background: red; color: white; }
+
+.card {
+  background: white;
+  padding: 15px;
+  margin-top: 15px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.total {
+  margin-top: 10px;
+  font-weight: bold;
+  color: #007bff;
+}
+
+.month {
+  text-align: center;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
 
 </style>
 </head>
@@ -45,8 +70,10 @@ button {
 
 <h2>Arbeitszeit Tracker</h2>
 
-<input id="input" placeholder="Filiale">
-<button onclick="add()">➕</button>
+<div class="month" id="month"></div>
+
+<input id="input" placeholder="Filiale eingeben">
+<button class="add" onclick="add()">➕ Hinzufügen</button>
 
 <div id="list"></div>
 
@@ -54,12 +81,25 @@ button {
 
 <script>
 
-let data = JSON.parse(localStorage.getItem("data")) || {};
+// 📅 Monatssystem
+let currentMonth = new Date().toISOString().slice(0,7);
+let allData = JSON.parse(localStorage.getItem("allData")) || {};
 
-function save() {
-  localStorage.setItem("data", JSON.stringify(data));
+if (!allData[currentMonth]) {
+  allData[currentMonth] = {};
 }
 
+let data = allData[currentMonth];
+
+document.getElementById("month").innerText = "Monat: " + currentMonth;
+
+// 💾 speichern
+function save() {
+  allData[currentMonth] = data;
+  localStorage.setItem("allData", JSON.stringify(allData));
+}
+
+// ➕ Filiale
 function add() {
   let val = document.getElementById("input").value;
   if (!val) return;
@@ -71,21 +111,45 @@ function add() {
   render();
 }
 
+// ⏱️ Log
 function log(branch, type) {
   data[branch].push({ type, time: new Date() });
   save();
   render();
 }
 
+// 🧮 حساب الساعات
+function calculate(logs) {
+  let total = 0;
+  let start = null;
+
+  logs.forEach(l => {
+    let t = new Date(l.time);
+
+    if (l.type === "Start") start = t;
+
+    if (l.type === "Ende" && start) {
+      total += t - start;
+      start = null;
+    }
+  });
+
+  return (total / 1000 / 60 / 60).toFixed(2);
+}
+
+// 🖥️ عرض
 function render() {
   let list = document.getElementById("list");
   list.innerHTML = "";
 
   for (let branch in data) {
+
     let logs = "";
     data[branch].forEach(l => {
-      logs += `${l.type} - ${new Date(l.time).toLocaleTimeString()}<br>`;
+      logs += `<div>${l.type} - ${new Date(l.time).toLocaleTimeString()}</div>`;
     });
+
+    let total = calculate(data[branch]);
 
     list.innerHTML += `
       <div class="card">
@@ -95,6 +159,8 @@ function render() {
         <button class="end" onclick="log('${branch}','Ende')">Ende</button>
 
         ${logs}
+
+        <div class="total">Gesamt: ${total} h</div>
       </div>
     `;
   }
