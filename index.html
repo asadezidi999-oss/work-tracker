@@ -7,22 +7,34 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-body { font-family: Arial; background:#f4f6f8; margin:0; }
-.container { max-width:500px; margin:auto; padding:15px; }
+body {
+  font-family: Arial;
+  background:#1e1e1e;
+  color:white;
+  margin:0;
+}
+
+.container {
+  max-width:500px;
+  margin:auto;
+  padding:15px;
+}
+
 h2 { text-align:center; }
 
 input, select {
   width:100%;
-  padding:12px;
-  margin-top:5px;
-  border-radius:8px;
+  padding:14px;
+  margin-top:8px;
+  border-radius:10px;
+  border:none;
 }
 
 button {
-  padding:12px;
-  margin-top:5px;
+  padding:14px;
+  margin-top:8px;
   border:none;
-  border-radius:10px;
+  border-radius:12px;
   font-size:16px;
 }
 
@@ -33,13 +45,18 @@ button {
 .end { background:red; color:white; }
 
 .card {
-  background:white;
+  background:#2a2a2a;
   padding:15px;
   margin-top:15px;
   border-radius:12px;
 }
 
-.total { font-weight:bold; color:#007bff; }
+.total { color:#4da3ff; font-weight:bold; }
+
+.login {
+  text-align:center;
+  margin-top:100px;
+}
 </style>
 
 </head>
@@ -47,6 +64,16 @@ button {
 <body>
 
 <div class="container">
+
+<!-- 🔐 LOGIN -->
+<div id="login" class="login">
+  <h2>Login</h2>
+  <input type="password" id="pass" placeholder="Passwort">
+  <button onclick="checkPass()">Login</button>
+</div>
+
+<!-- 📱 APP -->
+<div id="app" style="display:none">
 
 <h2>Arbeitszeit Tracker</h2>
 
@@ -60,20 +87,36 @@ button {
 
 </div>
 
+</div>
+
 <script>
 
-let allData = JSON.parse(localStorage.getItem("allData")) || {};
-let currentMonth = new Date().toISOString().slice(0,7);
+let PASSWORD="1234";
 
-if (!allData[currentMonth]) allData[currentMonth] = {};
-let data = allData[currentMonth];
+// 🔐 LOGIN
+function checkPass(){
+  let p=document.getElementById("pass").value;
+  if(p===PASSWORD){
+    document.getElementById("login").style.display="none";
+    document.getElementById("app").style.display="block";
+  } else {
+    alert("Falsch!");
+  }
+}
+
+// 📅 DATA
+let allData=JSON.parse(localStorage.getItem("allData"))||{};
+let currentMonth=new Date().toISOString().slice(0,7);
+
+if(!allData[currentMonth]) allData[currentMonth]={};
+let data=allData[currentMonth];
 
 function save(){
   allData[currentMonth]=data;
   localStorage.setItem("allData",JSON.stringify(allData));
 }
 
-// Monate Dropdown
+// 📅 MONTH
 function loadMonths(){
   let s=document.getElementById("monthSelect");
   s.innerHTML="";
@@ -93,7 +136,7 @@ function changeMonth(){
   render();
 }
 
-// add
+// ➕ ADD
 function add(){
   let v=document.getElementById("input").value;
   if(!v) return;
@@ -102,13 +145,13 @@ function add(){
   save(); render();
 }
 
-// log
+// ⏱️ LOG
 function log(b,t){
   data[b].push({type:t,time:new Date()});
   save(); render();
 }
 
-// حساب
+// 🧮 CALC
 function calc(logs){
   let total=0,start=null,pause=0,pStart=null;
 
@@ -117,6 +160,7 @@ function calc(logs){
 
     if(l.type==="Start") start=t;
     if(l.type==="Pause Start") pStart=t;
+
     if(l.type==="Pause Ende" && pStart){
       pause+=t-pStart;
       pStart=null;
@@ -132,7 +176,7 @@ function calc(logs){
   return (total/1000/60/60).toFixed(2);
 }
 
-// render
+// 🖥️ RENDER
 function render(){
   let list=document.getElementById("list");
   list.innerHTML="";
@@ -164,12 +208,13 @@ function render(){
   loadMonths();
 }
 
+// ❌ DELETE
 function del(b,i){
   data[b].splice(i,1);
   save(); render();
 }
 
-// PDF
+// 📤 PDF
 function exportPDF(){
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF();
