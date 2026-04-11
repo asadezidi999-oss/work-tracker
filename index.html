@@ -122,14 +122,25 @@ function calcDay(day){
 }
 
 function calcWeek(){
- const current=new Date(getDay());
- let total=0;
+ const selected = new Date(getDay());
+ if(isNaN(selected)) return 0;
+
+ // Start of week (Monday)
+ const dayIndex = (selected.getDay() + 6) % 7; // Monday=0
+ const monday = new Date(selected);
+ monday.setDate(selected.getDate() - dayIndex);
+
+ let total = 0;
+
  for(let i=0;i<7;i++){
-  const d=new Date(current);
-  d.setDate(current.getDate()-current.getDay()+i);
-  const day=d.toISOString().split('T')[0];
-  total+=calcDay(day);
+  const d = new Date(monday);
+  d.setDate(monday.getDate() + i);
+  const dayStr = d.toISOString().split('T')[0];
+  total += calcDay(dayStr);
  }
+
+ return Math.max(0,total);
+}
  return total;
 }
 
