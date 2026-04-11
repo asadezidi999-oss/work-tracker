@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Arbeitszeit Tracker PRO</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+body { font-family: Arial; background:#f4f6f8; margin:0; }
+.container { max-width:500px; margin:auto; padding:15px; }
+h2 { text-align:center; }
+
+input, select {
+  width:100%;
+  padding:12px;
+  margin-top:5px;
+  border-radius:8px;
+}
+
+button {
+  padding:12px;
+  margin-top:5px;
+  border:none;
+  border-radius:10px;
+  font-size:16px;
+}
+
+.add { background:#007bff; color:white; }
+.start { background:green; color:white; }
+.pause { background:orange; color:white; }
+.resume { background:teal; color:white; }
+.end { background:red; color:white; }
+
+.card {
+  background:white;
+  padding:15px;
+  margin-top:15px;
+  border-radius:12px;
+}
+
+.total { font-weight:bold; color:#007bff; }
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Arbeitszeit Tracker</h2>
+
+<select id="monthSelect" onchange="changeMonth()"></select>
+
+<input id="input" placeholder="Filiale">
+<button class="add" onclick="add()">➕ Hinzufügen</button>
+<button onclick="exportPDF()">📤 PDF</button>
+
+<div id="list"></div>
+
+</div>
+
+<script>
+
+let allData = JSON.parse(localStorage.getItem("allData")) || {};
+let currentMonth = new Date().toISOString().slice(0,7);
+
+if (!allData[currentMonth]) allData[currentMonth] = {};
+let data = allData[currentMonth];
+
+function save(){
+  allData[currentMonth]=data;
+  localStorage.setItem("allData",JSON.stringify(allData));
+}
+
+// Monate Dropdown
+function loadMonths(){
+  let s=document.getElementById("monthSelect");
+  s.innerHTML="";
+  for(let m in allData){
+    let o=document.createElement("option");
+    o.value=m;
+    o.text=m;
+    if(m===currentMonth) o.selected=true;
+    s.appendChild(o);
+  }
+}
+
+function changeMonth(){
+  currentMonth=document.getElementById("monthSelect").value;
+  if(!allData[currentMonth]) allData[currentMonth]={};
+  data=allData[currentMonth];
+  render();
+}
+
+// add
+function add(){
+  let v=document.getElementById("input").value;
+  if(!v) return;
+  if(!data[v]) data[v]=[];
+  document.getElementById("input").value="";
+  save(); render();
+}
+
+// log
+function log(b,t){
+  data[b].push({type:t,time:new Date()});
+  save(); render();
+}
+
+// حساب
+function calc(logs){
+  let total=0,start=null,pause=0,pStart=null;
+
+  logs.forEach(l=>{
+    let t=new Date(l.time);
+
+    if(l.type==="Start") start=t;
+    if(l.type==="Pause Start") pStart=t;
+    if(l.type==="Pause Ende" && pStart){
+      pause+=t-pStart;
+      pStart=null;
+    }
+
+    if(l.type==="Ende" && start){
+      total+=t-start-pause;
+      start=null;
+      pause=0;
+    }
+  });
+
+  return (total/1000/60/60).toFixed(2);
+}
+
+// render
+function render(){
+  let list=document.getElementById("list");
+  list.innerHTML="";
+
+  for(let b in data){
+    let logs="";
+    data[b].forEach((l,i)=>{
+      logs+=`${l.type} - ${new Date(l.time).toLocaleTimeString()}
+      <button onclick="del('${b}',${i})">❌</button><br>`;
+    });
+
+    let total=calc(data[b]);
+
+    list.innerHTML+=`
+    <div class="card">
+      <b>${b}</b><br>
+
+      <button class="start" onclick="log('${b}','Start')">Start</button>
+      <button class="pause" onclick="log('${b}','Pause Start')">Pause</button>
+      <button class="resume" onclick="log('${b}','Pause Ende')">Weiter</button>
+      <button class="end" onclick="log('${b}','Ende')">Ende</button>
+
+      ${logs}
+
+      <div class="total">Gesamt: ${total} h</div>
+    </div>`;
+  }
+
+  loadMonths();
+}
+
+function del(b,i){
+  data[b].splice(i,1);
+  save(); render();
+}
+
+// PDF
+function exportPDF(){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF();
+  let y=10;
+
+  doc.text("Arbeitszeit Bericht",10,y); y+=10;
+
+  for(let b in data){
+    doc.text("Filiale: "+b,10,y); y+=6;
+
+    data[b].forEach(l=>{
+      doc.text(l.type+" "+new Date(l.time).toLocaleString(),10,y);
+      y+=5;
+    });
+
+    y+=5;
+  }
+
+  doc.save("arbeitszeit.pdf");
+}
+
+render();
+
+</script>
+
+</body>
+</html>
