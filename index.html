@@ -3,171 +3,204 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Work Tracker PRO</title>
-
+<title>Arbeitszeit Tracker</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:Arial}
-body{
-  background:linear-gradient(135deg,#0f172a,#1e3a8a);
-  color:white;display:flex;justify-content:center;align-items:center;height:100vh
-}
-.container{width:95%;max-width:450px;background:rgba(255,255,255,0.1);padding:20px;border-radius:20px;backdrop-filter:blur(10px)}
+body{background:#0f172a;color:white;padding:15px}
+.container{max-width:520px;margin:auto}
 h1{text-align:center;margin-bottom:10px}
-button,input,select{width:100%;padding:12px;margin-top:10px;border-radius:10px;border:none}
+input,button{width:100%;padding:12px;margin-top:10px;border-radius:10px;border:none;font-size:16px}
 button{background:#38bdf8;color:black;font-weight:bold}
-.timer{text-align:center;font-size:28px;margin-top:10px}
-.entry{background:rgba(255,255,255,0.15);padding:10px;margin-top:10px;border-radius:10px}
-.total{text-align:center;margin-top:10px;font-weight:bold}
-.small-btn{margin-top:5px;background:#f87171;color:white}
+.card{background:#1e293b;padding:12px;margin-top:12px;border-radius:12px}
+.log{background:#334155;padding:8px;margin-top:6px;border-radius:8px;display:flex;justify-content:space-between;align-items:center}
+.log-actions button{margin-left:6px;padding:6px 8px;font-size:12px}
+.total{margin-top:12px;font-weight:bold;text-align:center}
+.row{display:flex;gap:8px}
+.row button{flex:1}
 </style>
 </head>
-
 <body>
 <div class="container">
-<h1>Work Tracker</h1>
+<h1>Arbeitszeit Tracker</h1>
+
+<input type="date" id="date">
 
 <input type="text" id="branchInput" placeholder="Filiale hinzufügen">
-<button onclick="addBranch()">Filiale hinzufügen</button>
-<select id="branch"></select>
-<button class="small-btn" onclick="deleteBranch()">Filiale löschen</button>
+<button id="addBranchBtn">Filiale hinzufügen</button>
 
-<div class="timer" id="timer">00:00:00</div>
-
-<button onclick="startWork()">Start</button>
-<button onclick="endWork()">Ende</button>
-<button onclick="startPause()">Pause Start</button>
-<button onclick="endPause()">Pause Ende</button>
-
-<div id="stats"></div>
-<div id="list"></div>
-<div class="total" id="total">Gesamt: 0 h</div>
+<div id="branches"></div>
+<div class="total" id="total"></div>
 </div>
 
 <script>
-let entries = JSON.parse(localStorage.getItem("entries")||"[]");
-let branches = JSON.parse(localStorage.getItem("branches")||"[]");
+const dateInput = document.getElementById("date");
+const branchInput = document.getElementById("branchInput");
+const branchesDiv = document.getElementById("branches");
+const totalDiv = document.getElementById("total");
 
-let startTime=null, pauseStart=null, totalPause=0, timerInterval=null;
+let data = JSON.parse(localStorage.getItem("tracker")||"{}");
 
-function save(){
- localStorage.setItem("entries",JSON.stringify(entries));
- localStorage.setItem("branches",JSON.stringify(branches));
-}
+// set today's date by default
+(function initDate(){
+ const d=new Date();
+ const iso=d.toISOString().split('T')[0];
+ dateInput.value = iso;
+})();
+
+function save(){ localStorage.setItem("tracker", JSON.stringify(data)); }
+function getDay(){ return dateInput.value; }
+
+function ensureDay(day){ if(!data[day]) data[day] = {}; }
 
 function addBranch(){
- const val=document.getElementById("branchInput").value.trim();
- if(!val) return;
- branches.push(val);
- document.getElementById("branchInput").value="";
- save(); renderBranches();
-}
-
-function deleteBranch(){
- const sel=document.getElementById("branch");
- const val=sel.value;
- branches = branches.filter(b=>b!==val);
- save(); renderBranches();
-}
-
-function renderBranches(){
- const sel=document.getElementById("branch"); sel.innerHTML="";
- branches.forEach(b=>{
-  const o=document.createElement("option"); o.value=b;o.textContent=b; sel.appendChild(o);
- });
-}
-
-function updateTimer(){
- if(!startTime) return;
- const now=new Date();
- let diff=(now-startTime)/1000-totalPause*60;
- const h=Math.floor(diff/3600);
- const m=Math.floor((diff%3600)/60);
- const s=Math.floor(diff%60);
- document.getElementById("timer").innerText=
-  `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-}
-
-function startWork(){
- startTime=new Date(); totalPause=0; pauseStart=null;
- clearInterval(timerInterval);
- timerInterval=setInterval(updateTimer,1000);
-}
-
-function endWork(){
- if(!startTime) return alert("Nicht gestartet!");
- if(pauseStart) endPause();
- clearInterval(timerInterval);
- const end=new Date();
- let diff=(end-startTime)/1000/60-totalPause;
- const branch=document.getElementById("branch").value||"-";
- const date=new Date().toISOString().split('T')[0];
- entries.push({branch,date,minutes:diff});
- startTime=null; totalPause=0;
+ const name = branchInput.value.trim();
+ const day = getDay();
+ if(!name || !day) return alert("Datum + Filiale!");
+ ensureDay(day);
+ if(!data[day][name]) data[day][name] = [];
+ branchInput.value="";
  save(); render();
 }
 
-function startPause(){
- if(!startTime) return alert("Starte zuerst!");
- if(pauseStart) return;
- pauseStart=new Date();
+document.getElementById("addBranchBtn").onclick = addBranch;
+
+// helpers
+function nowHM(){
+ const d=new Date();
+ const h=String(d.getHours()).padStart(2,'0');
+ const m=String(d.getMinutes()).padStart(2,'0');
+ return `${h}:${m}`; // stable HH:MM
 }
 
-function endPause(){
- if(!pauseStart) return;
- const now=new Date();
- totalPause+=(now-pauseStart)/1000/60;
- pauseStart=null;
+function parseHM(hm){
+ // returns minutes since 00:00 or NaN
+ const m = /^([01]?\d|2[0-3]):([0-5]\d)$/.exec(hm);
+ if(!m) return NaN;
+ return parseInt(m[1],10)*60 + parseInt(m[2],10);
 }
 
-function deleteEntry(i){
- entries.splice(i,1);
+function addLog(branch,type){
+ const day = getDay();
+ if(!day) return alert("Datum wählen");
+ ensureDay(day);
+ if(!data[day][branch]) data[day][branch] = [];
+ const time = nowHM();
+ data[day][branch].push({type,time});
  save(); render();
 }
 
-function editEntry(i){
- const newMin=prompt("Neue Minuten:", entries[i].minutes);
- if(newMin!==null){
-  entries[i].minutes=parseFloat(newMin);
-  save(); render();
+function deleteLog(branch,i){
+ const day=getDay();
+ data[day][branch].splice(i,1);
+ save(); render();
+}
+
+function deleteBranch(branch){
+ const day=getDay();
+ delete data[day][branch];
+ save(); render();
+}
+
+function editLog(branch,i){
+ const day=getDay();
+ const current = data[day][branch][i].time;
+ const val = prompt("Neue Uhrzeit (HH:MM):", current);
+ if(val===null) return;
+ const minutes = parseHM(val.trim());
+ if(Number.isNaN(minutes)){
+  alert("Ungültiges Format! Beispiel: 08:30");
+  return;
  }
+ data[day][branch][i].time = val.trim();
+ save(); render();
+}
+
+function calcDayTotal(day){
+ let total=0;
+ if(!data[day]) return 0;
+ Object.values(data[day]).forEach(logs=>{
+  let start=null, pauseMin=0, pauseStart=null;
+  logs.forEach(l=>{
+   const t = parseHM(l.time);
+   if(Number.isNaN(t)) return; // skip invalid
+   if(l.type==='Start') start = t;
+   if(l.type==='Pause Start') pauseStart = t;
+   if(l.type==='Pause Ende' && pauseStart!==null){
+    pauseMin += Math.max(0, t - pauseStart);
+    pauseStart = null;
+   }
+   if(l.type==='Ende' && start!==null){
+    const diff = Math.max(0, t - start);
+    total += Math.max(0, diff - pauseMin);
+    start=null; pauseMin=0; pauseStart=null;
+   }
+  });
+ });
+ return total; // minutes
 }
 
 function render(){
- const list=document.getElementById("list"); list.innerHTML="";
- let total=0;
+ const day=getDay();
+ branchesDiv.innerHTML="";
+ if(!day || !data[day]){
+  totalDiv.innerText="";
+  return;
+ }
 
- entries.forEach((e,i)=>{
-  total+=e.minutes;
-  const d=document.createElement("div");
-  d.className="entry";
-  d.innerHTML=`
-   <b>${e.branch}</b><br>
-   ${e.date}<br>
-   ${(e.minutes/60).toFixed(2)} h
-   <button onclick="editEntry(${i})">Bearbeiten</button>
-   <button class="small-btn" onclick="deleteEntry(${i})">X</button>
-  `;
-  list.appendChild(d);
+ Object.keys(data[day]).forEach(branch=>{
+  const card=document.createElement("div");
+  card.className="card";
+
+  const title=document.createElement("div");
+  title.innerHTML=`<b>${branch}</b>`;
+  card.appendChild(title);
+
+  const row=document.createElement("div");
+  row.className='row';
+  ['Start','Pause Start','Pause Ende','Ende'].forEach(t=>{
+   const btn=document.createElement("button");
+   btn.innerText=t;
+   btn.onclick=()=>addLog(branch,t);
+   row.appendChild(btn);
+  });
+  card.appendChild(row);
+
+  const delBtn=document.createElement("button");
+  delBtn.innerText="Filiale löschen";
+  delBtn.onclick=()=>deleteBranch(branch);
+  card.appendChild(delBtn);
+
+  data[day][branch].forEach((log,i)=>{
+   const l=document.createElement("div");
+   l.className="log";
+   const left=document.createElement("span");
+   left.textContent = `${log.type} - ${log.time}`;
+   const actions=document.createElement("span");
+   actions.className='log-actions';
+
+   const eBtn=document.createElement("button");
+   eBtn.textContent="✏️";
+   eBtn.onclick=()=>editLog(branch,i);
+   const dBtn=document.createElement("button");
+   dBtn.textContent="X";
+   dBtn.onclick=()=>deleteLog(branch,i);
+
+   actions.appendChild(eBtn);
+   actions.appendChild(dBtn);
+   l.appendChild(left);
+   l.appendChild(actions);
+   card.appendChild(l);
+  });
+
+  branchesDiv.appendChild(card);
  });
 
- document.getElementById("total").innerText="Gesamt: "+(total/60).toFixed(2)+" h";
- renderStats();
+ const total = calcDayTotal(day);
+ totalDiv.innerText = "Gesamt: " + (total/60).toFixed(2) + " h";
 }
 
-function renderStats(){
- let today=0, month=0;
- const now=new Date();
- entries.forEach(e=>{
-  const d=new Date(e.date);
-  if(d.toDateString()===now.toDateString()) today+=e.minutes;
-  if(d.getMonth()===now.getMonth()) month+=e.minutes;
- });
- document.getElementById("stats").innerHTML=
-  `Heute: ${(today/60).toFixed(2)} h<br>Monat: ${(month/60).toFixed(2)} h`;
-}
-
-renderBranches(); render();
+dateInput.onchange = render;
+render();
 </script>
-
 </body>
 </html>
