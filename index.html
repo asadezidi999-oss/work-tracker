@@ -7,14 +7,18 @@
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:Arial}
-body{background:#0f172a;color:white;display:flex;justify-content:center;align-items:center;height:100vh}
-.container{width:95%;max-width:450px;background:#1e293b;padding:20px;border-radius:20px}
+body{
+  background:linear-gradient(135deg,#0f172a,#1e3a8a);
+  color:white;display:flex;justify-content:center;align-items:center;height:100vh
+}
+.container{width:95%;max-width:450px;background:rgba(255,255,255,0.1);padding:20px;border-radius:20px;backdrop-filter:blur(10px)}
 h1{text-align:center;margin-bottom:10px}
 button,input,select{width:100%;padding:12px;margin-top:10px;border-radius:10px;border:none}
 button{background:#38bdf8;color:black;font-weight:bold}
 .timer{text-align:center;font-size:28px;margin-top:10px}
-.entry{background:#334155;padding:10px;margin-top:10px;border-radius:10px}
+.entry{background:rgba(255,255,255,0.15);padding:10px;margin-top:10px;border-radius:10px}
 .total{text-align:center;margin-top:10px;font-weight:bold}
+.small-btn{margin-top:5px;background:#f87171;color:white}
 </style>
 </head>
 
@@ -25,6 +29,7 @@ button{background:#38bdf8;color:black;font-weight:bold}
 <input type="text" id="branchInput" placeholder="Filiale hinzufügen">
 <button onclick="addBranch()">Filiale hinzufügen</button>
 <select id="branch"></select>
+<button class="small-btn" onclick="deleteBranch()">Filiale löschen</button>
 
 <div class="timer" id="timer">00:00:00</div>
 
@@ -57,14 +62,15 @@ function addBranch(){
  save(); renderBranches();
 }
 
-function renderBranches(){
+function deleteBranch(){
  const sel=document.getElementById("branch");
- sel.innerHTML="";
- if(branches.length===0){
-  sel.style.display="none";
-  return;
- }
- sel.style.display="block";
+ const val=sel.value;
+ branches = branches.filter(b=>b!==val);
+ save(); renderBranches();
+}
+
+function renderBranches(){
+ const sel=document.getElementById("branch"); sel.innerHTML="";
  branches.forEach(b=>{
   const o=document.createElement("option"); o.value=b;o.textContent=b; sel.appendChild(o);
  });
@@ -88,39 +94,43 @@ function startWork(){
 }
 
 function endWork(){
- if(!startTime) return alert("Du hast noch nicht gestartet!");
- if(pauseStart){
-  endPause();
- }
+ if(!startTime) return alert("Nicht gestartet!");
+ if(pauseStart) endPause();
  clearInterval(timerInterval);
  const end=new Date();
  let diff=(end-startTime)/1000/60-totalPause;
  const branch=document.getElementById("branch").value||"-";
  const date=new Date().toISOString().split('T')[0];
  entries.push({branch,date,minutes:diff});
- startTime=null; totalPause=0; pauseStart=null;
+ startTime=null; totalPause=0;
  save(); render();
 }
 
 function startPause(){
- if(!startTime) return alert("Starte zuerst die Arbeit!");
- if(pauseStart) return alert("Pause läuft schon!");
+ if(!startTime) return alert("Starte zuerst!");
+ if(pauseStart) return;
  pauseStart=new Date();
 }
 
 function endPause(){
- if(!pauseStart) return alert("Keine Pause aktiv!");
+ if(!pauseStart) return;
  const now=new Date();
  totalPause+=(now-pauseStart)/1000/60;
  pauseStart=null;
 }
 
-// Reminder
-setInterval(()=>{
- if(startTime && Notification.permission==='granted'){
-  new Notification("Vergiss nicht zu stoppen!");
+function deleteEntry(i){
+ entries.splice(i,1);
+ save(); render();
+}
+
+function editEntry(i){
+ const newMin=prompt("Neue Minuten:", entries[i].minutes);
+ if(newMin!==null){
+  entries[i].minutes=parseFloat(newMin);
+  save(); render();
  }
-},7200000);
+}
 
 function render(){
  const list=document.getElementById("list"); list.innerHTML="";
@@ -130,7 +140,13 @@ function render(){
   total+=e.minutes;
   const d=document.createElement("div");
   d.className="entry";
-  d.innerHTML=`${e.branch}<br>${e.date}<br>${(e.minutes/60).toFixed(2)} h`;
+  d.innerHTML=`
+   <b>${e.branch}</b><br>
+   ${e.date}<br>
+   ${(e.minutes/60).toFixed(2)} h
+   <button onclick="editEntry(${i})">Bearbeiten</button>
+   <button class="small-btn" onclick="deleteEntry(${i})">X</button>
+  `;
   list.appendChild(d);
  });
 
