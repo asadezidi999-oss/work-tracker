@@ -3,105 +3,122 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Arbeitszeit Tracker PRO</title>
+<title>Work Tracker PRO</title>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:Arial}
-body{background:#f0f2f5;padding:10px}
-.container{max-width:500px;margin:auto;background:#fff;padding:15px;border-radius:12px;box-shadow:0 5px 15px rgba(0,0,0,0.1)}
-h1{text-align:center;margin-bottom:10px}
-input,button{width:100%;padding:10px;margin-top:10px;border-radius:8px;border:1px solid #ccc;font-size:16px}
-button{background:#007bff;color:white;border:none;cursor:pointer}
+body{background:#eef1f5;padding:15px}
+.container{max-width:600px;margin:auto;background:#fff;padding:20px;border-radius:15px;box-shadow:0 10px 25px rgba(0,0,0,0.1)}
+h1{text-align:center;margin-bottom:15px}
+select,input,button{width:100%;padding:12px;margin-top:10px;border-radius:10px;border:1px solid #ccc;font-size:15px}
+button{background:#007bff;color:#fff;border:none;font-weight:bold}
 button:hover{background:#0056b3}
-.entry{background:#f9f9f9;padding:10px;margin-top:10px;border-radius:8px}
-.total{margin-top:15px;font-weight:bold;text-align:center}
+.entry{background:#f8f9fa;padding:12px;margin-top:10px;border-radius:10px}
+.topbar{display:flex;gap:10px}
+.topbar input{flex:1}
+.total{text-align:center;margin-top:15px;font-size:18px;font-weight:bold}
 </style>
 </head>
 
 <body>
 <div class="container">
-<h1>Arbeitszeit Tracker</h1>
+<h1>Work Tracker PRO</h1>
 
-<label>Datum</label>
+<div class="topbar">
+<input type="text" id="branchInput" placeholder="Neue Filiale...">
+<button onclick="addBranch()">+</button>
+</div>
+
+<select id="branch"></select>
+
 <input type="date" id="date">
-
-<label>Startzeit</label>
 <input type="time" id="start">
-
-<label>Endzeit</label>
 <input type="time" id="end">
-
-<label>Pause (Minuten)</label>
-<input type="number" id="break" value="0">
+<input type="number" id="break" placeholder="Pause (Minuten)" value="0">
 
 <button onclick="addEntry()">Speichern</button>
 
 <div id="list"></div>
-
-<div class="total" id="total">Gesamt: 0 Stunden</div>
+<div class="total" id="total">Gesamt: 0 h</div>
 </div>
 
 <script>
-let entries = JSON.parse(localStorage.getItem("entries") || "[]");
+let entries = JSON.parse(localStorage.getItem("entries")||"[]");
+let branches = JSON.parse(localStorage.getItem("branches")||"[\"Hauptfiliale\"]");
 
-function addEntry(){
-  const date = document.getElementById("date").value;
-  const start = document.getElementById("start").value;
-  const end = document.getElementById("end").value;
-  const br = parseInt(document.getElementById("break").value) || 0;
-
-  if(!date || !start || !end){
-    alert("Bitte alles ausfüllen!");
-    return;
-  }
-
-  const startTime = new Date(`1970-01-01T${start}:00`);
-  const endTime = new Date(`1970-01-01T${end}:00`);
-
-  let diff = (endTime - startTime) / 1000 / 60; // minutes
-  diff -= br;
-
-  if(diff < 0){
-    alert("Endzeit ist falsch!");
-    return;
-  }
-
-  entries.push({date, start, end, break: br, minutes: diff});
-  localStorage.setItem("entries", JSON.stringify(entries));
-
-  render();
+function save(){
+ localStorage.setItem("entries",JSON.stringify(entries));
+ localStorage.setItem("branches",JSON.stringify(branches));
 }
 
-function deleteEntry(index){
-  entries.splice(index,1);
-  localStorage.setItem("entries", JSON.stringify(entries));
-  render();
+function renderBranches(){
+ const sel=document.getElementById("branch");
+ sel.innerHTML="";
+ branches.forEach(b=>{
+  const opt=document.createElement("option");
+  opt.value=b; opt.textContent=b;
+  sel.appendChild(opt);
+ });
+}
+
+function addBranch(){
+ const val=document.getElementById("branchInput").value.trim();
+ if(!val) return;
+ branches.push(val);
+ document.getElementById("branchInput").value="";
+ save();
+ renderBranches();
+}
+
+function addEntry(){
+ const branch=document.getElementById("branch").value;
+ const date=document.getElementById("date").value;
+ const start=document.getElementById("start").value;
+ const end=document.getElementById("end").value;
+ const br=parseInt(document.getElementById("break").value)||0;
+
+ if(!date||!start||!end) return alert("Bitte alles ausfüllen");
+
+ const s=new Date(`1970-01-01T${start}:00`);
+ const e=new Date(`1970-01-01T${end}:00`);
+ let diff=(e-s)/1000/60 - br;
+ if(diff<0) return alert("Fehler bei Zeit");
+
+ entries.push({branch,date,start,end,break:br,minutes:diff});
+ save();
+ render();
+}
+
+function deleteEntry(i){
+ entries.splice(i,1);
+ save();
+ render();
 }
 
 function render(){
-  const list = document.getElementById("list");
-  list.innerHTML = "";
+ const list=document.getElementById("list");
+ list.innerHTML="";
+ let total=0;
 
-  let total = 0;
+ entries.forEach((e,i)=>{
+  total+=e.minutes;
+  const div=document.createElement("div");
+  div.className="entry";
+  div.innerHTML=`
+   <b>${e.branch}</b><br>
+   ${e.date}<br>
+   ${e.start} - ${e.end} | Pause: ${e.break} min<br>
+   <b>${(e.minutes/60).toFixed(2)} h</b>
+   <button onclick="deleteEntry(${i})">Löschen</button>
+  `;
+  list.appendChild(div);
+ });
 
-  entries.forEach((e,i)=>{
-    total += e.minutes;
-
-    const div = document.createElement("div");
-    div.className = "entry";
-    div.innerHTML = `
-      <b>${e.date}</b><br>
-      ${e.start} - ${e.end} | Pause: ${e.break} min<br>
-      <b>${(e.minutes/60).toFixed(2)} h</b>
-      <button onclick="deleteEntry(${i})">Löschen</button>
-    `;
-    list.appendChild(div);
-  });
-
-  document.getElementById("total").innerText =
-    "Gesamt: " + (total/60).toFixed(2) + " Stunden";
+ document.getElementById("total").innerText=
+  "Gesamt: "+(total/60).toFixed(2)+" h";
 }
 
+renderBranches();
 render();
 </script>
 
