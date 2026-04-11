@@ -7,34 +7,82 @@
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:Arial}
-body{background:#eef1f5;padding:15px}
-.container{max-width:600px;margin:auto;background:#fff;padding:20px;border-radius:15px;box-shadow:0 10px 25px rgba(0,0,0,0.1)}
+
+body{
+  height:100vh;
+  background:url('https://images.unsplash.com/photo-1504754524776-8f4f37790ca0') no-repeat center/cover;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.overlay{
+  position:absolute;
+  width:100%;
+  height:100%;
+  backdrop-filter:blur(8px);
+  background:rgba(0,0,0,0.4);
+}
+
+.container{
+  position:relative;
+  width:90%;
+  max-width:420px;
+  background:rgba(255,255,255,0.1);
+  backdrop-filter:blur(15px);
+  padding:20px;
+  border-radius:20px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.3);
+  color:white;
+}
+
 h1{text-align:center;margin-bottom:15px}
-select,input,button{width:100%;padding:12px;margin-top:10px;border-radius:10px;border:1px solid #ccc;font-size:15px}
-button{background:#007bff;color:#fff;border:none;font-weight:bold}
-button:hover{background:#0056b3}
-.entry{background:#f8f9fa;padding:12px;margin-top:10px;border-radius:10px}
-.topbar{display:flex;gap:10px}
-.topbar input{flex:1}
-.total{text-align:center;margin-top:15px;font-size:18px;font-weight:bold}
+
+input,select,button{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border-radius:10px;
+  border:none;
+  font-size:15px;
+}
+
+input,select{
+  background:rgba(255,255,255,0.2);
+  color:white;
+}
+
+button{
+  background:#00c6ff;
+  color:white;
+  font-weight:bold;
+}
+
+.entry{
+  background:rgba(255,255,255,0.15);
+  padding:10px;
+  margin-top:10px;
+  border-radius:10px;
+}
+
+.total{text-align:center;margin-top:10px;font-weight:bold}
 </style>
 </head>
 
 <body>
-<div class="container">
-<h1>Work Tracker PRO</h1>
+<div class="overlay"></div>
 
-<div class="topbar">
+<div class="container">
+<h1>Work Tracker</h1>
+
 <input type="text" id="branchInput" placeholder="Neue Filiale...">
-<button onclick="addBranch()">+</button>
-</div>
+<button onclick="addBranch()">Filiale hinzufügen</button>
 
 <select id="branch"></select>
-
 <input type="date" id="date">
 <input type="time" id="start">
 <input type="time" id="end">
-<input type="number" id="break" placeholder="Pause (Minuten)" value="0">
+<input type="number" id="break" placeholder="Pause (Minuten)">
 
 <button onclick="addEntry()">Speichern</button>
 
@@ -44,11 +92,20 @@ button:hover{background:#0056b3}
 
 <script>
 let entries = JSON.parse(localStorage.getItem("entries")||"[]");
-let branches = JSON.parse(localStorage.getItem("branches")||"[\"Hauptfiliale\"]");
+let branches = JSON.parse(localStorage.getItem("branches")||"[]");
 
 function save(){
  localStorage.setItem("entries",JSON.stringify(entries));
  localStorage.setItem("branches",JSON.stringify(branches));
+}
+
+function addBranch(){
+ const val=document.getElementById("branchInput").value.trim();
+ if(!val) return;
+ branches.push(val);
+ document.getElementById("branchInput").value="";
+ save();
+ renderBranches();
 }
 
 function renderBranches(){
@@ -59,15 +116,6 @@ function renderBranches(){
   opt.value=b; opt.textContent=b;
   sel.appendChild(opt);
  });
-}
-
-function addBranch(){
- const val=document.getElementById("branchInput").value.trim();
- if(!val) return;
- branches.push(val);
- document.getElementById("branchInput").value="";
- save();
- renderBranches();
 }
 
 function addEntry(){
@@ -107,9 +155,9 @@ function render(){
   div.innerHTML=`
    <b>${e.branch}</b><br>
    ${e.date}<br>
-   ${e.start} - ${e.end} | Pause: ${e.break} min<br>
+   ${e.start} - ${e.end}<br>
    <b>${(e.minutes/60).toFixed(2)} h</b>
-   <button onclick="deleteEntry(${i})">Löschen</button>
+   <button onclick="deleteEntry(${i})">X</button>
   `;
   list.appendChild(div);
  });
