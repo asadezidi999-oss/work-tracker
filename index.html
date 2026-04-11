@@ -12,14 +12,16 @@ h1{text-align:center;margin-bottom:10px}
 input,button{width:100%;padding:12px;margin-top:10px;border-radius:10px;border:none;font-size:16px}
 button{background:#38bdf8;color:black;font-weight:bold}
 .card{background:#1e293b;padding:12px;margin-top:12px;border-radius:12px}
-.log{background:#334155;padding:8px;margin-top:6px;border-radius:8px;display:flex;justify-content:space-between;align-items:center}
+.log{background:#334155;padding:8px;margin-top:6px;border-radius:8px;display:flex;justify-content:space-between}
 .total{text-align:center;margin-top:12px;font-weight:bold}
 .row{display:flex;gap:8px}
 .row button{flex:1}
 .nav{display:flex;gap:6px}
 .nav button{flex:1;background:#22c55e}
-.status{margin-top:6px;font-size:14px;color:#a7f3d0}
-.small{font-size:13px;color:#cbd5f5}
+.status{margin-top:6px;font-weight:bold}
+.running{color:#4ade80}
+.pause{color:#facc15}
+.done{color:#94a3b8}
 </style>
 </head>
 <body>
@@ -27,214 +29,199 @@ button{background:#38bdf8;color:black;font-weight:bold}
 <h1>Arbeitszeit Tracker</h1>
 
 <div class="nav">
-  <button id="prevDay">⬅️ Vorheriger Tag</button>
-  <input type="date" id="date">
-  <button id="nextDay">Nächster Tag ➡️</button>
+<button id="prevDay">⬅️</button>
+<input type="date" id="date">
+<button id="nextDay">➡️</button>
 </div>
 
-<div id="summary" class="total"></div>
+<button id="resetDay">Tag zurücksetzen</button>
+
+<div class="total" id="dayTotal"></div>
+<div class="total" id="weekTotal"></div>
+<div class="total" id="live"></div>
+<div id="weekList" class="total"></div>
 
 <input type="text" id="branchInput" placeholder="Filiale hinzufügen">
 <button id="addBranchBtn">Filiale hinzufügen</button>
 
 <div id="branches"></div>
-<div class="total" id="total"></div>
-<div class="total" id="weekTotal"></div>
 </div>
 
 <script>
-const dateInput = document.getElementById("date");
-const branchInput = document.getElementById("branchInput");
-const branchesDiv = document.getElementById("branches");
-const totalDiv = document.getElementById("total");
-const weekTotalDiv = document.getElementById("weekTotal");
-const summaryDiv = document.getElementById("summary");
-const prevBtn = document.getElementById("prevDay");
-const nextBtn = document.getElementById("nextDay");
+const dateInput=document.getElementById("date");
+const branchInput=document.getElementById("branchInput");
+const branchesDiv=document.getElementById("branches");
+const dayTotalDiv=document.getElementById("dayTotal");
+const weekTotalDiv=document.getElementById("weekTotal");
+const liveDiv=document.getElementById("live");
+const weekListDiv=document.getElementById("weekList");
 
-let data = JSON.parse(localStorage.getItem("tracker")||"{}");
+let data=JSON.parse(localStorage.getItem("tracker")||"{}");
+let lastClick=0;
 
-(function initDate(){
- const d=new Date();
- dateInput.value=d.toISOString().split('T')[0];
-})();
+(function(){const d=new Date();dateInput.value=d.toISOString().split('T')[0]})();
 
-function save(){ localStorage.setItem("tracker", JSON.stringify(data)); }
-function getDay(){ return dateInput.value; }
-function ensureDay(day){ if(!data[day]) data[day] = {}; }
+function save(){localStorage.setItem("tracker",JSON.stringify(data))}
+function getDay(){return dateInput.value}
+function ensureDay(d){if(!data[d])data[d]={}}
 
-// Navigation
-function changeDay(offset){
- const d=new Date(dateInput.value);
- d.setDate(d.getDate()+offset);
- dateInput.value=d.toISOString().split('T')[0];
- render();
-}
-prevBtn.onclick = ()=>changeDay(-1);
-nextBtn.onclick = ()=>changeDay(1);
+function changeDay(o){let d=new Date(getDay());d.setDate(d.getDate()+o);dateInput.value=d.toISOString().split('T')[0];render()}
+document.getElementById("prevDay").onclick=()=>changeDay(-1)
+document.getElementById("nextDay").onclick=()=>changeDay(1)
 
-function addBranch(){
- const name = branchInput.value.trim();
- const day = getDay();
- if(!name || !day) return alert("Datum + Filiale!");
- ensureDay(day);
- if(!data[day][name]) data[day][name] = [];
- branchInput.value="";
- save(); render();
-}
+function nowHM(){let d=new Date();return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`}
+function parseHM(h){let m=/^([01]?\d|2[0-3]):([0-5]\d)$/.exec(h);return m?parseInt(m[1])*60+parseInt(m[2]):NaN}
+function fmt(min){let h=Math.floor(min/60);let m=min%60;return `${h}h ${m}min`}
 
-document.getElementById("addBranchBtn").onclick = addBranch;
+function addBranch(){let n=branchInput.value.trim();let d=getDay();if(!n||!d)return;ensureDay(d);if(!data[d][n])data[d][n]=[];branchInput.value="";save();render()}
+document.getElementById("addBranchBtn").onclick=addBranch;
 
-function nowHM(){
- const d=new Date();
- return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-}
-
-function parseHM(hm){
- const m=/^([01]?\d|2[0-3]):([0-5]\d)$/.exec(hm);
- if(!m) return NaN;
- return parseInt(m[1])*60+parseInt(m[2]);
-}
-
-function sortLogs(logs){
- logs.sort((a,b)=>parseHM(a.time)-parseHM(b.time));
-}
+function sortLogs(l){l.sort((a,b)=>parseHM(a.time)-parseHM(b.time))}
 
 function addLog(branch,type){
- const day = getDay();
- ensureDay(day);
- if(!data[day][branch]) data[day][branch]=[];
- data[day][branch].push({type,time:nowHM()});
- sortLogs(data[day][branch]);
- save(); render();
+ if(Date.now()-lastClick<500)return;
+ lastClick=Date.now();
+ let d=getDay();ensureDay(d);
+ if(!data[d][branch])data[d][branch]=[];
+ data[d][branch].push({type,time:nowHM()});
+ sortLogs(data[d][branch]);
+ save();render()
 }
 
-function deleteLog(branch,i){
- if(!confirm("Bist du sicher?")) return;
- data[getDay()][branch].splice(i,1);
- save(); render();
+function deleteLog(b,i){if(!confirm("Bist du sicher?"))return;data[getDay()][b].splice(i,1);save();render()}
+function deleteBranch(b){if(!confirm("Bist du sicher?"))return;delete data[getDay()][b];save();render()}
+
+function calcDay(d){
+ let t=0;if(!data[d])return 0;
+ Object.values(data[d]).forEach(l=>{
+  let s=null,p=0,ps=null;
+  l.forEach(x=>{
+   let tm=parseHM(x.time);
+   if(x.type==='Start')s=tm;
+   if(x.type==='Pause Start')ps=tm;
+   if(x.type==='Pause Ende'&&ps!=null){p+=tm-ps;ps=null}
+   if(x.type==='Ende'&&s!=null){t+=Math.max(0,tm-s-p);s=null;p=0}
+  })
+ })
+ return t
 }
 
-function deleteBranch(branch){
- if(!confirm("Bist du sicher?")) return;
- delete data[getDay()][branch];
- save(); render();
+function calcWeek(){
+ let d=new Date(getDay());
+ let idx=(d.getDay()+6)%7;
+ let mon=new Date(d);mon.setDate(d.getDate()-idx);
+ let t=0;let list="";
+ for(let i=0;i<7;i++){
+  let x=new Date(mon);x.setDate(mon.getDate()+i);
+  let ds=x.toISOString().split('T')[0];
+  let v=calcDay(ds);
+  t+=v;
+  list+=`${ds}: ${fmt(v)}\n`;
+ }
+ weekListDiv.innerText=list;
+ return t
 }
 
-function editLog(branch,i){
- const val=prompt("Neue Zeit HH:MM", data[getDay()][branch][i].time);
- if(!val) return;
- if(isNaN(parseHM(val))) return alert("Fehler Format");
- data[getDay()][branch][i].time=val;
- sortLogs(data[getDay()][branch]);
- save(); render();
+function getStatus(l){
+ if(!l.length)return"Keine Aktivität";
+ let last=l[l.length-1].type;
+ if(last==='Start')return"Arbeit läuft";
+ if(last==='Pause Start')return"Pause aktiv";
+ if(last==='Pause Ende')return"Arbeit läuft";
+ if(last==='Ende')return"Beendet";
+ return"-"
 }
 
-function calcDay(day){
- let total=0;
- if(!data[day]) return 0;
- Object.values(data[day]).forEach(logs=>{
-  let start=null,pause=0,pStart=null;
-  logs.forEach(l=>{
-   const t=parseHM(l.time);
-   if(l.type==='Start') start=t;
-   if(l.type==='Pause Start') pStart=t;
-   if(l.type==='Pause Ende'&&pStart!==null){pause+=t-pStart;pStart=null}
-   if(l.type==='Ende'&&start!==null){total+=t-start-pause;start=null;pause=0}
+function liveTime(){
+ let d=getDay();let total=0;
+ if(!data[d])return 0;
+ Object.values(data[d]).forEach(l=>{
+  let s=null,p=0,ps=null;
+  l.forEach(x=>{
+   let tm=parseHM(x.time);
+   if(x.type==='Start')s=tm;
+   if(x.type==='Pause Start')ps=tm;
+   if(x.type==='Pause Ende'&&ps!=null){p+=tm-ps;ps=null}
   });
+  if(s!=null){
+   let now=parseHM(nowHM());
+   total+=Math.max(0,now-s-p);
+  }
  });
  return total;
 }
 
-function calcWeek(){
- const selected = new Date(getDay());
- const dayIndex = (selected.getDay() + 6) % 7;
- const monday = new Date(selected);
- monday.setDate(selected.getDate() - dayIndex);
- let total = 0;
- for(let i=0;i<7;i++){
-  const d = new Date(monday);
-  d.setDate(monday.getDate() + i);
-  total += calcDay(d.toISOString().split('T')[0]);
- }
- return Math.max(0,total);
-}
-
-function getStatus(logs){
- if(!logs.length) return "Keine Aktivität";
- const last = logs[logs.length-1].type;
- if(last==='Start') return "Arbeit läuft";
- if(last==='Pause Start') return "Pause aktiv";
- if(last==='Pause Ende') return "Arbeit läuft";
- if(last==='Ende') return "Arbeit beendet";
- return "-";
-}
-
 function render(){
- const day=getDay();
- branchesDiv.innerHTML="";
+ let d=getDay();branchesDiv.innerHTML="";
+ dayTotalDiv.innerText="Heute: "+fmt(calcDay(d));
+ weekTotalDiv.innerText="Woche: "+fmt(calcWeek());
 
- let dayTotal = calcDay(day);
- totalDiv.innerText="Heute: "+(dayTotal/60).toFixed(2)+" h";
- weekTotalDiv.innerText="Woche: "+(calcWeek()/60).toFixed(2)+" h";
+ let live=liveTime();
+ liveDiv.innerText=live>0?"Aktuell: "+fmt(live):"";
 
- if(!data[day]){
-  summaryDiv.innerText="";
-  return;
- }
+ if(!data[d])return;
 
- // Summary per branch
- let summaryText = "";
- Object.keys(data[day]).forEach(branch=>{
-  const t = calcDay(day);
-  summaryText += `${branch}: ${(t/60).toFixed(2)} h\n`;
- });
- summaryDiv.innerText = summaryText;
+ Object.keys(data[d]).forEach(b=>{
+  let card=document.createElement("div");card.className="card";
+  let logs=data[d][b];
 
- Object.keys(data[day]).forEach(branch=>{
-  const card=document.createElement("div");
-  card.className="card";
-  const logs = data[day][branch];
+  let title=document.createElement("div");title.innerHTML=`<b>${b}</b>`;card.appendChild(title);
 
-  const title=document.createElement("div");
-  title.innerHTML=`<b>${branch}</b>`;
-  card.appendChild(title);
+  let st=document.createElement("div");st.className="status";
+  let s=getStatus(logs);
+  st.innerText=s;
+  if(s.includes("läuft"))st.classList.add("running");
+  else if(s.includes("Pause"))st.classList.add("pause");
+  else st.classList.add("done");
+  card.appendChild(st);
 
-  const status=document.createElement("div");
-  status.className='status';
-  status.innerText = getStatus(logs);
-  card.appendChild(status);
-
-  const row=document.createElement("div"); row.className='row';
+  let row=document.createElement("div");row.className="row";
   ['Start','Pause Start','Pause Ende','Ende'].forEach(t=>{
-   const b=document.createElement("button");
-   b.innerText=t; b.onclick=()=>addLog(branch,t);
-   row.appendChild(b);
+   let btn=document.createElement("button");btn.innerText=t;btn.onclick=()=>addLog(b,t);
+   row.appendChild(btn);
   });
   card.appendChild(row);
 
-  const del=document.createElement("button");
-  del.innerText="Filiale löschen";
-  del.onclick=()=>deleteBranch(branch);
+  let del=document.createElement("button");del.innerText="Filiale löschen";del.onclick=()=>deleteBranch(b);
   card.appendChild(del);
 
-  logs.forEach((log,i)=>{
-   const l=document.createElement("div");
-   l.className="log";
-   l.innerHTML=`${log.type} - ${log.time}`;
+  if(!logs.length){
+   let empty=document.createElement("div");empty.innerText="Keine Aktivität";
+   card.appendChild(empty);
+  }
 
-   const actions=document.createElement("div");
-   const e=document.createElement("button"); e.innerText="✏️"; e.onclick=()=>editLog(branch,i);
-   const d=document.createElement("button"); d.innerText="X"; d.onclick=()=>deleteLog(branch,i);
-   actions.appendChild(e); actions.appendChild(d);
-
-   l.appendChild(actions);
-   card.appendChild(l);
+  logs.forEach((l,i)=>{
+   let div=document.createElement("div");div.className="log";
+   div.innerHTML=`${l.type} - ${l.time}`;
+   let act=document.createElement("div");
+   let e=document.createElement("button");e.innerText="✏️";e.onclick=()=>editLog(b,i);
+   let x=document.createElement("button");x.innerText="X";x.onclick=()=>deleteLog(b,i);
+   act.appendChild(e);act.appendChild(x);
+   div.appendChild(act);
+   card.appendChild(div);
   });
 
   branchesDiv.appendChild(card);
  });
 }
+
+function editLog(b,i){
+ let v=prompt("Zeit HH:MM",data[getDay()][b][i].time);
+ if(!v||isNaN(parseHM(v)))return;
+ data[getDay()][b][i].time=v;
+ sortLogs(data[getDay()][b]);
+ save();render();
+}
+
+// reset day
+document.getElementById("resetDay").onclick=function(){
+ if(!confirm("Tag wirklich löschen?"))return;
+ delete data[getDay()];
+ save();render();
+}
+
+// live update
+setInterval(render,60000);
 
 dateInput.onchange=render;
 render();
