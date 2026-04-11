@@ -2,7 +2,9 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Arbeitszeit Tracker</title>
+<title>Arbeitszeit Tracker Pro</title>
+
+<link rel="manifest" href="manifest.json">
 
 <style>
 body {
@@ -11,59 +13,41 @@ body {
   padding: 20px;
 }
 
-h2 {
-  text-align: center;
-}
-
 .container {
   max-width: 500px;
   margin: auto;
 }
 
-input {
-  width: 70%;
-  padding: 10px;
+h2 {
+  text-align: center;
+}
+
+input, select {
+  width: 100%;
+  padding: 12px;
+  margin-top: 5px;
   border-radius: 8px;
-  border: 1px solid #ccc;
 }
 
 button {
-  padding: 8px 10px;
+  padding: 12px;
+  margin: 5px 0;
+  width: 100%;
   border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  margin: 3px;
-}
-
-.add-btn {
-  background: #007bff;
-  color: white;
+  border-radius: 10px;
+  font-size: 16px;
 }
 
 .start { background: green; color: white; }
-.pause { background: orange; color: white; }
-.resume { background: teal; color: white; }
 .end { background: red; color: white; }
 .delete { background: black; color: white; }
-
 .card {
   background: white;
   padding: 15px;
   margin-top: 15px;
   border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
-.log {
-  font-size: 12px;
-  margin-top: 5px;
-}
-
-.result {
-  margin-top: 10px;
-  font-weight: bold;
-  color: #007bff;
-}
 </style>
 
 </head>
@@ -74,21 +58,76 @@ button {
 
 <h2>Arbeitszeit Tracker</h2>
 
-<input id="input" placeholder="Filiale eingeben">
-<button class="add-btn" onclick="add()">➕</button>
+<!-- Passwort -->
+<div id="login">
+  <input type="password" id="pass" placeholder="Passwort">
+  <button onclick="checkPass()">Login</button>
+</div>
+
+<div id="app" style="display:none">
+
+<select id="monthSelect" onchange="changeMonth()"></select>
+
+<input id="input" placeholder="Filiale">
+<button onclick="add()">➕ Hinzufügen</button>
+<button onclick="exportPDF()">📤 PDF</button>
+<button onclick="resetData()">🧹 Reset</button>
 
 <div id="list"></div>
 
 </div>
 
+</div>
+
 <script>
 
-let data = JSON.parse(localStorage.getItem("data")) || {};
+let PASSWORD = "1234";
 
-function save() {
-  localStorage.setItem("data", JSON.stringify(data));
+// 🔐 Login
+function checkPass() {
+  let p = document.getElementById("pass").value;
+  if (p === PASSWORD) {
+    document.getElementById("login").style.display = "none";
+    document.getElementById("app").style.display = "block";
+  } else {
+    alert("Falsch!");
+  }
 }
 
+// 📅 Monate
+let allData = JSON.parse(localStorage.getItem("allData")) || {};
+let currentMonth = new Date().toISOString().slice(0,7);
+
+if (!allData[currentMonth]) allData[currentMonth] = {};
+let data = allData[currentMonth];
+
+function save() {
+  allData[currentMonth] = data;
+  localStorage.setItem("allData", JSON.stringify(allData));
+}
+
+// 📅 Dropdown
+function loadMonths() {
+  let select = document.getElementById("monthSelect");
+  select.innerHTML = "";
+
+  for (let m in allData) {
+    let opt = document.createElement("option");
+    opt.value = m;
+    opt.text = m;
+    if (m === currentMonth) opt.selected = true;
+    select.appendChild(opt);
+  }
+}
+
+function changeMonth() {
+  currentMonth = document.getElementById("monthSelect").value;
+  if (!allData[currentMonth]) allData[currentMonth] = {};
+  data = allData[currentMonth];
+  render();
+}
+
+// ➕
 function add() {
   let val = document.getElementById("input").value;
   if (!val) return;
@@ -100,96 +139,89 @@ function add() {
   render();
 }
 
+// ⏱️
 function log(branch, type) {
-  let now = new Date();
-  data[branch].push({ type: type, time: now });
+  data[branch].push({ type, time: new Date() });
   save();
   render();
 }
 
-function deleteBranch(branch) {
-  delete data[branch];
-  save();
-  render();
-}
-
-function deleteLog(branch, index) {
-  data[branch].splice(index, 1);
-  save();
-  render();
-}
-
+// 🧮 حساب أسبوعي
 function calculate(logs) {
   let total = 0;
   let start = null;
-  let pause = 0;
-  let pauseStart = null;
 
   logs.forEach(l => {
     let t = new Date(l.time);
 
     if (l.type === "Start") start = t;
-
-    if (l.type === "Pause Start") pauseStart = t;
-
-    if (l.type === "Pause Ende" && pauseStart) {
-      pause += t - pauseStart;
-      pauseStart = null;
-    }
-
     if (l.type === "Ende" && start) {
-      total += t - start - pause;
+      total += t - start;
       start = null;
-      pause = 0;
     }
   });
 
-  return (total / 1000 / 60 / 60).toFixed(2) + " h";
+  return (total/1000/60/60).toFixed(2);
 }
 
+// 📤 PDF
+function exportPDF() {
+  alert("PDF später hinzufügen");
+}
+
+// 🧹
+function resetData() {
+  if (confirm("Alles löschen?")) {
+    data = {};
+    save();
+    render();
+  }
+}
+
+// ❌
+function deleteLog(b, i) {
+  data[b].splice(i,1);
+  save();
+  render();
+}
+
+// 🖥️
 function render() {
   let list = document.getElementById("list");
   list.innerHTML = "";
 
   for (let branch in data) {
-
-    let logsHTML = "";
-    data[branch].forEach((l, i) => {
-      logsHTML += `
-        <div class="log">
-          ${l.type} - ${new Date(l.time).toLocaleTimeString()}
-          <button onclick="deleteLog('${branch}', ${i})">❌</button>
-        </div>
-      `;
+    let logs = "";
+    data[branch].forEach((l,i)=>{
+      logs += `${l.type} - ${new Date(l.time).toLocaleTimeString()}
+      <button onclick="deleteLog('${branch}',${i})">❌</button><br>`;
     });
 
-    let result = calculate(data[branch]);
+    let total = calculate(data[branch]);
 
     list.innerHTML += `
       <div class="card">
         <b>${branch}</b><br>
 
         <button class="start" onclick="log('${branch}','Start')">Start</button>
-        <button class="pause" onclick="log('${branch}','Pause Start')">Pause</button>
-        <button class="resume" onclick="log('${branch}','Pause Ende')">Weiter</button>
         <button class="end" onclick="log('${branch}','Ende')">Ende</button>
-        <button class="delete" onclick="deleteBranch('${branch}')">Löschen</button>
 
-        ${logsHTML}
+        ${logs}
 
-        <div class="result">Gesamt: ${result}</div>
+        <b>Woche: ${total} h</b>
       </div>
     `;
   }
+
+  loadMonths();
 }
 
-render();
-
-</script>
-<script>
+// Service Worker
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js");
 }
+
 </script>
+
 </body>
 </html>
