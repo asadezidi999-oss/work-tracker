@@ -2,21 +2,35 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Arbeitszeit Tracker PRO</title>
+<title>Arbeitszeit PRO</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 body {font-family:Arial;background:#1e1e1e;color:white;margin:0;}
 .container{max-width:600px;margin:auto;padding:15px;}
-input,select,button{width:100%;padding:12px;margin-top:6px;border-radius:8px;}
-button{border:none;font-size:15px;}
-.start{background:green;color:white;}
-.pause{background:orange;color:white;}
-.resume{background:teal;color:white;}
-.end{background:red;color:white;}
-.card{background:#2a2a2a;padding:12px;margin-top:10px;border-radius:10px;}
-.totalBox{background:#111;padding:10px;margin-bottom:10px;border-radius:10px;}
+
+input,button{
+width:100%;padding:12px;margin-top:6px;border-radius:8px;
+}
+
+button{border:none;}
+
+.card{
+background:#2a2a2a;padding:10px;margin-top:10px;border-radius:10px;
+}
+
+.topbox{
+background:#111;padding:10px;margin-bottom:10px;border-radius:10px;
+}
+
+.nav{
+display:flex;gap:5px;
+}
+.nav button{flex:1;}
+
+canvas{background:white;border-radius:10px;margin-top:10px;}
 </style>
 
 </head>
@@ -25,260 +39,199 @@ button{border:none;font-size:15px;}
 
 <div class="container">
 
-<div id="login">
-<h2>Login</h2>
-<input type="password" id="pass">
-<button onclick="checkPass()">Login</button>
-</div>
+<h2>Arbeitszeit PRO</h2>
 
-<div id="app" style="display:none">
-
-<h2>Arbeitszeit Tracker</h2>
-
-<div id="totals" class="totalBox"></div>
-
-<select id="monthSelect" onchange="changeMonth()"></select>
+<div class="nav">
+<button onclick="changeDay(-1)">⬅️</button>
 <input type="date" id="date">
-<input type="date" id="filterDate">
+<button onclick="changeDay(1)">➡️</button>
+</div>
 
 <input id="input" placeholder="Filiale">
 <button onclick="add()">➕ Hinzufügen</button>
-<button onclick="exportPDF()">📤 PDF Tag</button>
+<button onclick="exportPDF()">📤 PDF</button>
 
-<div id="daily"></div>
+<div id="totals" class="topbox"></div>
+
+<canvas id="chart"></canvas>
+
 <div id="list"></div>
-
-</div>
 
 </div>
 
 <script>
 
-let PASSWORD="1234";
-
-function checkPass(){
-  if(pass.value===PASSWORD){
-    login.style.display="none";
-    app.style.display="block";
-  }
-}
-
-let allData=JSON.parse(localStorage.getItem("allData"))||{};
-let currentMonth=new Date().toISOString().slice(0,7);
-
-if(!allData[currentMonth]) allData[currentMonth]={};
-let data=allData[currentMonth];
+let data=JSON.parse(localStorage.getItem("data"))||{};
 
 function save(){
-  allData[currentMonth]=data;
-  localStorage.setItem("allData",JSON.stringify(allData));
-}
-
-function loadMonths(){
-  monthSelect.innerHTML="";
-  for(let m in allData){
-    let o=document.createElement("option");
-    o.value=m;
-    o.text=m;
-    if(m===currentMonth) o.selected=true;
-    monthSelect.appendChild(o);
-  }
-}
-
-function changeMonth(){
-  currentMonth=monthSelect.value;
-  if(!allData[currentMonth]) allData[currentMonth]={};
-  data=allData[currentMonth];
-  render();
+localStorage.setItem("data",JSON.stringify(data));
 }
 
 function add(){
-  if(!input.value) return;
-  if(!data[input.value]) data[input.value]=[];
-  input.value="";
-  save(); render();
+if(!input.value)return;
+if(!data[input.value])data[input.value]=[];
+input.value="";
+save();render();
 }
 
 function log(b,t){
-  let now=new Date();
-  if(date.value){
-    let d=new Date(date.value);
-    d.setHours(now.getHours(),now.getMinutes());
-    now=d;
-  }
-  data[b].push({type:t,time:now});
-  save(); render();
-}
+let d=date.value;
+if(!d){alert("Datum wählen");return;}
 
-function editTime(b,i,input){
-  if(input.value.length<5) return;
-  let d=new Date(data[b][i].time);
-  let [h,m]=input.value.split(":");
-  d.setHours(h); d.setMinutes(m);
-  data[b][i].time=d;
-  save();
+let now=new Date(d);
+let c=new Date();
+now.setHours(c.getHours(),c.getMinutes());
+
+data[b].push({type:t,time:now});
+save();render();
 }
 
 function del(b,i){
-  data[b].splice(i,1);
-  save(); render();
+data[b].splice(i,1);
+save();render();
 }
 
-function deleteBranch(b){
-  if(confirm("Löschen?")){
-    delete data[b];
-    save(); render();
-  }
+function calcDay(logs,selected){
+let total=0,start=null,pause=0,pStart=null;
+
+logs.forEach(l=>{
+let t=new Date(l.time);
+if(t.toDateString()!=new Date(selected).toDateString())return;
+
+if(l.type==="Start")start=t;
+if(l.type==="Pause Start")pStart=t;
+
+if(l.type==="Pause Ende"&&pStart){
+pause+=t-pStart;pStart=null;
 }
 
-// حساب العمل
-function calcPeriods(logs){
-  let result=[];
-  let start=null,pause=0,pStart=null;
-
-  logs.forEach(l=>{
-    let t=new Date(l.time);
-
-    if(l.type==="Start") start=t;
-    if(l.type==="Pause Start") pStart=t;
-
-    if(l.type==="Pause Ende" && pStart){
-      pause+=t-pStart;
-      pStart=null;
-    }
-
-    if(l.type==="Ende" && start){
-      let work=t-start-pause;
-      result.push({date:start,work});
-      start=null; pause=0;
-    }
-  });
-
-  return result;
+if(l.type==="Ende"&&start){
+total+=t-start-pause;
+start=null;pause=0;
 }
+});
 
-// إجماليات
-function totalsCalc(){
-  let day=0,week=0,month=0;
-  let today=new Date();
-  let weekStart=new Date(); weekStart.setDate(today.getDate()-7);
-
-  for(let b in data){
-    let periods=calcPeriods(data[b]);
-
-    periods.forEach(p=>{
-      month+=p.work;
-
-      if(p.date.toDateString()===today.toDateString())
-        day+=p.work;
-
-      if(p.date>weekStart)
-        week+=p.work;
-    });
-  }
-
-  totals.innerHTML=`
-  📅 Tag: ${(day/3600000).toFixed(2)} h<br>
-  📆 Woche: ${(week/3600000).toFixed(2)} h<br>
-  🗓️ Monat: ${(month/3600000).toFixed(2)} h`;
-}
-
-// يومي + فلتر
-function dailyView(){
-
-  let map={};
-
-  for(let b in data){
-    let periods=calcPeriods(data[b]);
-
-    periods.forEach(p=>{
-      let d=p.date.toLocaleDateString();
-
-      if(!map[d]) map[d]={};
-      if(!map[d][b]) map[d][b]=0;
-
-      map[d][b]+=p.work;
-    });
-  }
-
-  let f=filterDate.value;
-  let html="<h3>📊 Tagesübersicht</h3>";
-
-  for(let d in map){
-
-    if(f && new Date(d).toDateString()!==new Date(f).toDateString()) continue;
-
-    html+=`<div class="card"><b>${d}</b><br>`;
-
-    for(let b in map[d]){
-      html+=`${b}: ${(map[d][b]/3600000).toFixed(2)} h<br>`;
-    }
-
-    html+="</div>";
-  }
-
-  daily.innerHTML=html;
-}
-
-// PDF يومي
-function exportPDF(){
-
-  let f=filterDate.value;
-  if(!f){ alert("Datum wählen"); return; }
-
-  const {jsPDF}=window.jspdf;
-  let doc=new jsPDF();
-  let y=10;
-
-  doc.text("Tagesbericht "+f,10,y); y+=10;
-
-  for(let b in data){
-    let periods=calcPeriods(data[b]);
-
-    periods.forEach(p=>{
-      if(new Date(p.date).toDateString()===new Date(f).toDateString()){
-        doc.text(b+" "+(p.work/3600000).toFixed(2)+" h",10,y);
-        y+=6;
-      }
-    });
-  }
-
-  doc.save("tag.pdf");
+return total;
 }
 
 function render(){
 
-  list.innerHTML="";
+let selected=date.value;
+if(!selected)return;
 
-  for(let b in data){
+list.innerHTML="";
+let totalDay=0;
 
-    let logs="";
-    data[b].forEach((l,i)=>{
-      logs+=`${l.type} - ${new Date(l.time).toLocaleString()}
-      <input value="${new Date(l.time).toTimeString().slice(0,5)}"
-      oninput="editTime('${b}',${i},this)">
-      <button onclick="del('${b}',${i})">❌</button><br>`;
-    });
+for(let b in data){
 
-    list.innerHTML+=`
-    <div class="card">
-    <b>${b}</b>
-    <button onclick="deleteBranch('${b}')">🗑️</button><br>
+let logs="";
+data[b].forEach((l,i)=>{
 
-    <button class="start" onclick="log('${b}','Start')">Start</button>
-    <button class="pause" onclick="log('${b}','Pause Start')">Pause</button>
-    <button class="resume" onclick="log('${b}','Pause Ende')">Weiter</button>
-    <button class="end" onclick="log('${b}','Ende')">Ende</button>
+let t=new Date(l.time);
+if(t.toDateString()!=new Date(selected).toDateString())return;
 
-    ${logs}
-    </div>`;
-  }
+logs+=`${l.type} - ${t.toLocaleTimeString()}
+<button onclick="del('${b}',${i})">❌</button><br>`;
+});
 
-  totalsCalc();
-  dailyView();
-  loadMonths();
+let total=calcDay(data[b],selected);
+totalDay+=total;
+
+if(logs){
+list.innerHTML+=`
+<div class="card">
+<b>${b}</b><br>
+
+<button onclick="log('${b}','Start')">Start</button>
+<button onclick="log('${b}','Pause Start')">Pause</button>
+<button onclick="log('${b}','Pause Ende')">Weiter</button>
+<button onclick="log('${b}','Ende')">Ende</button>
+
+${logs}
+
+<b>${(total/3600000).toFixed(2)} h</b>
+</div>`;
+}
 }
 
+// أسبوع
+let week=0;
+let weekStart=new Date(selected);
+weekStart.setDate(weekStart.getDate()-7);
+
+for(let b in data){
+data[b].forEach(l=>{
+let t=new Date(l.time);
+if(t>weekStart)week+=calcDay(data[b],t);
+});
+}
+
+totals.innerHTML=`
+📅 Tag: ${(totalDay/3600000).toFixed(2)} h<br>
+📆 Woche: ${(week/3600000).toFixed(2)} h
+`;
+
+drawChart();
+}
+
+// 📊 Chart
+function drawChart(){
+
+let days={};
+
+for(let b in data){
+data[b].forEach(l=>{
+let d=new Date(l.time).toLocaleDateString();
+if(!days[d])days[d]=0;
+});
+}
+
+let labels=Object.keys(days);
+let values=[];
+
+labels.forEach(d=>{
+let sum=0;
+for(let b in data){
+sum+=calcDay(data[b],d);
+}
+values.push((sum/3600000).toFixed(2));
+});
+
+new Chart(chart,{
+type:'bar',
+data:{labels:labels,datasets:[{label:'Stunden',data:values}]}
+});
+}
+
+// تغيير يوم
+function changeDay(n){
+let d=new Date(date.value||new Date());
+d.setDate(d.getDate()+n);
+date.value=d.toISOString().split("T")[0];
+render();
+}
+
+// PDF
+function exportPDF(){
+
+const {jsPDF}=window.jspdf;
+let doc=new jsPDF();
+let y=10;
+
+doc.text("Tagesbericht "+date.value,10,y);y+=10;
+
+for(let b in data){
+let t=calcDay(data[b],date.value);
+if(t>0){
+doc.text(b+" "+(t/3600000).toFixed(2)+" h",10,y);
+y+=6;
+}
+}
+
+doc.save("report.pdf");
+}
+
+date.value=new Date().toISOString().split("T")[0];
 render();
 
 </script>
