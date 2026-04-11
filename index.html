@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Arbeitszeit Tracker</title>
+
+<style>
+body {
+  font-family: Arial;
+  padding: 20px;
+  background: #f0f2f5;
+}
+
+.container {
+  max-width: 500px;
+  margin: auto;
+}
+
+input {
+  width: 70%;
+  padding: 10px;
+}
+
+button {
+  padding: 10px;
+  margin: 5px;
+  border-radius: 8px;
+}
+
+.card {
+  background: white;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+.start { background: green; color: white; }
+.end { background: red; color: white; }
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Arbeitszeit Tracker</h2>
+
+<input id="input" placeholder="Filiale">
+<button onclick="add()">➕</button>
+
+<div id="list"></div>
+
+</div>
+
+<script>
+
+let data = JSON.parse(localStorage.getItem("data")) || {};
+
+function save() {
+  localStorage.setItem("data", JSON.stringify(data));
+}
+
+function add() {
+  let val = document.getElementById("input").value;
+  if (!val) return;
+
+  if (!data[val]) data[val] = [];
+
+  document.getElementById("input").value = "";
+  save();
+  render();
+}
+
+function log(branch, type) {
+  data[branch].push({ type, time: new Date() });
+  save();
+  render();
+}
+
+function render() {
+  let list = document.getElementById("list");
+  list.innerHTML = "";
+
+  for (let branch in data) {
+    let logs = "";
+    data[branch].forEach(l => {
+      logs += `${l.type} - ${new Date(l.time).toLocaleTimeString()}<br>`;
+    });
+
+    list.innerHTML += `
+      <div class="card">
+        <b>${branch}</b><br>
+
+        <button class="start" onclick="log('${branch}','Start')">Start</button>
+        <button class="end" onclick="log('${branch}','Ende')">Ende</button>
+
+        ${logs}
+      </div>
+    `;
+  }
+}
+
+render();
+
+</script>
+
+</body>
+</html>
