@@ -66,6 +66,8 @@ button {
 
 <select id="monthSelect" onchange="changeMonth()"></select>
 
+<input type="date" id="date">
+
 <input id="input" placeholder="Filiale">
 <button class="add" onclick="add()">➕ Hinzufügen</button>
 <button onclick="exportPDF()">📤 PDF</button>
@@ -134,7 +136,18 @@ function add(){
 
 // LOG
 function log(b,t){
-  data[b].push({type:t,time:new Date()});
+
+  let chosenDate=document.getElementById("date").value;
+  let now=new Date();
+
+  if(chosenDate){
+    let d=new Date(chosenDate);
+    d.setHours(now.getHours());
+    d.setMinutes(now.getMinutes());
+    now=d;
+  }
+
+  data[b].push({type:t,time:now});
   save(); render();
 }
 
@@ -179,6 +192,7 @@ function render(){
   list.innerHTML="";
 
   for(let b in data){
+
     let logs="";
     data[b].forEach((l,i)=>{
       logs+=`
@@ -192,7 +206,8 @@ function render(){
 
     list.innerHTML+=`
     <div class="card">
-      <b>${b}</b><br>
+      <b>${b}</b>
+      <button onclick="deleteBranch('${b}')">🗑️</button><br>
 
       <button class="start" onclick="log('${b}','Start')">Start</button>
       <button class="pause" onclick="log('${b}','Pause Start')">Pause</button>
@@ -208,10 +223,18 @@ function render(){
   loadMonths();
 }
 
-// DELETE
+// DELETE LOG
 function del(b,i){
   data[b].splice(i,1);
   save(); render();
+}
+
+// DELETE BRANCH
+function deleteBranch(branch){
+  if(confirm("Filiale löschen?")){
+    delete data[branch];
+    save(); render();
+  }
 }
 
 // PDF
