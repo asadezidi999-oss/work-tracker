@@ -12,23 +12,27 @@ h1{text-align:center;margin-bottom:10px}
 input,button{width:100%;padding:12px;margin-top:10px;border-radius:10px;border:none;font-size:16px}
 button{background:#38bdf8;color:black;font-weight:bold}
 .card{background:#1e293b;padding:12px;margin-top:12px;border-radius:12px}
-.log{background:#334155;padding:8px;margin-top:6px;border-radius:8px;display:flex;justify-content:space-between}
+.log{background:#334155;padding:8px;margin-top:6px;border-radius:8px;display:flex;justify-content:space-between;align-items:center}
 .total{text-align:center;margin-top:12px;font-weight:bold}
 .row{display:flex;gap:8px}
 .row button{flex:1}
-.switch{display:flex;gap:5px}
-.switch button{flex:1;background:#22c55e}
+.nav{display:flex;gap:6px}
+.nav button{flex:1;background:#22c55e}
+.status{margin-top:6px;font-size:14px;color:#a7f3d0}
+.small{font-size:13px;color:#cbd5f5}
 </style>
 </head>
 <body>
 <div class="container">
 <h1>Arbeitszeit Tracker</h1>
 
-<div class="switch">
-<button onclick="changeDay(-1)">⬅️</button>
-<input type="date" id="date">
-<button onclick="changeDay(1)">➡️</button>
+<div class="nav">
+  <button id="prevDay">⬅️ Vorheriger Tag</button>
+  <input type="date" id="date">
+  <button id="nextDay">Nächster Tag ➡️</button>
 </div>
+
+<div id="summary" class="total"></div>
 
 <input type="text" id="branchInput" placeholder="Filiale hinzufügen">
 <button id="addBranchBtn">Filiale hinzufügen</button>
@@ -44,6 +48,9 @@ const branchInput = document.getElementById("branchInput");
 const branchesDiv = document.getElementById("branches");
 const totalDiv = document.getElementById("total");
 const weekTotalDiv = document.getElementById("weekTotal");
+const summaryDiv = document.getElementById("summary");
+const prevBtn = document.getElementById("prevDay");
+const nextBtn = document.getElementById("nextDay");
 
 let data = JSON.parse(localStorage.getItem("tracker")||"{}");
 
@@ -56,12 +63,15 @@ function save(){ localStorage.setItem("tracker", JSON.stringify(data)); }
 function getDay(){ return dateInput.value; }
 function ensureDay(day){ if(!data[day]) data[day] = {}; }
 
+// Navigation
 function changeDay(offset){
  const d=new Date(dateInput.value);
  d.setDate(d.getDate()+offset);
  dateInput.value=d.toISOString().split('T')[0];
  render();
 }
+prevBtn.onclick = ()=>changeDay(-1);
+nextBtn.onclick = ()=>changeDay(1);
 
 function addBranch(){
  const name = branchInput.value.trim();
@@ -86,22 +96,37 @@ function parseHM(hm){
  return parseInt(m[1])*60+parseInt(m[2]);
 }
 
+function sortLogs(logs){
+ logs.sort((a,b)=>parseHM(a.time)-parseHM(b.time));
+}
+
 function addLog(branch,type){
  const day = getDay();
  ensureDay(day);
  if(!data[day][branch]) data[day][branch]=[];
  data[day][branch].push({type,time:nowHM()});
+ sortLogs(data[day][branch]);
  save(); render();
 }
 
-function deleteLog(branch,i){ data[getDay()][branch].splice(i,1); save(); render(); }
-function deleteBranch(branch){ delete data[getDay()][branch]; save(); render(); }
+function deleteLog(branch,i){
+ if(!confirm("Bist du sicher?")) return;
+ data[getDay()][branch].splice(i,1);
+ save(); render();
+}
+
+function deleteBranch(branch){
+ if(!confirm("Bist du sicher?")) return;
+ delete data[getDay()][branch];
+ save(); render();
+}
 
 function editLog(branch,i){
  const val=prompt("Neue Zeit HH:MM", data[getDay()][branch][i].time);
  if(!val) return;
  if(isNaN(parseHM(val))) return alert("Fehler Format");
  data[getDay()][branch][i].time=val;
+ sortLogs(data[getDay()][branch]);
  save(); render();
 }
 
@@ -123,70 +148,92 @@ function calcDay(day){
 
 function calcWeek(){
  const selected = new Date(getDay());
- if(isNaN(selected)) return 0;
-
- // Start of week (Monday)
- const dayIndex = (selected.getDay() + 6) % 7; // Monday=0
+ const dayIndex = (selected.getDay() + 6) % 7;
  const monday = new Date(selected);
  monday.setDate(selected.getDate() - dayIndex);
-
  let total = 0;
-
  for(let i=0;i<7;i++){
   const d = new Date(monday);
   d.setDate(monday.getDate() + i);
-  const dayStr = d.toISOString().split('T')[0];
-  total += calcDay(dayStr);
+  total += calcDay(d.toISOString().split('T')[0]);
  }
-
  return Math.max(0,total);
 }
- return total;
+
+function getStatus(logs){
+ if(!logs.length) return "Keine Aktivität";
+ const last = logs[logs.length-1].type;
+ if(last==='Start') return "Arbeit läuft";
+ if(last==='Pause Start') return "Pause aktiv";
+ if(last==='Pause Ende') return "Arbeit läuft";
+ if(last==='Ende') return "Arbeit beendet";
+ return "-";
 }
 
 function render(){
  const day=getDay();
  branchesDiv.innerHTML="";
 
- if(data[day]){
-  Object.keys(data[day]).forEach(branch=>{
-   const card=document.createElement("div");
-   card.className="card";
-   card.innerHTML=`<b>${branch}</b>`;
+ let dayTotal = calcDay(day);
+ totalDiv.innerText="Heute: "+(dayTotal/60).toFixed(2)+" h";
+ weekTotalDiv.innerText="Woche: "+(calcWeek()/60).toFixed(2)+" h";
 
-   const row=document.createElement("div"); row.className='row';
-   ['Start','Pause Start','Pause Ende','Ende'].forEach(t=>{
-    const b=document.createElement("button");
-    b.innerText=t; b.onclick=()=>addLog(branch,t);
-    row.appendChild(b);
-   });
-   card.appendChild(row);
-
-   const del=document.createElement("button");
-   del.innerText="Filiale löschen";
-   del.onclick=()=>deleteBranch(branch);
-   card.appendChild(del);
-
-   data[day][branch].forEach((log,i)=>{
-    const l=document.createElement("div");
-    l.className="log";
-    l.innerHTML=`${log.type} - ${log.time}`;
-
-    const actions=document.createElement("div");
-    const e=document.createElement("button"); e.innerText="✏️"; e.onclick=()=>editLog(branch,i);
-    const d=document.createElement("button"); d.innerText="X"; d.onclick=()=>deleteLog(branch,i);
-    actions.appendChild(e); actions.appendChild(d);
-
-    l.appendChild(actions);
-    card.appendChild(l);
-   });
-
-   branchesDiv.appendChild(card);
-  });
+ if(!data[day]){
+  summaryDiv.innerText="";
+  return;
  }
 
- totalDiv.innerText="Heute: "+(calcDay(day)/60).toFixed(2)+" h";
- weekTotalDiv.innerText="Woche: "+(calcWeek()/60).toFixed(2)+" h";
+ // Summary per branch
+ let summaryText = "";
+ Object.keys(data[day]).forEach(branch=>{
+  const t = calcDay(day);
+  summaryText += `${branch}: ${(t/60).toFixed(2)} h\n`;
+ });
+ summaryDiv.innerText = summaryText;
+
+ Object.keys(data[day]).forEach(branch=>{
+  const card=document.createElement("div");
+  card.className="card";
+  const logs = data[day][branch];
+
+  const title=document.createElement("div");
+  title.innerHTML=`<b>${branch}</b>`;
+  card.appendChild(title);
+
+  const status=document.createElement("div");
+  status.className='status';
+  status.innerText = getStatus(logs);
+  card.appendChild(status);
+
+  const row=document.createElement("div"); row.className='row';
+  ['Start','Pause Start','Pause Ende','Ende'].forEach(t=>{
+   const b=document.createElement("button");
+   b.innerText=t; b.onclick=()=>addLog(branch,t);
+   row.appendChild(b);
+  });
+  card.appendChild(row);
+
+  const del=document.createElement("button");
+  del.innerText="Filiale löschen";
+  del.onclick=()=>deleteBranch(branch);
+  card.appendChild(del);
+
+  logs.forEach((log,i)=>{
+   const l=document.createElement("div");
+   l.className="log";
+   l.innerHTML=`${log.type} - ${log.time}`;
+
+   const actions=document.createElement("div");
+   const e=document.createElement("button"); e.innerText="✏️"; e.onclick=()=>editLog(branch,i);
+   const d=document.createElement("button"); d.innerText="X"; d.onclick=()=>deleteLog(branch,i);
+   actions.appendChild(e); actions.appendChild(d);
+
+   l.appendChild(actions);
+   card.appendChild(l);
+  });
+
+  branchesDiv.appendChild(card);
+ });
 }
 
 dateInput.onchange=render;
