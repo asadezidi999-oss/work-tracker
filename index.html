@@ -10,40 +10,33 @@
 body { font-family: Arial; background:#1e1e1e; color:white; margin:0; }
 .container { max-width:500px; margin:auto; padding:15px; }
 
-h2 { text-align:center; }
-
 input, select {
   width:100%;
-  padding:14px;
-  margin-top:8px;
+  padding:12px;
+  margin-top:6px;
+  border-radius:8px;
+}
+
+button {
+  padding:12px;
+  margin-top:5px;
   border-radius:10px;
   border:none;
 }
 
-button {
-  padding:14px;
-  margin-top:8px;
-  border:none;
-  border-radius:12px;
-  font-size:16px;
-}
-
-.add { background:#007bff; color:white; }
-.start { background:green; color:white; }
-.pause { background:orange; color:white; }
-.resume { background:teal; color:white; }
-.end { background:red; color:white; }
+.start{background:green;color:white;}
+.pause{background:orange;color:white;}
+.resume{background:teal;color:white;}
+.end{background:red;color:white;}
 
 .card {
   background:#2a2a2a;
   padding:15px;
-  margin-top:15px;
-  border-radius:12px;
+  margin-top:10px;
+  border-radius:10px;
 }
 
-.total { color:#4da3ff; font-weight:bold; }
-
-.login { text-align:center; margin-top:100px; }
+.total {color:#4da3ff;font-weight:bold;}
 </style>
 
 </head>
@@ -52,80 +45,24 @@ button {
 
 <div class="container">
 
-<!-- LOGIN -->
-<div id="login" class="login">
-  <h2>Login</h2>
-  <input type="password" id="pass" placeholder="Passwort">
-  <button onclick="checkPass()">Login</button>
-</div>
-
-<!-- APP -->
-<div id="app" style="display:none">
-
 <h2>Arbeitszeit Tracker</h2>
 
-<select id="monthSelect" onchange="changeMonth()"></select>
-
 <input type="date" id="date">
-
 <input id="input" placeholder="Filiale">
-<button class="add" onclick="add()">➕ Hinzufügen</button>
-<button onclick="exportPDF()">📤 PDF</button>
+<button onclick="add()">➕</button>
 
 <div id="list"></div>
 
 </div>
 
-</div>
-
 <script>
 
-let PASSWORD="1234";
-
-// LOGIN
-function checkPass(){
-  let p=document.getElementById("pass").value;
-  if(p===PASSWORD){
-    document.getElementById("login").style.display="none";
-    document.getElementById("app").style.display="block";
-  } else {
-    alert("Falsch!");
-  }
-}
-
-// DATA
-let allData=JSON.parse(localStorage.getItem("allData"))||{};
-let currentMonth=new Date().toISOString().slice(0,7);
-
-if(!allData[currentMonth]) allData[currentMonth]={};
-let data=allData[currentMonth];
+let data = JSON.parse(localStorage.getItem("data")) || {};
 
 function save(){
-  allData[currentMonth]=data;
-  localStorage.setItem("allData",JSON.stringify(allData));
+  localStorage.setItem("data",JSON.stringify(data));
 }
 
-// MONTH
-function loadMonths(){
-  let s=document.getElementById("monthSelect");
-  s.innerHTML="";
-  for(let m in allData){
-    let o=document.createElement("option");
-    o.value=m;
-    o.text=m;
-    if(m===currentMonth) o.selected=true;
-    s.appendChild(o);
-  }
-}
-
-function changeMonth(){
-  currentMonth=document.getElementById("monthSelect").value;
-  if(!allData[currentMonth]) allData[currentMonth]={};
-  data=allData[currentMonth];
-  render();
-}
-
-// ADD
 function add(){
   let v=document.getElementById("input").value;
   if(!v) return;
@@ -134,34 +71,36 @@ function add(){
   save(); render();
 }
 
-// LOG
 function log(b,t){
-
-  let chosenDate=document.getElementById("date").value;
   let now=new Date();
+  let d=document.getElementById("date").value;
 
-  if(chosenDate){
-    let d=new Date(chosenDate);
-    d.setHours(now.getHours());
-    d.setMinutes(now.getMinutes());
-    now=d;
+  if(d){
+    let dd=new Date(d);
+    dd.setHours(now.getHours(),now.getMinutes());
+    now=dd;
   }
 
   data[b].push({type:t,time:now});
   save(); render();
 }
 
-// EDIT TIME
-function editTime(branch,index,newTime){
-  let old=new Date(data[branch][index].time);
-  let [h,m]=newTime.split(":");
-  old.setHours(h);
-  old.setMinutes(m);
-  data[branch][index].time=old;
-  save(); render();
+// 🔥 تعديل الوقت بدون تخريب
+function editTime(b,i,input){
+  let val=input.value;
+  if(val.length<5) return; // يمنع التخريب
+
+  let d=new Date(data[b][i].time);
+  let [h,m]=val.split(":");
+
+  d.setHours(parseInt(h));
+  d.setMinutes(parseInt(m));
+
+  data[b][i].time=d;
+  save();
 }
 
-// CALC
+// 🧮 الحساب
 function calc(logs){
   let total=0,start=null,pause=0,pStart=null;
 
@@ -186,7 +125,13 @@ function calc(logs){
   return (total/1000/60/60).toFixed(2);
 }
 
-// RENDER
+// 🔥 عرض تاريخ + وقت مرتب
+function formatDate(d){
+  let dt=new Date(d);
+  return dt.toLocaleDateString()+" - "+dt.toLocaleTimeString().slice(0,5);
+}
+
+// 🖥️
 function render(){
   let list=document.getElementById("list");
   list.innerHTML="";
@@ -195,19 +140,19 @@ function render(){
 
     let logs="";
     data[b].forEach((l,i)=>{
+
+      let time=new Date(l.time).toTimeString().slice(0,5);
+
       logs+=`
-      ${l.type} -
-      <input type="time" value="${new Date(l.time).toTimeString().slice(0,5)}"
-      onchange="editTime('${b}',${i},this.value)">
+      ${l.type} - ${formatDate(l.time)}
+      <input value="${time}" 
+      oninput="editTime('${b}',${i},this)">
       <button onclick="del('${b}',${i})">❌</button><br>`;
     });
 
-    let total=calc(data[b]);
-
     list.innerHTML+=`
     <div class="card">
-      <b>${b}</b>
-      <button onclick="deleteBranch('${b}')">🗑️</button><br>
+      <b>${b}</b><br>
 
       <button class="start" onclick="log('${b}','Start')">Start</button>
       <button class="pause" onclick="log('${b}','Pause Start')">Pause</button>
@@ -216,47 +161,14 @@ function render(){
 
       ${logs}
 
-      <div class="total">Gesamt: ${total} h</div>
+      <div class="total">Gesamt: ${calc(data[b])} h</div>
     </div>`;
   }
-
-  loadMonths();
 }
 
-// DELETE LOG
 function del(b,i){
   data[b].splice(i,1);
   save(); render();
-}
-
-// DELETE BRANCH
-function deleteBranch(branch){
-  if(confirm("Filiale löschen?")){
-    delete data[branch];
-    save(); render();
-  }
-}
-
-// PDF
-function exportPDF(){
-  const {jsPDF}=window.jspdf;
-  const doc=new jsPDF();
-  let y=10;
-
-  doc.text("Arbeitszeit Bericht",10,y); y+=10;
-
-  for(let b in data){
-    doc.text("Filiale: "+b,10,y); y+=6;
-
-    data[b].forEach(l=>{
-      doc.text(l.type+" "+new Date(l.time).toLocaleString(),10,y);
-      y+=5;
-    });
-
-    y+=5;
-  }
-
-  doc.save("arbeitszeit.pdf");
 }
 
 render();
@@ -264,4 +176,4 @@ render();
 </script>
 
 </body>
-</html>
+</html>Gesamt: 0.02 h
