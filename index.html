@@ -22,7 +22,7 @@ button{background:#38bdf8;color:black;font-weight:bold}
 <div class="container">
 <h1>Work Tracker</h1>
 
-<input type="text" id="branchInput" placeholder="Filiale">
+<input type="text" id="branchInput" placeholder="Filiale hinzufügen">
 <button onclick="addBranch()">Filiale hinzufügen</button>
 <select id="branch"></select>
 
@@ -58,7 +58,13 @@ function addBranch(){
 }
 
 function renderBranches(){
- const sel=document.getElementById("branch"); sel.innerHTML="";
+ const sel=document.getElementById("branch");
+ sel.innerHTML="";
+ if(branches.length===0){
+  sel.style.display="none";
+  return;
+ }
+ sel.style.display="block";
  branches.forEach(b=>{
   const o=document.createElement("option"); o.value=b;o.textContent=b; sel.appendChild(o);
  });
@@ -76,27 +82,40 @@ function updateTimer(){
 }
 
 function startWork(){
- startTime=new Date(); totalPause=0;
+ startTime=new Date(); totalPause=0; pauseStart=null;
+ clearInterval(timerInterval);
  timerInterval=setInterval(updateTimer,1000);
- Notification.requestPermission();
 }
 
 function endWork(){
- if(!startTime) return;
+ if(!startTime) return alert("Du hast noch nicht gestartet!");
+ if(pauseStart){
+  endPause();
+ }
  clearInterval(timerInterval);
  const end=new Date();
  let diff=(end-startTime)/1000/60-totalPause;
- const branch=document.getElementById("branch").value;
+ const branch=document.getElementById("branch").value||"-";
  const date=new Date().toISOString().split('T')[0];
  entries.push({branch,date,minutes:diff});
- startTime=null; totalPause=0;
+ startTime=null; totalPause=0; pauseStart=null;
  save(); render();
 }
 
-function startPause(){ pauseStart=new Date(); }
-function endPause(){ if(!pauseStart) return; totalPause+=(new Date()-pauseStart)/1000/60; pauseStart=null; }
+function startPause(){
+ if(!startTime) return alert("Starte zuerst die Arbeit!");
+ if(pauseStart) return alert("Pause läuft schon!");
+ pauseStart=new Date();
+}
 
-// Reminder every 2h
+function endPause(){
+ if(!pauseStart) return alert("Keine Pause aktiv!");
+ const now=new Date();
+ totalPause+=(now-pauseStart)/1000/60;
+ pauseStart=null;
+}
+
+// Reminder
 setInterval(()=>{
  if(startTime && Notification.permission==='granted'){
   new Notification("Vergiss nicht zu stoppen!");
