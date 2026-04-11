@@ -5,39 +5,37 @@
 <title>Arbeitszeit Tracker PRO</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 body {font-family:Arial;background:#1e1e1e;color:white;margin:0;}
 .container{max-width:600px;margin:auto;padding:15px;}
 
-input,button{
+input,select,button{
 width:100%;
 padding:12px;
 margin-top:6px;
 border-radius:8px;
 }
 
-button{border:none;}
+button{border:none;font-size:15px;}
+
+.start{background:green;color:white;}
+.pause{background:orange;color:white;}
+.resume{background:teal;color:white;}
+.end{background:red;color:white;}
 
 .card{
 background:#2a2a2a;
-padding:10px;
+padding:12px;
 margin-top:10px;
 border-radius:10px;
 }
 
-.top{
+.totalBox{
 background:#111;
 padding:10px;
 margin-bottom:10px;
 border-radius:10px;
-}
-
-canvas{
-background:white;
-border-radius:10px;
-margin-top:10px;
 }
 </style>
 
@@ -47,66 +45,107 @@ margin-top:10px;
 
 <div class="container">
 
+<div id="login">
+<h2>Login</h2>
+<input type="password" id="pass">
+<button onclick="checkPass()">Login</button>
+</div>
+
+<div id="app" style="display:none">
+
 <h2>Arbeitszeit Tracker</h2>
 
+<div id="totals" class="totalBox"></div>
+
+<select id="monthSelect" onchange="changeMonth()"></select>
+
 <input type="date" id="date">
+<input type="date" id="filterDate">
 
 <input id="input" placeholder="Filiale">
 <button onclick="add()">➕ Hinzufügen</button>
-<button onclick="exportPDF()">📤 PDF</button>
+<button onclick="exportPDF()">📤 PDF Tag</button>
 
-<div id="totals" class="top"></div>
-
-<canvas id="chart"></canvas>
-
+<div id="daily"></div>
 <div id="list"></div>
+
+</div>
 
 </div>
 
 <script>
 
-let data = JSON.parse(localStorage.getItem("data")) || {};
+let PASSWORD="1234";
 
-function save(){
-  localStorage.setItem("data",JSON.stringify(data));
+function checkPass(){
+  if(document.getElementById("pass").value===PASSWORD){
+    document.getElementById("login").style.display="none";
+    document.getElementById("app").style.display="block";
+  }
 }
 
-// ➕ Filiale
+// 📅 بيانات
+let allData=JSON.parse(localStorage.getItem("allData"))||{};
+let currentMonth=new Date().toISOString().slice(0,7);
+
+if(!allData[currentMonth]) allData[currentMonth]={};
+let data=allData[currentMonth];
+
+function save(){
+  allData[currentMonth]=data;
+  localStorage.setItem("allData",JSON.stringify(allData));
+}
+
+// 📅 الأشهر
+function loadMonths(){
+  let s=document.getElementById("monthSelect");
+  s.innerHTML="";
+  for(let m in allData){
+    let o=document.createElement("option");
+    o.value=m;
+    o.text=m;
+    if(m===currentMonth) o.selected=true;
+    s.appendChild(o);
+  }
+}
+
+function changeMonth(){
+  currentMonth=document.getElementById("monthSelect").value;
+  if(!allData[currentMonth]) allData[currentMonth]={};
+  data=allData[currentMonth];
+  render();
+}
+
+// ➕ إضافة فرع
 function add(){
-  let v=input.value.trim();
+  let v=document.getElementById("input").value.trim();
   if(!v) return;
+
   if(!data[v]) data[v]=[];
-  input.value="";
-  save(); render();
+
+  document.getElementById("input").value="";
+  save();
+  render();
 }
 
 // ⏱️ تسجيل
 function log(b,t){
 
-  let d=date.value;
-  if(!d){ alert("Datum wählen"); return; }
+  let selected=document.getElementById("date").value;
+  if(!selected){
+    alert("Bitte Datum wählen");
+    return;
+  }
 
-  let now=new Date(d);
-  let c=new Date();
+  let now=new Date();
+  let d=new Date(selected);
 
-  now.setHours(c.getHours(),c.getMinutes());
+  d.setHours(now.getHours(),now.getMinutes());
+  now=d;
 
   data[b].push({type:t,time:now});
-  save(); render();
-}
-
-// ❌ حذف
-function del(b,i){
-  data[b].splice(i,1);
-  save(); render();
-}
-
-// 🗑️ حذف فرع
-function deleteBranch(b){
-  if(confirm("Filiale löschen?")){
-    delete data[b];
-    save(); render();
-  }
+  save();
+  render();
 }
 
 // ✏️ تعديل وقت
@@ -124,6 +163,22 @@ function editTime(b,i,input){
   save();
 }
 
+// ❌ حذف
+function del(b,i){
+  data[b].splice(i,1);
+  save();
+  render();
+}
+
+// 🗑️ حذف فرع
+function deleteBranch(b){
+  if(confirm("Filiale löschen?")){
+    delete data[b];
+    save();
+    render();
+  }
+}
+
 // 🧮 حساب الفترات
 function calcPeriods(logs){
 
@@ -134,6 +189,7 @@ function calcPeriods(logs){
     let t=new Date(l.time);
 
     if(l.type==="Start") start=t;
+
     if(l.type==="Pause Start") pStart=t;
 
     if(l.type==="Pause Ende" && pStart){
@@ -151,15 +207,15 @@ function calcPeriods(logs){
   return result;
 }
 
-// 📊 حسابات
-function calculateTotals(){
+// 📊 الحسابات
+function totalsCalc(){
 
-  let selected=new Date(date.value);
-  let today=selected;
-  let weekStart=new Date(selected);
-  weekStart.setDate(weekStart.getDate()-7);
+  let selected=new Date(document.getElementById("date").value);
 
   let day=0,week=0,month=0;
+
+  let weekStart=new Date(selected);
+  weekStart.setDate(weekStart.getDate()-7);
 
   for(let b in data){
 
@@ -169,27 +225,28 @@ function calculateTotals(){
 
       let d=new Date(p.date);
 
-      if(d.toDateString()===today.toDateString())
+      if(d.toDateString()===selected.toDateString())
         day+=p.work;
 
-      if(d>weekStart)
+      if(d>=weekStart && d<=selected)
         week+=p.work;
 
-      if(d.getMonth()===today.getMonth())
+      if(d.getMonth()===selected.getMonth() &&
+         d.getFullYear()===selected.getFullYear())
         month+=p.work;
     });
   }
 
-  totals.innerHTML=`
+  document.getElementById("totals").innerHTML=`
   📅 Tag: ${(day/3600000).toFixed(2)} h<br>
   📆 Woche: ${(week/3600000).toFixed(2)} h<br>
   🗓️ Monat: ${(month/3600000).toFixed(2)} h`;
 }
 
-// 📈 رسم بياني
-function drawChart(){
+// 📋 Übersicht
+function dailyView(){
 
-  let days={};
+  let map={};
 
   for(let b in data){
 
@@ -197,28 +254,74 @@ function drawChart(){
 
     periods.forEach(p=>{
       let d=new Date(p.date).toLocaleDateString();
-      if(!days[d]) days[d]=0;
-      days[d]+=p.work;
+
+      if(!map[d]) map[d]={};
+      if(!map[d][b]) map[d][b]=0;
+
+      map[d][b]+=p.work;
     });
   }
 
-  let labels=Object.keys(days);
-  let values=labels.map(d=>(days[d]/3600000).toFixed(2));
+  let f=document.getElementById("filterDate").value;
 
-  new Chart(chart,{
-    type:'bar',
-    data:{
-      labels:labels,
-      datasets:[{label:'Stunden',data:values}]
+  let html="<h3>📊 Übersicht</h3>";
+
+  for(let d in map){
+
+    if(f){
+      let fd=new Date(f).toLocaleDateString();
+      if(d!==fd) continue;
     }
-  });
+
+    html+=`<div class="card"><b>${d}</b><br>`;
+
+    for(let b in map[d]){
+      html+=`${b}: ${(map[d][b]/3600000).toFixed(2)} h<br>`;
+    }
+
+    html+="</div>";
+  }
+
+  document.getElementById("daily").innerHTML=html;
+}
+
+// 📤 PDF
+function exportPDF(){
+
+  let f=document.getElementById("date").value;
+
+  if(!f){
+    alert("Datum wählen");
+    return;
+  }
+
+  const {jsPDF}=window.jspdf;
+  let doc=new jsPDF();
+  let y=10;
+
+  doc.text("Tagesbericht "+f,10,y); y+=10;
+
+  for(let b in data){
+
+    let periods=calcPeriods(data[b]);
+
+    periods.forEach(p=>{
+      if(new Date(p.date).toDateString()===new Date(f).toDateString()){
+        doc.text(b+" "+(p.work/3600000).toFixed(2)+" h",10,y);
+        y+=6;
+      }
+    });
+  }
+
+  doc.save("tag.pdf");
 }
 
 // 🖥️ عرض
 function render(){
 
-  let selected=date.value;
+  let selected=document.getElementById("date").value;
 
+  let list=document.getElementById("list");
   list.innerHTML="";
 
   if(!selected){
@@ -229,11 +332,12 @@ function render(){
   for(let b in data){
 
     let logs="";
+
     data[b].forEach((l,i)=>{
 
       let t=new Date(l.time);
 
-      if(t.toDateString() !== new Date(selected).toDateString()) return;
+      if(t.toDateString()!==new Date(selected).toDateString()) return;
 
       logs+=`
       ${l.type} - ${t.toLocaleTimeString()}
@@ -249,47 +353,23 @@ function render(){
       <b>${b}</b>
       <button onclick="deleteBranch('${b}')">🗑️</button><br>
 
-      <button onclick="log('${b}','Start')">Start</button>
-      <button onclick="log('${b}','Pause Start')">Pause</button>
-      <button onclick="log('${b}','Pause Ende')">Weiter</button>
-      <button onclick="log('${b}','Ende')">Ende</button>
+      <button class="start" onclick="log('${b}','Start')">Start</button>
+      <button class="pause" onclick="log('${b}','Pause Start')">Pause</button>
+      <button class="resume" onclick="log('${b}','Pause Ende')">Weiter</button>
+      <button class="end" onclick="log('${b}','Ende')">Ende</button>
 
       ${logs}
       </div>`;
     }
   }
 
-  calculateTotals();
-  drawChart();
+  totalsCalc();
+  dailyView();
+  loadMonths();
 }
 
-// 📤 PDF
-function exportPDF(){
-
-  if(!date.value){ alert("Datum wählen"); return; }
-
-  const {jsPDF}=window.jspdf;
-  let doc=new jsPDF();
-  let y=10;
-
-  doc.text("Tagesbericht "+date.value,10,y); y+=10;
-
-  for(let b in data){
-
-    let periods=calcPeriods(data[b]);
-
-    periods.forEach(p=>{
-      if(new Date(p.date).toDateString()===new Date(date.value).toDateString()){
-        doc.text(b+" "+(p.work/3600000).toFixed(2)+" h",10,y);
-        y+=6;
-      }
-    });
-  }
-
-  doc.save("report.pdf");
-}
-
-date.value=new Date().toISOString().split("T")[0];
+// 📅 تاريخ افتراضي
+document.getElementById("date").value=new Date().toISOString().split("T")[0];
 
 render();
 
