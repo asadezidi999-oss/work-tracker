@@ -7,12 +7,13 @@
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:Arial}
-body{height:100vh;background:#111;display:flex;justify-content:center;align-items:center;color:white}
-.container{width:90%;max-width:420px;background:rgba(255,255,255,0.1);padding:20px;border-radius:20px;backdrop-filter:blur(10px)}
+body{background:#0f172a;color:white;display:flex;justify-content:center;align-items:center;height:100vh}
+.container{width:95%;max-width:450px;background:#1e293b;padding:20px;border-radius:20px}
 h1{text-align:center;margin-bottom:10px}
-input,select,button{width:100%;padding:12px;margin-top:10px;border-radius:10px;border:none}
-button{background:#00c6ff;color:white;font-weight:bold}
-.entry{background:rgba(255,255,255,0.1);padding:10px;margin-top:10px;border-radius:10px}
+button,input,select{width:100%;padding:12px;margin-top:10px;border-radius:10px;border:none}
+button{background:#38bdf8;color:black;font-weight:bold}
+.timer{text-align:center;font-size:28px;margin-top:10px}
+.entry{background:#334155;padding:10px;margin-top:10px;border-radius:10px}
 .total{text-align:center;margin-top:10px;font-weight:bold}
 </style>
 </head>
@@ -25,12 +26,14 @@ button{background:#00c6ff;color:white;font-weight:bold}
 <button onclick="addBranch()">Filiale hinzufügen</button>
 <select id="branch"></select>
 
-<button onclick="startWork()">Start Arbeit</button>
-<button onclick="endWork()">Ende Arbeit</button>
+<div class="timer" id="timer">00:00:00</div>
 
+<button onclick="startWork()">Start</button>
+<button onclick="endWork()">Ende</button>
 <button onclick="startPause()">Pause Start</button>
 <button onclick="endPause()">Pause Ende</button>
 
+<div id="stats"></div>
 <div id="list"></div>
 <div class="total" id="total">Gesamt: 0 h</div>
 </div>
@@ -39,9 +42,7 @@ button{background:#00c6ff;color:white;font-weight:bold}
 let entries = JSON.parse(localStorage.getItem("entries")||"[]");
 let branches = JSON.parse(localStorage.getItem("branches")||"[]");
 
-let startTime = null;
-let pauseStart = null;
-let totalPause = 0;
+let startTime=null, pauseStart=null, totalPause=0, timerInterval=null;
 
 function save(){
  localStorage.setItem("entries",JSON.stringify(entries));
@@ -53,83 +54,84 @@ function addBranch(){
  if(!val) return;
  branches.push(val);
  document.getElementById("branchInput").value="";
- save();
- renderBranches();
+ save(); renderBranches();
 }
 
 function renderBranches(){
- const sel=document.getElementById("branch");
- sel.innerHTML="";
+ const sel=document.getElementById("branch"); sel.innerHTML="";
  branches.forEach(b=>{
-  const opt=document.createElement("option");
-  opt.value=b; opt.textContent=b;
-  sel.appendChild(opt);
+  const o=document.createElement("option"); o.value=b;o.textContent=b; sel.appendChild(o);
  });
 }
 
+function updateTimer(){
+ if(!startTime) return;
+ const now=new Date();
+ let diff=(now-startTime)/1000-totalPause*60;
+ const h=Math.floor(diff/3600);
+ const m=Math.floor((diff%3600)/60);
+ const s=Math.floor(diff%60);
+ document.getElementById("timer").innerText=
+  `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
 function startWork(){
- startTime = new Date();
- totalPause = 0;
- alert("Arbeit gestartet");
+ startTime=new Date(); totalPause=0;
+ timerInterval=setInterval(updateTimer,1000);
+ Notification.requestPermission();
 }
 
 function endWork(){
- if(!startTime) return alert("Nicht gestartet!");
- const end = new Date();
- let diff = (end - startTime)/1000/60 - totalPause;
-
+ if(!startTime) return;
+ clearInterval(timerInterval);
+ const end=new Date();
+ let diff=(end-startTime)/1000/60-totalPause;
  const branch=document.getElementById("branch").value;
  const date=new Date().toISOString().split('T')[0];
-
  entries.push({branch,date,minutes:diff});
- startTime=null;
- totalPause=0;
- save();
- render();
+ startTime=null; totalPause=0;
+ save(); render();
 }
 
-function startPause(){
- if(!startTime) return alert("Start zuerst!");
- pauseStart = new Date();
-}
+function startPause(){ pauseStart=new Date(); }
+function endPause(){ if(!pauseStart) return; totalPause+=(new Date()-pauseStart)/1000/60; pauseStart=null; }
 
-function endPause(){
- if(!pauseStart) return;
- const now = new Date();
- totalPause += (now - pauseStart)/1000/60;
- pauseStart=null;
-}
-
-function deleteEntry(i){
- entries.splice(i,1);
- save();
- render();
-}
+// Reminder every 2h
+setInterval(()=>{
+ if(startTime && Notification.permission==='granted'){
+  new Notification("Vergiss nicht zu stoppen!");
+ }
+},7200000);
 
 function render(){
- const list=document.getElementById("list");
- list.innerHTML="";
+ const list=document.getElementById("list"); list.innerHTML="";
  let total=0;
 
  entries.forEach((e,i)=>{
   total+=e.minutes;
-  const div=document.createElement("div");
-  div.className="entry";
-  div.innerHTML=`
-   <b>${e.branch}</b><br>
-   ${e.date}<br>
-   <b>${(e.minutes/60).toFixed(2)} h</b>
-   <button onclick="deleteEntry(${i})">X</button>
-  `;
-  list.appendChild(div);
+  const d=document.createElement("div");
+  d.className="entry";
+  d.innerHTML=`${e.branch}<br>${e.date}<br>${(e.minutes/60).toFixed(2)} h`;
+  list.appendChild(d);
  });
 
- document.getElementById("total").innerText=
-  "Gesamt: "+(total/60).toFixed(2)+" h";
+ document.getElementById("total").innerText="Gesamt: "+(total/60).toFixed(2)+" h";
+ renderStats();
 }
 
-renderBranches();
-render();
+function renderStats(){
+ let today=0, month=0;
+ const now=new Date();
+ entries.forEach(e=>{
+  const d=new Date(e.date);
+  if(d.toDateString()===now.toDateString()) today+=e.minutes;
+  if(d.getMonth()===now.getMonth()) month+=e.minutes;
+ });
+ document.getElementById("stats").innerHTML=
+  `Heute: ${(today/60).toFixed(2)} h<br>Monat: ${(month/60).toFixed(2)} h`;
+}
+
+renderBranches(); render();
 </script>
 
 </body>
