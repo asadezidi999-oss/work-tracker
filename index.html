@@ -12,24 +12,30 @@ h1{text-align:center;margin-bottom:10px}
 input,button{width:100%;padding:12px;margin-top:10px;border-radius:10px;border:none;font-size:16px}
 button{background:#38bdf8;color:black;font-weight:bold}
 .card{background:#1e293b;padding:12px;margin-top:12px;border-radius:12px}
-.log{background:#334155;padding:8px;margin-top:6px;border-radius:8px;display:flex;justify-content:space-between;align-items:center}
-.log-actions button{margin-left:6px;padding:6px 8px;font-size:12px}
-.total{margin-top:12px;font-weight:bold;text-align:center}
+.log{background:#334155;padding:8px;margin-top:6px;border-radius:8px;display:flex;justify-content:space-between}
+.total{text-align:center;margin-top:12px;font-weight:bold}
 .row{display:flex;gap:8px}
 .row button{flex:1}
+.switch{display:flex;gap:5px}
+.switch button{flex:1;background:#22c55e}
 </style>
 </head>
 <body>
 <div class="container">
 <h1>Arbeitszeit Tracker</h1>
 
+<div class="switch">
+<button onclick="changeDay(-1)">⬅️</button>
 <input type="date" id="date">
+<button onclick="changeDay(1)">➡️</button>
+</div>
 
 <input type="text" id="branchInput" placeholder="Filiale hinzufügen">
 <button id="addBranchBtn">Filiale hinzufügen</button>
 
 <div id="branches"></div>
 <div class="total" id="total"></div>
+<div class="total" id="weekTotal"></div>
 </div>
 
 <script>
@@ -37,20 +43,25 @@ const dateInput = document.getElementById("date");
 const branchInput = document.getElementById("branchInput");
 const branchesDiv = document.getElementById("branches");
 const totalDiv = document.getElementById("total");
+const weekTotalDiv = document.getElementById("weekTotal");
 
 let data = JSON.parse(localStorage.getItem("tracker")||"{}");
 
-// set today's date by default
 (function initDate(){
  const d=new Date();
- const iso=d.toISOString().split('T')[0];
- dateInput.value = iso;
+ dateInput.value=d.toISOString().split('T')[0];
 })();
 
 function save(){ localStorage.setItem("tracker", JSON.stringify(data)); }
 function getDay(){ return dateInput.value; }
-
 function ensureDay(day){ if(!data[day]) data[day] = {}; }
+
+function changeDay(offset){
+ const d=new Date(dateInput.value);
+ d.setDate(d.getDate()+offset);
+ dateInput.value=d.toISOString().split('T')[0];
+ render();
+}
 
 function addBranch(){
  const name = branchInput.value.trim();
@@ -64,142 +75,110 @@ function addBranch(){
 
 document.getElementById("addBranchBtn").onclick = addBranch;
 
-// helpers
 function nowHM(){
  const d=new Date();
- const h=String(d.getHours()).padStart(2,'0');
- const m=String(d.getMinutes()).padStart(2,'0');
- return `${h}:${m}`; // stable HH:MM
+ return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
 
 function parseHM(hm){
- // returns minutes since 00:00 or NaN
- const m = /^([01]?\d|2[0-3]):([0-5]\d)$/.exec(hm);
+ const m=/^([01]?\d|2[0-3]):([0-5]\d)$/.exec(hm);
  if(!m) return NaN;
- return parseInt(m[1],10)*60 + parseInt(m[2],10);
+ return parseInt(m[1])*60+parseInt(m[2]);
 }
 
 function addLog(branch,type){
  const day = getDay();
- if(!day) return alert("Datum wählen");
  ensureDay(day);
- if(!data[day][branch]) data[day][branch] = [];
- const time = nowHM();
- data[day][branch].push({type,time});
+ if(!data[day][branch]) data[day][branch]=[];
+ data[day][branch].push({type,time:nowHM()});
  save(); render();
 }
 
-function deleteLog(branch,i){
- const day=getDay();
- data[day][branch].splice(i,1);
- save(); render();
-}
-
-function deleteBranch(branch){
- const day=getDay();
- delete data[day][branch];
- save(); render();
-}
+function deleteLog(branch,i){ data[getDay()][branch].splice(i,1); save(); render(); }
+function deleteBranch(branch){ delete data[getDay()][branch]; save(); render(); }
 
 function editLog(branch,i){
- const day=getDay();
- const current = data[day][branch][i].time;
- const val = prompt("Neue Uhrzeit (HH:MM):", current);
- if(val===null) return;
- const minutes = parseHM(val.trim());
- if(Number.isNaN(minutes)){
-  alert("Ungültiges Format! Beispiel: 08:30");
-  return;
- }
- data[day][branch][i].time = val.trim();
+ const val=prompt("Neue Zeit HH:MM", data[getDay()][branch][i].time);
+ if(!val) return;
+ if(isNaN(parseHM(val))) return alert("Fehler Format");
+ data[getDay()][branch][i].time=val;
  save(); render();
 }
 
-function calcDayTotal(day){
+function calcDay(day){
  let total=0;
  if(!data[day]) return 0;
  Object.values(data[day]).forEach(logs=>{
-  let start=null, pauseMin=0, pauseStart=null;
+  let start=null,pause=0,pStart=null;
   logs.forEach(l=>{
-   const t = parseHM(l.time);
-   if(Number.isNaN(t)) return; // skip invalid
-   if(l.type==='Start') start = t;
-   if(l.type==='Pause Start') pauseStart = t;
-   if(l.type==='Pause Ende' && pauseStart!==null){
-    pauseMin += Math.max(0, t - pauseStart);
-    pauseStart = null;
-   }
-   if(l.type==='Ende' && start!==null){
-    const diff = Math.max(0, t - start);
-    total += Math.max(0, diff - pauseMin);
-    start=null; pauseMin=0; pauseStart=null;
-   }
+   const t=parseHM(l.time);
+   if(l.type==='Start') start=t;
+   if(l.type==='Pause Start') pStart=t;
+   if(l.type==='Pause Ende'&&pStart!==null){pause+=t-pStart;pStart=null}
+   if(l.type==='Ende'&&start!==null){total+=t-start-pause;start=null;pause=0}
   });
  });
- return total; // minutes
+ return total;
+}
+
+function calcWeek(){
+ const current=new Date(getDay());
+ let total=0;
+ for(let i=0;i<7;i++){
+  const d=new Date(current);
+  d.setDate(current.getDate()-current.getDay()+i);
+  const day=d.toISOString().split('T')[0];
+  total+=calcDay(day);
+ }
+ return total;
 }
 
 function render(){
  const day=getDay();
  branchesDiv.innerHTML="";
- if(!day || !data[day]){
-  totalDiv.innerText="";
-  return;
+
+ if(data[day]){
+  Object.keys(data[day]).forEach(branch=>{
+   const card=document.createElement("div");
+   card.className="card";
+   card.innerHTML=`<b>${branch}</b>`;
+
+   const row=document.createElement("div"); row.className='row';
+   ['Start','Pause Start','Pause Ende','Ende'].forEach(t=>{
+    const b=document.createElement("button");
+    b.innerText=t; b.onclick=()=>addLog(branch,t);
+    row.appendChild(b);
+   });
+   card.appendChild(row);
+
+   const del=document.createElement("button");
+   del.innerText="Filiale löschen";
+   del.onclick=()=>deleteBranch(branch);
+   card.appendChild(del);
+
+   data[day][branch].forEach((log,i)=>{
+    const l=document.createElement("div");
+    l.className="log";
+    l.innerHTML=`${log.type} - ${log.time}`;
+
+    const actions=document.createElement("div");
+    const e=document.createElement("button"); e.innerText="✏️"; e.onclick=()=>editLog(branch,i);
+    const d=document.createElement("button"); d.innerText="X"; d.onclick=()=>deleteLog(branch,i);
+    actions.appendChild(e); actions.appendChild(d);
+
+    l.appendChild(actions);
+    card.appendChild(l);
+   });
+
+   branchesDiv.appendChild(card);
+  });
  }
 
- Object.keys(data[day]).forEach(branch=>{
-  const card=document.createElement("div");
-  card.className="card";
-
-  const title=document.createElement("div");
-  title.innerHTML=`<b>${branch}</b>`;
-  card.appendChild(title);
-
-  const row=document.createElement("div");
-  row.className='row';
-  ['Start','Pause Start','Pause Ende','Ende'].forEach(t=>{
-   const btn=document.createElement("button");
-   btn.innerText=t;
-   btn.onclick=()=>addLog(branch,t);
-   row.appendChild(btn);
-  });
-  card.appendChild(row);
-
-  const delBtn=document.createElement("button");
-  delBtn.innerText="Filiale löschen";
-  delBtn.onclick=()=>deleteBranch(branch);
-  card.appendChild(delBtn);
-
-  data[day][branch].forEach((log,i)=>{
-   const l=document.createElement("div");
-   l.className="log";
-   const left=document.createElement("span");
-   left.textContent = `${log.type} - ${log.time}`;
-   const actions=document.createElement("span");
-   actions.className='log-actions';
-
-   const eBtn=document.createElement("button");
-   eBtn.textContent="✏️";
-   eBtn.onclick=()=>editLog(branch,i);
-   const dBtn=document.createElement("button");
-   dBtn.textContent="X";
-   dBtn.onclick=()=>deleteLog(branch,i);
-
-   actions.appendChild(eBtn);
-   actions.appendChild(dBtn);
-   l.appendChild(left);
-   l.appendChild(actions);
-   card.appendChild(l);
-  });
-
-  branchesDiv.appendChild(card);
- });
-
- const total = calcDayTotal(day);
- totalDiv.innerText = "Gesamt: " + (total/60).toFixed(2) + " h";
+ totalDiv.innerText="Heute: "+(calcDay(day)/60).toFixed(2)+" h";
+ weekTotalDiv.innerText="Woche: "+(calcWeek()/60).toFixed(2)+" h";
 }
 
-dateInput.onchange = render;
+dateInput.onchange=render;
 render();
 </script>
 </body>
