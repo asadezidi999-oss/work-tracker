@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Arbeitszeit Tracker</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: #f4f6f8;
+  padding: 20px;
+}
+
+h2 {
+  text-align: center;
+}
+
+.container {
+  max-width: 500px;
+  margin: auto;
+}
+
+input {
+  width: 70%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+button {
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin: 3px;
+}
+
+.add-btn {
+  background: #007bff;
+  color: white;
+}
+
+.start { background: green; color: white; }
+.pause { background: orange; color: white; }
+.resume { background: teal; color: white; }
+.end { background: red; color: white; }
+.delete { background: black; color: white; }
+
+.card {
+  background: white;
+  padding: 15px;
+  margin-top: 15px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.log {
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.result {
+  margin-top: 10px;
+  font-weight: bold;
+  color: #007bff;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Arbeitszeit Tracker</h2>
+
+<input id="input" placeholder="Filiale eingeben">
+<button class="add-btn" onclick="add()">➕</button>
+
+<div id="list"></div>
+
+</div>
+
+<script>
+
+let data = JSON.parse(localStorage.getItem("data")) || {};
+
+function save() {
+  localStorage.setItem("data", JSON.stringify(data));
+}
+
+function add() {
+  let val = document.getElementById("input").value;
+  if (!val) return;
+
+  if (!data[val]) data[val] = [];
+
+  document.getElementById("input").value = "";
+  save();
+  render();
+}
+
+function log(branch, type) {
+  let now = new Date();
+  data[branch].push({ type: type, time: now });
+  save();
+  render();
+}
+
+function deleteBranch(branch) {
+  delete data[branch];
+  save();
+  render();
+}
+
+function deleteLog(branch, index) {
+  data[branch].splice(index, 1);
+  save();
+  render();
+}
+
+function calculate(logs) {
+  let total = 0;
+  let start = null;
+  let pause = 0;
+  let pauseStart = null;
+
+  logs.forEach(l => {
+    let t = new Date(l.time);
+
+    if (l.type === "Start") start = t;
+
+    if (l.type === "Pause Start") pauseStart = t;
+
+    if (l.type === "Pause Ende" && pauseStart) {
+      pause += t - pauseStart;
+      pauseStart = null;
+    }
+
+    if (l.type === "Ende" && start) {
+      total += t - start - pause;
+      start = null;
+      pause = 0;
+    }
+  });
+
+  return (total / 1000 / 60 / 60).toFixed(2) + " h";
+}
+
+function render() {
+  let list = document.getElementById("list");
+  list.innerHTML = "";
+
+  for (let branch in data) {
+
+    let logsHTML = "";
+    data[branch].forEach((l, i) => {
+      logsHTML += `
+        <div class="log">
+          ${l.type} - ${new Date(l.time).toLocaleTimeString()}
+          <button onclick="deleteLog('${branch}', ${i})">❌</button>
+        </div>
+      `;
+    });
+
+    let result = calculate(data[branch]);
+
+    list.innerHTML += `
+      <div class="card">
+        <b>${branch}</b><br>
+
+        <button class="start" onclick="log('${branch}','Start')">Start</button>
+        <button class="pause" onclick="log('${branch}','Pause Start')">Pause</button>
+        <button class="resume" onclick="log('${branch}','Pause Ende')">Weiter</button>
+        <button class="end" onclick="log('${branch}','Ende')">Ende</button>
+        <button class="delete" onclick="deleteBranch('${branch}')">Löschen</button>
+
+        ${logsHTML}
+
+        <div class="result">Gesamt: ${result}</div>
+      </div>
+    `;
+  }
+}
+
+render();
+
+</script>
+
+</body>
+</html>
