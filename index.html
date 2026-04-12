@@ -68,6 +68,10 @@ function addBranch(){let n=branchInput.value.trim();let d=getDay();if(!n||!d)ret
 
 function sortLogs(l){l.sort((a,b)=>parseHM(a.time)-parseHM(b.time))}
 
+function isToday(day){
+ return day === new Date().toISOString().split('T')[0];
+}
+
 function addLog(branch,type){
  let d=getDay();ensureDay(d);
  if(!data[d][branch])data[d][branch]=[];
@@ -79,14 +83,21 @@ function addLog(branch,type){
 function deleteLog(b,i){data[getDay()][b].splice(i,1);save();render()}
 function deleteBranch(b){delete data[getDay()][b];save();render()}
 
-function getStatus(logs){
+function getStatus(logs, day){
  if(!logs.length)return"Keine Aktivität";
+
+ // Vergangenheit → nie "läuft"
+ if(!isToday(day)){
+  if(logs.some(l=>l.type==='Ende')) return "Beendet";
+  return "Unvollständig";
+ }
+
  let last=logs[logs.length-1].type;
  if(last==='Start')return"Arbeit läuft";
  if(last==='Pause Start')return"Pause aktiv";
  if(last==='Pause Ende')return"Arbeit läuft";
  if(last==='Ende')return"Beendet";
- return"-"
+ return"-";
 }
 
 function calcDay(d){
@@ -98,7 +109,7 @@ function calcDay(d){
    if(x.type==='Start')s=tm;
    if(x.type==='Pause Start')ps=tm;
    if(x.type==='Pause Ende'&&ps!=null){
-    let end=tm; if(end<s) end+=1440;
+    let end=tm; if(end<ps) end+=1440;
     p+=end-ps;ps=null
    }
    if(x.type==='Ende'&&s!=null){
@@ -122,9 +133,45 @@ function calcWeek(){
  return t
 }
 
+function liveTime(){
+ let d=getDay();
+ if(!isToday(d)) return 0;
+
+ let total=0;
+ if(!data[d])return 0;
+
+ Object.values(data[d]).forEach(l=>{
+  let s=null,p=0,ps=null;
+
+  l.forEach(x=>{
+   let tm=parseHM(x.time);
+   if(x.type==='Start') s=tm;
+   if(x.type==='Pause Start') ps=tm;
+   if(x.type==='Pause Ende'&&ps!=null){
+    let end=tm; if(end<ps) end+=1440;
+    p+=end-ps; ps=null;
+   }
+  });
+
+  let hasEnd = l.some(x=>x.type==='Ende');
+
+  if(s!=null && !hasEnd){
+   let now=parseHM(nowHM());
+   if(now<s) now+=1440;
+   total+=Math.max(0,now-s-p);
+  }
+ });
+
+ return total;
+}
+
 function render(){
  let d=getDay();branchesDiv.innerHTML="";
- dayTotalDiv.innerText="Heute: "+fmt(calcDay(d));
+
+ let base="Heute: "+fmt(calcDay(d));
+ let live=liveTime();
+ dayTotalDiv.innerText = live>0 ? base+" | Aktuell: "+fmt(live) : base;
+
  weekTotalDiv.innerText="Woche: "+fmt(calcWeek());
 
  if(!data[d])return;
@@ -136,7 +183,7 @@ function render(){
   let title=document.createElement("div");title.innerHTML=`<b>${b}</b>`;card.appendChild(title);
 
   let st=document.createElement("div");st.className="status";
-  let s=getStatus(logs);
+  let s=getStatus(logs,d);
   st.innerText=s;
   if(s.includes("läuft"))st.classList.add("running");
   else if(s.includes("Pause"))st.classList.add("pause");
