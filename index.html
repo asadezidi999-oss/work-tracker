@@ -26,6 +26,11 @@ button:disabled{background:#475569;color:#aaa}
 .today{border:2px solid #22c55e}
 .small{font-size:13px;color:#cbd5f5}
 </style>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
 <div class="container">
@@ -269,6 +274,14 @@ setInterval(render,60000);
 
 dateInput.onchange=render;
 render();
+</script>
+<script>
+// Service Worker Registrierung
+if('serviceWorker' in navigator){
+ window.addEventListener('load',()=>{
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+ });
+}
 </script>
 </body>
 </html>
