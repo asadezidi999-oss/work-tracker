@@ -3,239 +3,304 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Arbeitszeit Pro</title>
-
+<title>Arbeitszeit Tracker</title>
 <style>
-body { font-family: Arial; background:#121212; color:#fff; padding:10px }
-.card { background:#1e1e1e; padding:10px; margin:10px 0; border-radius:10px }
-button { margin:3px; padding:8px; border:none; border-radius:6px; cursor:pointer }
-input { padding:5px }
-.green { color:#4caf50 }
-.yellow { color:#ffeb3b }
-.red { color:#f44336 }
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial}
+body{background:#0f172a;color:white;padding:15px}
+.container{max-width:520px;margin:auto}
+h1{text-align:center;margin-bottom:10px}
+input,button{width:100%;padding:12px;margin-top:10px;border-radius:10px;border:none;font-size:16px}
+button{background:#38bdf8;color:black;font-weight:bold}
+button:disabled{background:#475569;color:#aaa}
+.card{background:#1e293b;padding:12px;margin-top:12px;border-radius:12px}
+.log{background:#334155;padding:8px;margin-top:6px;border-radius:8px;display:flex;justify-content:space-between}
+.total{text-align:center;margin-top:12px;font-weight:bold}
+.row{display:flex;gap:8px}
+.row button{flex:1}
+.nav{display:flex;gap:6px}
+.nav button{flex:1;background:#22c55e}
+.status{margin-top:6px;font-weight:bold}
+.running{color:#4ade80}
+.pause{color:#facc15}
+.done{color:#94a3b8}
+.today{border:2px solid #22c55e}
+.small{font-size:13px;color:#cbd5f5}
 </style>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
-
 <body>
+<div class="container">
+<h1>Arbeitszeit Tracker</h1>
 
-<h2>Arbeitszeit Tracker</h2>
-
+<div class="nav">
+<button id="prevDay">⬅️</button>
 <input type="date" id="date">
-<button onclick="changeDay(-1)">◀</button>
-<button onclick="changeDay(1)">▶</button>
+<button id="nextDay">➡️</button>
+</div>
 
-<h3 id="today"></h3>
-<h3 id="week"></h3>
+<button id="resetDay">Tag zurücksetzen</button>
 
-<input id="name" placeholder="Filiale">
-<button onclick="addFiliale()">+</button>
+<div class="total" id="dayTotal"></div>
+<div class="total" id="weekTotal"></div>
+<div class="total" id="live"></div>
+<div id="weekList" class="total"></div>
 
-<button onclick="exportJSON()">Export</button>
-<input type="file" onchange="importJSON(event)">
+<input type="text" id="branchInput" placeholder="Filiale hinzufügen">
+<button id="addBranchBtn">Filiale hinzufügen</button>
 
-<button onclick="resetDay()">Tag Reset</button>
+<button id="exportBtn">Export JSON</button>
+<input type="file" id="importFile">
 
-<div id="app"></div>
+<div id="branches"></div>
+</div>
 
 <script>
-const KEY="tracker_pro";
+const dateInput=document.getElementById("date");
+const branchInput=document.getElementById("branchInput");
+const branchesDiv=document.getElementById("branches");
+const dayTotalDiv=document.getElementById("dayTotal");
+const weekTotalDiv=document.getElementById("weekTotal");
+const liveDiv=document.getElementById("live");
+const weekListDiv=document.getElementById("weekList");
 
-// ===== Storage =====
-function load(){return JSON.parse(localStorage.getItem(KEY))||{filialen:[]}}
-function save(d){localStorage.setItem(KEY,JSON.stringify(d))}
+let data=JSON.parse(localStorage.getItem("tracker")||"{}");
+let lastClick=0;
 
-// ===== Utils =====
-function now(){return new Date().toTimeString().slice(0,5)}
-function toMin(t){let[a,b]=t.split(":");return a*60+ +b}
-function diff(a,b){ if(b<a) b+=1440; return b-a } // Smart Fix midnight
-function fmt(m){return Math.floor(m/60)+"h "+(m%60)+"min"}
+(function(){const d=new Date();dateInput.value=d.toISOString().split('T')[0]})();
 
-// ===== Date =====
-function getDate(){return document.getElementById("date").value}
-function changeDay(x){
- let d=new Date(getDate()); d.setDate(d.getDate()+x)
- document.getElementById("date").value=d.toISOString().slice(0,10)
- render()
+function save(){localStorage.setItem("tracker",JSON.stringify(data))}
+function getDay(){return dateInput.value}
+function ensureDay(d){if(!data[d])data[d]={}}
+
+function changeDay(o){let d=new Date(getDay());d.setDate(d.getDate()+o);dateInput.value=d.toISOString().split('T')[0];render()}
+document.getElementById("prevDay").onclick=()=>changeDay(-1)
+document.getElementById("nextDay").onclick=()=>changeDay(1)
+
+function nowHM(){let d=new Date();return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`}
+function parseHM(h){let m=/^([01]?\d|2[0-3]):([0-5]\d)$/.exec(h);return m?parseInt(m[1])*60+parseInt(m[2]):NaN}
+function fmt(min){let h=Math.floor(min/60);let m=min%60;return `${h}h ${m}min`}
+
+function addBranch(){let n=branchInput.value.trim();let d=getDay();if(!n||!d)return;ensureDay(d);if(!data[d][n])data[d][n]=[];branchInput.value="";save();render()}
+document.getElementById("addBranchBtn").onclick=addBranch;
+
+function sortLogs(l){l.sort((a,b)=>parseHM(a.time)-parseHM(b.time))}
+
+function isToday(day){
+ const t=new Date().toISOString().split('T')[0];
+ return day===t;
 }
 
-// ===== Filiale =====
-function addFiliale(){
- let d=load()
- let n=document.getElementById("name").value
- if(!n) return
- d.filialen.push({id:Date.now(),name:n,days:{}})
- save(d); render()
+function getStatus(logs, day){
+ if(!logs.length) return "Keine Aktivität";
+ const last = logs[logs.length-1].type;
+
+ if(!isToday(day)){
+  if(logs.some(l=>l.type==='Ende')) return "Beendet";
+  return "Unvollständig";
+ }
+
+ if(last==='Start') return "Arbeit läuft";
+ if(last==='Pause Start') return "Pause aktiv";
+ if(last==='Pause Ende') return "Arbeit läuft";
+ if(last==='Ende') return "Beendet";
+ return "-";
 }
 
-// ===== Logs =====
-function addLog(fid,type){
- let d=load(),date=getDate()
- let f=d.filialen.find(x=>x.id===fid)
- if(!f.days[date]) f.days[date]={logs:[]}
-
- let logs=f.days[date].logs
-
- // Anti double click
- if(logs.length && logs[logs.length-1].type===type) return
-
- logs.push({
-   id:Date.now(),
-   type,
-   time:now(),
-   min:toMin(now())
- })
-
- save(d); render()
+function addLog(branch,type){
+ if(Date.now()-lastClick<500)return;
+ lastClick=Date.now();
+ let d=getDay();ensureDay(d);
+ if(!data[d][branch])data[d][branch]=[];
+ data[d][branch].push({type,time:nowHM()});
+ sortLogs(data[d][branch]);
+ save();render()
 }
 
-// ===== Edit =====
-function editTime(fid,lid,val){
- let d=load(),date=getDate()
- let f=d.filialen.find(x=>x.id===fid)
- let log=f.days[date].logs.find(l=>l.id===lid)
- log.time=val
- log.min=toMin(val)
- save(d); render()
-}
+function deleteLog(b,i){if(!confirm("Bist du sicher?"))return;data[getDay()][b].splice(i,1);save();render()}
+function deleteBranch(b){if(!confirm("Bist du sicher?"))return;delete data[getDay()][b];save();render()}
 
-// ===== Delete =====
-function delLog(fid,lid){
- let d=load(),date=getDate()
- let f=d.filialen.find(x=>x.id===fid)
- f.days[date].logs=f.days[date].logs.filter(l=>l.id!==lid)
- save(d); render()
-}
+function calcDay(d){
+ let t=0;if(!data[d])return 0;
+ Object.values(data[d]).forEach(l=>{
+  let s=null,p=0,ps=null;
+  l.forEach(x=>{
+   let tm=parseHM(x.time);
+   if(x.type==='Start') s=tm;
 
-// ===== Calc =====
-function calc(logs){
- let s=logs.find(l=>l.type==="start")
- let e=[...logs].reverse().find(l=>l.type==="end")
- if(!s||!e) return 0
+   if(x.type==='Pause Start') ps=tm;
 
- let total=diff(s.min,e.min)
- let pause=0,ps=null
-
- logs.forEach(l=>{
-   if(l.type==="pause_start") ps=l
-   if(l.type==="pause_end"&&ps){
-     pause+=diff(ps.min,l.min)
-     ps=null
+   if(x.type==='Pause Ende' && ps!=null){
+    let end=tm;
+    if(end < ps) end += 1440;
+    p += end - ps;
+    ps=null;
    }
+
+   if(x.type==='Ende' && s!=null){
+    let end=tm;
+    if(end < s) end += 1440;
+    t += Math.max(0, end - s - p);
+    s=null; p=0;
+   }
+  })
  })
-
- return total-pause
+ return t
 }
 
-// ===== Status =====
-function status(logs){
- let end=logs.some(l=>l.type==="end")
- let pause=logs.some(l=>l.type==="pause_start") &&
-            !logs.some(l=>l.type==="pause_end")
-
- if(end) return ["Beendet","green"]
- if(pause) return ["Pause","yellow"]
- if(logs.some(l=>l.type==="start")) return ["Arbeit läuft","red"]
- return ["Keine Aktivität",""]
-}
-
-// ===== Week =====
-function weekTotal(data){
- let base=new Date(getDate())
- let sum=0
-
+function calcWeek(){
+ let d=new Date(getDay());
+ let idx=(d.getDay()+6)%7;
+ let mon=new Date(d);mon.setDate(d.getDate()-idx);
+ let t=0;let list="";
  for(let i=0;i<7;i++){
-   let d=new Date(base); d.setDate(base.getDate()-i)
-   let day=d.toISOString().slice(0,10)
-
-   data.filialen.forEach(f=>{
-     let logs=f.days[day]?.logs||[]
-     logs.sort((a,b)=>a.min-b.min)
-     sum+=calc(logs)
-   })
+  let x=new Date(mon);x.setDate(mon.getDate()+i);
+  let ds=x.toISOString().split('T')[0];
+  let v=calcDay(ds);
+  t+=v;
+  list+=`${ds}: ${fmt(v)}\n`;
  }
- return sum
+ weekListDiv.innerText=list;
+ return t
 }
 
-// ===== Export =====
-function exportJSON(){
- let data=localStorage.getItem(KEY)
- let blob=new Blob([data],{type:"application/json"})
- let a=document.createElement("a")
- a.href=URL.createObjectURL(blob)
- a.download="data.json"
- a.click()
+function liveTime(){
+ let d=getDay();let total=0;
+ if(!data[d])return 0;
+ Object.values(data[d]).forEach(l=>{
+  let s=null,p=0,ps=null;
+  l.forEach(x=>{
+   let tm=parseHM(x.time);
+   if(x.type==='Start')s=tm;
+   if(x.type==='Pause Start')ps=tm;
+   if(x.type==='Pause Ende'&&ps!=null){p+=tm-ps;ps=null}
+  });
+  if(s!=null){let now=parseHM(nowHM());total+=Math.max(0,now-s-p)}
+ });
+ return total;
 }
 
-// ===== Import =====
-function importJSON(e){
- let file=e.target.files[0]
- let reader=new FileReader()
- reader.onload=()=>{
-   localStorage.setItem(KEY,reader.result)
-   render()
- }
- reader.readAsText(file)
-}
-
-// ===== Reset =====
-function resetDay(){
- if(!confirm("Sicher?")) return
- let d=load(),date=getDate()
- d.filialen.forEach(f=>{ if(f.days[date]) f.days[date].logs=[] })
- save(d); render()
-}
-
-// ===== Render =====
 function render(){
- let data=load(),date=getDate()
- let app=document.getElementById("app")
- app.innerHTML=""
- let total=0
+ let d=getDay();branchesDiv.innerHTML="";
+ dayTotalDiv.innerText="Heute: "+fmt(calcDay(d));
+ weekTotalDiv.innerText="Woche: "+fmt(calcWeek());
+ liveDiv.innerText=liveTime()>0?"Aktuell: "+fmt(liveTime()):"";
 
- data.filialen.forEach(f=>{
-   let logs=f.days[date]?.logs||[]
+ let today=new Date().toISOString().split('T')[0];
+ if(d===today)dateInput.classList.add('today'); else dateInput.classList.remove('today');
 
-   // Smart Fix sort
-   logs.sort((a,b)=>a.min-b.min)
+ if(!data[d])return;
 
-   let work=calc(logs)
-   total+=work
+ Object.keys(data[d]).forEach(b=>{
+  let card=document.createElement("div");card.className="card";
+  let logs=data[d][b];
 
-   let [txt,color]=status(logs)
+  let title=document.createElement("div");title.innerHTML=`<b>${b}</b>`;card.appendChild(title);
 
-   let div=document.createElement("div")
-   div.className="card"
+  let st=document.createElement("div");st.className="status";
+  let s=getStatus(logs, d);
+  st.innerText=s;
+  if(s.includes("läuft"))st.classList.add("running");
+  else if(s.includes("Pause"))st.classList.add("pause");
+  else st.classList.add("done");
+  card.appendChild(st);
 
-   div.innerHTML=`
-   <h3>${f.name}</h3>
-   <p class="${color}">${txt}</p>
-   <p>${logs.length?fmt(work):"Keine Aktivität"}</p>
+  let last=document.createElement("div");last.className='small';
+  if(logs.length){let l=logs[logs.length-1];last.innerText=`Letzte Aktion: ${l.type} um ${l.time}`}
+  card.appendChild(last);
 
-   <button onclick="addLog(${f.id},'start')">Start</button>
-   <button onclick="addLog(${f.id},'pause_start')">Pause</button>
-   <button onclick="addLog(${f.id},'pause_end')">Weiter</button>
-   <button onclick="addLog(${f.id},'end')">Ende</button>
+  let row=document.createElement("div");row.className="row";
+  let hasStart = logs.some(l=>l.type==='Start') && !logs.some(l=>l.type==='Ende');
+  let pauseActive = logs.some(l=>l.type==='Pause Start') && !logs.some(l=>l.type==='Pause Ende');
 
-   ${logs.map(l=>`
-     <div>
-       ${l.type}
-       <input type="time" value="${l.time}" onchange="editTime(${f.id},${l.id},this.value)">
-       <button onclick="delLog(${f.id},${l.id})">X</button>
-     </div>
-   `).join("")}
-   `
+  ['Start','Pause Start','Pause Ende','Ende'].forEach(t=>{
+   let btn=document.createElement("button");btn.innerText=t;
+   btn.onclick=()=>addLog(b,t);
 
-   app.appendChild(div)
- })
+   if(t==='Pause Ende' && !pauseActive) btn.disabled=true;
+   if(t==='Ende' && !hasStart) btn.disabled=true;
 
- document.getElementById("today").innerText="Heute: "+fmt(total)
- document.getElementById("week").innerText="Woche: "+fmt(weekTotal(data))
+   row.appendChild(btn);
+  });
+  card.appendChild(row);
+
+  let del=document.createElement("button");del.innerText="Filiale löschen";del.onclick=()=>deleteBranch(b);
+  card.appendChild(del);
+
+  if(!logs.length){let empty=document.createElement("div");empty.innerText="Keine Aktivität";card.appendChild(empty)}
+
+  logs.forEach((l,i)=>{
+   let div=document.createElement("div");div.className="log";
+   div.innerHTML=`${l.type} - ${l.time}`;
+   let act=document.createElement("div");
+   let e=document.createElement("button");e.innerText="✏️";e.onclick=()=>editLog(b,i);
+   let x=document.createElement("button");x.innerText="X";x.onclick=()=>deleteLog(b,i);
+   act.appendChild(e);act.appendChild(x);
+   div.appendChild(act);
+   card.appendChild(div);
+  });
+
+  branchesDiv.appendChild(card);
+ });
 }
 
-// init
-document.getElementById("date").value=new Date().toISOString().slice(0,10)
-render()
+function editLog(b,i){
+ let v=prompt("Zeit HH:MM",data[getDay()][b][i].time);
+ if(!v||isNaN(parseHM(v)))return;
+ data[getDay()][b][i].time=v;
+ sortLogs(data[getDay()][b]);
+ save();render();
+}
 
+window.onbeforeunload=function(){
+ let d=getDay();
+ if(!data[d])return;
+ let open=false;
+ Object.values(data[d]).forEach(l=>{
+  if(l.some(x=>x.type==='Start') && !l.some(x=>x.type==='Ende')) open=true;
+ });
+ if(open) return "Du hast deine Arbeit noch nicht beendet";
+}
+
+document.getElementById("exportBtn").onclick=function(){
+ const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
+ const a=document.createElement('a');
+ a.href=URL.createObjectURL(blob);
+ a.download='backup.json';
+ a.click();
+}
+
+document.getElementById("importFile").onchange=function(e){
+ const file=e.target.files[0];
+ if(!file)return;
+ const reader=new FileReader();
+ reader.onload=function(){
+  try{data=JSON.parse(reader.result);save();render()}catch{alert('Fehler beim Import')}
+ }
+ reader.readAsText(file);
+}
+
+document.getElementById("resetDay").onclick=function(){
+ if(!confirm("Tag wirklich löschen?"))return;
+ delete data[getDay()];save();render();
+}
+
+setInterval(render,60000);
+
+dateInput.onchange=render;
+render();
 </script>
+
+<script>
+if('serviceWorker' in navigator){
+ window.addEventListener('load',()=>{
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+ });
+}
+</script>
+
 </body>
 </html>
