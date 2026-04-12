@@ -118,10 +118,23 @@ function calcDay(d){
   let s=null,p=0,ps=null;
   l.forEach(x=>{
    let tm=parseHM(x.time);
-   if(x.type==='Start')s=tm;
-   if(x.type==='Pause Start')ps=tm;
-   if(x.type==='Pause Ende'&&ps!=null){p+=tm-ps;ps=null}
-   if(x.type==='Ende'&&s!=null){t+=Math.max(0,tm-s-p);s=null;p=0}
+   if(x.type==='Start') s=tm;
+
+   if(x.type==='Pause Start') ps=tm;
+
+   if(x.type==='Pause Ende' && ps!=null){
+    let end=tm;
+    if(end < ps) end += 1440; // über Mitternacht
+    p += end - ps;
+    ps=null;
+   }
+
+   if(x.type==='Ende' && s!=null){
+    let end=tm;
+    if(end < s) end += 1440; // über Mitternacht
+    t += Math.max(0, end - s - p);
+    s=null; p=0;
+   }
   })
  })
  return t
@@ -150,11 +163,20 @@ function liveTime(){
   let s=null,p=0,ps=null;
   l.forEach(x=>{
    let tm=parseHM(x.time);
-   if(x.type==='Start')s=tm;
-   if(x.type==='Pause Start')ps=tm;
-   if(x.type==='Pause Ende'&&ps!=null){p+=tm-ps;ps=null}
+   if(x.type==='Start') s=tm;
+   if(x.type==='Pause Start') ps=tm;
+   if(x.type==='Pause Ende' && ps!=null){
+    let end=tm;
+    if(end < ps) end += 1440;
+    p += end - ps;
+    ps=null;
+   }
   });
-  if(s!=null){let now=parseHM(nowHM());total+=Math.max(0,now-s-p)}
+  if(s!=null){
+   let now=parseHM(nowHM());
+   if(now < s) now += 1440;
+   total += Math.max(0, now - s - p);
+  }
  });
  return total;
 }
