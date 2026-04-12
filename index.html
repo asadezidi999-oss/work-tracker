@@ -11,6 +11,7 @@ body{background:#0f172a;color:white;padding:15px}
 h1{text-align:center;margin-bottom:10px}
 input,button{width:100%;padding:12px;margin-top:10px;border-radius:10px;border:none;font-size:16px}
 button{background:#38bdf8;color:black;font-weight:bold}
+button:disabled{background:#475569;color:#aaa}
 .card{background:#1e293b;padding:12px;margin-top:12px;border-radius:12px}
 .log{background:#334155;padding:8px;margin-top:6px;border-radius:8px;display:flex;justify-content:space-between}
 .total{text-align:center;margin-top:12px;font-weight:bold}
@@ -22,6 +23,8 @@ button{background:#38bdf8;color:black;font-weight:bold}
 .running{color:#4ade80}
 .pause{color:#facc15}
 .done{color:#94a3b8}
+.today{border:2px solid #22c55e}
+.small{font-size:13px;color:#cbd5f5}
 </style>
 </head>
 <body>
@@ -43,6 +46,9 @@ button{background:#38bdf8;color:black;font-weight:bold}
 
 <input type="text" id="branchInput" placeholder="Filiale hinzufügen">
 <button id="addBranchBtn">Filiale hinzufügen</button>
+
+<button id="exportBtn">Export JSON</button>
+<input type="file" id="importFile">
 
 <div id="branches"></div>
 </div>
@@ -77,6 +83,16 @@ function addBranch(){let n=branchInput.value.trim();let d=getDay();if(!n||!d)ret
 document.getElementById("addBranchBtn").onclick=addBranch;
 
 function sortLogs(l){l.sort((a,b)=>parseHM(a.time)-parseHM(b.time))}
+
+function getStatus(logs){
+ if(!logs.length)return"Keine Aktivität";
+ let last=logs[logs.length-1].type;
+ if(last==='Start')return"Arbeit läuft";
+ if(last==='Pause Start')return"Pause aktiv";
+ if(last==='Pause Ende')return"Arbeit läuft";
+ if(last==='Ende')return"Beendet";
+ return"-";
+}
 
 function addLog(branch,type){
  if(Date.now()-lastClick<500)return;
@@ -122,16 +138,6 @@ function calcWeek(){
  return t
 }
 
-function getStatus(l){
- if(!l.length)return"Keine Aktivität";
- let last=l[l.length-1].type;
- if(last==='Start')return"Arbeit läuft";
- if(last==='Pause Start')return"Pause aktiv";
- if(last==='Pause Ende')return"Arbeit läuft";
- if(last==='Ende')return"Beendet";
- return"-"
-}
-
 function liveTime(){
  let d=getDay();let total=0;
  if(!data[d])return 0;
@@ -143,10 +149,7 @@ function liveTime(){
    if(x.type==='Pause Start')ps=tm;
    if(x.type==='Pause Ende'&&ps!=null){p+=tm-ps;ps=null}
   });
-  if(s!=null){
-   let now=parseHM(nowHM());
-   total+=Math.max(0,now-s-p);
-  }
+  if(s!=null){let now=parseHM(nowHM());total+=Math.max(0,now-s-p)}
  });
  return total;
 }
@@ -155,9 +158,11 @@ function render(){
  let d=getDay();branchesDiv.innerHTML="";
  dayTotalDiv.innerText="Heute: "+fmt(calcDay(d));
  weekTotalDiv.innerText="Woche: "+fmt(calcWeek());
+ liveDiv.innerText=liveTime()>0?"Aktuell: "+fmt(liveTime()):"";
 
- let live=liveTime();
- liveDiv.innerText=live>0?"Aktuell: "+fmt(live):"";
+ // highlight today
+ let today=new Date().toISOString().split('T')[0];
+ if(d===today)dateInput.classList.add('today'); else dateInput.classList.remove('today');
 
  if(!data[d])return;
 
@@ -175,9 +180,22 @@ function render(){
   else st.classList.add("done");
   card.appendChild(st);
 
+  // last action
+  let last=document.createElement("div");last.className='small';
+  if(logs.length){let l=logs[logs.length-1];last.innerText=`Letzte Aktion: ${l.type} um ${l.time}`}
+  card.appendChild(last);
+
   let row=document.createElement("div");row.className="row";
+  let hasStart = logs.some(l=>l.type==='Start') && !logs.some(l=>l.type==='Ende');
+  let pauseActive = logs.some(l=>l.type==='Pause Start') && !logs.some(l=>l.type==='Pause Ende');
+
   ['Start','Pause Start','Pause Ende','Ende'].forEach(t=>{
-   let btn=document.createElement("button");btn.innerText=t;btn.onclick=()=>addLog(b,t);
+   let btn=document.createElement("button");btn.innerText=t;
+   btn.onclick=()=>addLog(b,t);
+
+   if(t==='Pause Ende' && !pauseActive) btn.disabled=true;
+   if(t==='Ende' && !hasStart) btn.disabled=true;
+
    row.appendChild(btn);
   });
   card.appendChild(row);
@@ -185,10 +203,7 @@ function render(){
   let del=document.createElement("button");del.innerText="Filiale löschen";del.onclick=()=>deleteBranch(b);
   card.appendChild(del);
 
-  if(!logs.length){
-   let empty=document.createElement("div");empty.innerText="Keine Aktivität";
-   card.appendChild(empty);
-  }
+  if(!logs.length){let empty=document.createElement("div");empty.innerText="Keine Aktivität";card.appendChild(empty)}
 
   logs.forEach((l,i)=>{
    let div=document.createElement("div");div.className="log";
@@ -213,14 +228,43 @@ function editLog(b,i){
  save();render();
 }
 
-// reset day
-document.getElementById("resetDay").onclick=function(){
- if(!confirm("Tag wirklich löschen?"))return;
- delete data[getDay()];
- save();render();
+// warn on exit
+window.onbeforeunload=function(){
+ let d=getDay();
+ if(!data[d])return;
+ let open=false;
+ Object.values(data[d]).forEach(l=>{
+  if(l.some(x=>x.type==='Start') && !l.some(x=>x.type==='Ende')) open=true;
+ });
+ if(open) return "Du hast deine Arbeit noch nicht beendet";
 }
 
-// live update
+// export/import
+ document.getElementById("exportBtn").onclick=function(){
+ const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
+ const a=document.createElement('a');
+ a.href=URL.createObjectURL(blob);
+ a.download='backup.json';
+ a.click();
+ }
+
+ document.getElementById("importFile").onchange=function(e){
+ const file=e.target.files[0];
+ if(!file)return;
+ const reader=new FileReader();
+ reader.onload=function(){
+  try{data=JSON.parse(reader.result);save();render()}catch{alert('Fehler beim Import')}
+ }
+ reader.readAsText(file);
+ }
+
+// reset
+ document.getElementById("resetDay").onclick=function(){
+ if(!confirm("Tag wirklich löschen?"))return;
+ delete data[getDay()];save();render();
+ }
+
+// auto update
 setInterval(render,60000);
 
 dateInput.onchange=render;
