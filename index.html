@@ -89,14 +89,41 @@ document.getElementById("addBranchBtn").onclick=addBranch;
 
 function sortLogs(l){l.sort((a,b)=>parseHM(a.time)-parseHM(b.time))}
 
-function getStatus(logs){
- if(!logs.length)return"Keine Aktivität";
- let last=logs[logs.length-1].type;
- if(last==='Start')return"Arbeit läuft";
- if(last==='Pause Start')return"Pause aktiv";
- if(last==='Pause Ende')return"Arbeit läuft";
- if(last==='Ende')return"Beendet";
- return"-";
+function isToday(day){
+ const t=new Date().toISOString().split('T')[0];
+ return day===t;
+}
+
+function getStatus(logs, day){
+ // Sicherstellen: Logs sortiert (nur Darstellung, keine Datenänderung)
+ sortLogs(logs);
+
+ if(!logs.length) return "Keine Aktivität";
+
+ // 1. Ende hat höchste Priorität
+ if(logs.some(l=>l.type==='Ende')) return "Beendet";
+
+ // 2. Pause aktiv (Start Pause ohne Ende Pause)
+ let pauseActive=false;
+ let pStart=false;
+ logs.forEach(l=>{
+  if(l.type==='Pause Start') pStart=true;
+  if(l.type==='Pause Ende') pStart=false;
+ });
+ pauseActive=pStart;
+ if(pauseActive) return "Pause aktiv";
+
+ // 3. Arbeit läuft (Start ohne Ende)
+ if(logs.some(l=>l.type==='Start')) return "Arbeit läuft";
+
+ return "-";
+}
+
+ if(last==='Start') return "Arbeit läuft";
+ if(last==='Pause Start') return "Pause aktiv";
+ if(last==='Pause Ende') return "Arbeit läuft";
+ if(last==='Ende') return "Beendet";
+ return "-";
 }
 
 function addLog(branch,type){
@@ -157,8 +184,12 @@ function calcWeek(){
 }
 
 function liveTime(){
- let d=getDay();let total=0;
- if(!data[d])return 0;
+ let d=getDay();
+ if(!isToday(d)) return 0; // ❗ فقط اليوم الحالي
+
+ let total=0;
+ if(!data[d]) return 0;
+
  Object.values(data[d]).forEach(l=>{
   let s=null,p=0,ps=null;
   l.forEach(x=>{
@@ -172,12 +203,17 @@ function liveTime(){
     ps=null;
    }
   });
-  if(s!=null){
+
+  // ❗ فقط إذا ما في Ende
+  const hasEnd = l.some(x=>x.type==='Ende');
+
+  if(s!=null && !hasEnd){
    let now=parseHM(nowHM());
    if(now < s) now += 1440;
    total += Math.max(0, now - s - p);
   }
  });
+
  return total;
 }
 
@@ -200,7 +236,7 @@ function render(){
   let title=document.createElement("div");title.innerHTML=`<b>${b}</b>`;card.appendChild(title);
 
   let st=document.createElement("div");st.className="status";
-  let s=getStatus(logs);
+  let s=getStatus(logs, d);
   st.innerText=s;
   if(s.includes("läuft"))st.classList.add("running");
   else if(s.includes("Pause"))st.classList.add("pause");
