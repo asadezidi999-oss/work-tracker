@@ -2093,7 +2093,6 @@ document.getElementById("week-range").textContent =
         renderTimer();
         renderSummary();
         renderWeekBar();
-        setTimeout(scrollToToday, 300);
         renderLogs();
         renderDateLabel();
       }
@@ -2190,18 +2189,25 @@ document.getElementById("week-next").addEventListener("click", () => {
       }
 
       function init() {
-        applyThemeFromStorage();
-        loadState();
-        if (!state.selectedWeekStart) {
-  state.selectedWeekStart = getMonday(now()).getTime();
+  applyThemeFromStorage();
+  loadState();
+
+  if (!state.selectedWeekStart) {
+    state.selectedWeekStart = getMonday(now()).getTime();
+  }
+
+  if (!state.selectedDay) {
+    state.selectedDay = toDateOnlyString(now());
+  }
+
+  renderAll();
+
+  // ✅ هنا الحل الصح
+  setTimeout(scrollToToday, 500);
+
+  startTimerLoop();
+  initEvents();
 }
-        if (!state.selectedDay) {
-          state.selectedDay = toDateOnlyString(now());
-        }
-        renderAll();
-        startTimerLoop();
-        initEvents();
-      }
 function scrollToToday() {
   const bar = document.getElementById("week-bar");
   if (!bar) return;
