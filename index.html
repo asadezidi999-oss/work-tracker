@@ -1,306 +1,2167 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Arbeitszeit Tracker</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:Arial}
-body{background:#0f172a;color:white;padding:15px}
-.container{max-width:520px;margin:auto}
-h1{text-align:center;margin-bottom:10px}
-input,button{width:100%;padding:12px;margin-top:10px;border-radius:10px;border:none;font-size:16px}
-button{background:#38bdf8;color:black;font-weight:bold}
-button:disabled{background:#475569;color:#aaa}
-.card{background:#1e293b;padding:12px;margin-top:12px;border-radius:12px}
-.log{background:#334155;padding:8px;margin-top:6px;border-radius:8px;display:flex;justify-content:space-between}
-.total{text-align:center;margin-top:12px;font-weight:bold}
-.row{display:flex;gap:8px}
-.row button{flex:1}
-.nav{display:flex;gap:6px}
-.nav button{flex:1;background:#22c55e}
-.status{margin-top:6px;font-weight:bold}
-.running{color:#4ade80}
-.pause{color:#facc15}
-.done{color:#94a3b8}
-.today{border:2px solid #22c55e}
-.small{font-size:13px;color:#cbd5f5}
-</style>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0f172a">
-<link rel="apple-touch-icon" href="icon.png">
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2563eb">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icon-192.png">
+  <meta charset="UTF-8" />
+  <title>Arbeitszeit-Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #f4f5fb;
+      --bg-card: #ffffff;
+      --bg-card-alt: #f0f1f7;
+      --text: #1f2933;
+      --text-soft: #6b7280;
+      --accent: #2563eb;
+      --accent-soft: #dbeafe;
+      --border: #e5e7eb;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --green: #16a34a;
+      --green-soft: #dcfce7;
+      --yellow: #eab308;
+      --yellow-soft: #fef9c3;
+      --red: #dc2626;
+      --red-soft: #fee2e2;
+      --radius: 12px;
+      --transition-fast: 0.18s ease-out;
+    }
+
+    body.dark {
+      --bg: #020617;
+      --bg-card: #020617;
+      --bg-card-alt: #020617;
+      --text: #e5e7eb;
+      --text-soft: #9ca3af;
+      --accent: #60a5fa;
+      --accent-soft: #1d283a;
+      --border: #111827;
+      --shadow: 0 18px 40px rgba(0, 0, 0, 0.7);
+      --green-soft: #052e16;
+      --yellow-soft: #422006;
+      --red-soft: #450a0a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, #e0f2fe 0, transparent 55%),
+        radial-gradient(circle at bottom right, #fee2e2 0, transparent 55%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px;
+      display: flex;
+      justify-content: center;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 1200px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.9));
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 20px 22px 24px;
+      backdrop-filter: blur(18px);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    body.dark .app-shell {
+      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.96));
+      border-color: rgba(15, 23, 42, 0.9);
+    }
+
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .app-title {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .app-title h1 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: 0.02em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .app-title h1 span.badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid rgba(37, 99, 235, 0.25);
+    }
+
+    .app-title p {
+      margin: 0;
+      font-size: 12px;
+      color: var(--text-soft);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn {
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.9);
+      color: var(--text);
+      padding: 6px 12px;
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: background var(--transition-fast), transform var(--transition-fast),
+        box-shadow var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+      backdrop-filter: blur(10px);
+    }
+
+    .btn span.icon {
+      font-size: 14px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #f9fafb;
+      border-color: rgba(37, 99, 235, 0.9);
+      box-shadow: 0 8px 18px rgba(37, 99, 235, 0.35);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border-color: rgba(148, 163, 184, 0.6);
+      color: var(--text-soft);
+      box-shadow: none;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18);
+      background: rgba(255, 255, 255, 1);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 10px 24px rgba(37, 99, 235, 0.5);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.2);
+    }
+
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 11px;
+    }
+
+    .btn-icon {
+      padding: 5px 8px;
+      border-radius: 999px;
+      width: 30px;
+      height: 30px;
+      justify-content: center;
+    }
+
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 22px;
+      border-radius: 999px;
+      background: var(--bg-card-alt);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      padding: 2px;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .toggle-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: #f9fafb;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.25);
+      transform: translateX(0);
+      transition: transform 0.2s ease;
+    }
+
+    body.dark .toggle {
+      background: #020617;
+      border-color: #1f2937;
+    }
+
+    body.dark .toggle-thumb {
+      transform: translateX(20px);
+      background: #0f172a;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 2.1fr) minmax(0, 1.4fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 960px) {
+      .layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 14px 14px 16px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      gap: 8px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-title span.dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    .card-subtitle {
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+
+    .pill {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--bg-card-alt);
+      color: var(--text-soft);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+    }
+
+    .branch-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .branch-pill {
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      font-size: 11px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      background: var(--bg-card-alt);
+      color: var(--text-soft);
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease,
+        transform 0.15s ease;
+    }
+
+    .branch-pill span.remove {
+      font-size: 13px;
+      opacity: 0.7;
+    }
+
+    .branch-pill.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-color: rgba(37, 99, 235, 0.7);
+      transform: translateY(-1px);
+    }
+
+    .branch-input-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    input[type="text"],
+    input[type="time"],
+    input[type="date"],
+    textarea {
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      font-size: 12px;
+      outline: none;
+      background: rgba(248, 250, 252, 0.9);
+      color: var(--text);
+      width: 100%;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    textarea {
+      border-radius: 10px;
+      resize: vertical;
+      min-height: 80px;
+      font-family: inherit;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.25);
+      background: #ffffff;
+    }
+
+    body.dark input,
+    body.dark textarea {
+      background: #020617;
+    }
+
+    .timer-display {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .timer-main {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .timer-time {
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+    }
+
+    .timer-label {
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+
+    .status-pill {
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid transparent;
+    }
+
+    .status-pill span.dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--text-soft);
+    }
+
+    .status-running {
+      background: var(--green-soft);
+      color: var(--green);
+      border-color: rgba(22, 163, 74, 0.4);
+    }
+
+    .status-paused {
+      background: var(--yellow-soft);
+      color: var(--yellow);
+      border-color: rgba(234, 179, 8, 0.4);
+    }
+
+    .status-ended {
+      background: var(--red-soft);
+      color: var(--red);
+      border-color: rgba(220, 38, 38, 0.4);
+    }
+
+    .status-incomplete {
+      background: var(--bg-card-alt);
+      color: var(--text-soft);
+      border-color: rgba(148, 163, 184, 0.5);
+    }
+
+    .timer-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .btn-green {
+      background: linear-gradient(135deg, #16a34a, #15803d);
+      color: #f9fafb;
+      border-color: rgba(22, 163, 74, 0.9);
+      box-shadow: 0 8px 18px rgba(22, 163, 74, 0.35);
+    }
+
+    .btn-yellow {
+      background: linear-gradient(135deg, #eab308, #ca8a04);
+      color: #111827;
+      border-color: rgba(234, 179, 8, 0.9);
+      box-shadow: 0 8px 18px rgba(234, 179, 8, 0.35);
+    }
+
+    .btn-red {
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
+      color: #f9fafb;
+      border-color: rgba(220, 38, 38, 0.9);
+      box-shadow: 0 8px 18px rgba(220, 38, 38, 0.35);
+    }
+
+    .summary-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .summary-item {
+      flex: 1 1 120px;
+      min-width: 120px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: var(--bg-card-alt);
+      border: 1px dashed rgba(148, 163, 184, 0.7);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .summary-label {
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+
+    .summary-value {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .week-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+      margin-top: 4px;
+    }
+
+    .week-day {
+      flex: 1;
+      padding: 6px 4px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--bg-card-alt);
+      font-size: 11px;
+      text-align: center;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease,
+        transform 0.15s ease;
+    }
+
+    .week-day span.label {
+      font-weight: 500;
+    }
+
+    .week-day span.hours {
+      font-size: 10px;
+      color: var(--text-soft);
+    }
+
+    .week-day.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-color: rgba(37, 99, 235, 0.8);
+      transform: translateY(-1px);
+    }
+
+    .week-day.today {
+      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.7);
+    }
+
+    .progress-wrapper {
+      margin-top: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--bg-card-alt);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-inner {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #22c55e, #eab308, #ef4444);
+      transition: width 0.25s ease-out;
+    }
+
+    .progress-label {
+      font-size: 11px;
+      color: var(--text-soft);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .logs-list {
+      margin-top: 6px;
+      max-height: 260px;
+      overflow: auto;
+      padding-right: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .log-item {
+      border-radius: 10px;
+      padding: 8px 9px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: var(--bg-card-alt);
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1.2fr) auto;
+      gap: 6px;
+      font-size: 11px;
+      align-items: center;
+    }
+
+    @media (max-width: 720px) {
+      .log-item {
+        grid-template-columns: minmax(0, 1.6fr);
+      }
+    }
+
+    .log-main {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .log-times {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .log-tag {
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-size: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: rgba(15, 23, 42, 0.02);
+    }
+
+    .log-status {
+      justify-self: flex-start;
+    }
+
+    .log-actions {
+      display: flex;
+      gap: 4px;
+      justify-content: flex-end;
+    }
+
+    .badge-green {
+      background: var(--green-soft);
+      color: var(--green);
+      border-color: rgba(22, 163, 74, 0.6);
+    }
+
+    .badge-yellow {
+      background: var(--yellow-soft);
+      color: var(--yellow);
+      border-color: rgba(234, 179, 8, 0.6);
+    }
+
+    .badge-red {
+      background: var(--red-soft);
+      color: var(--red);
+      border-color: rgba(220, 38, 38, 0.6);
+    }
+
+    .badge-gray {
+      background: var(--bg-card);
+      color: var(--text-soft);
+      border-color: rgba(148, 163, 184, 0.7);
+    }
+
+    .secondary-grid {
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      gap: 10px;
+      height: 100%;
+    }
+
+    .card-footer-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .toast-container {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 9999;
+      pointer-events: none;
+    }
+
+    .toast {
+      min-width: 220px;
+      max-width: 320px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.96);
+      color: #e5e7eb;
+      font-size: 12px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      pointer-events: auto;
+      animation: toast-in 0.18s ease-out;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+    }
+
+    .toast-icon {
+      font-size: 16px;
+      margin-top: 1px;
+    }
+
+    .toast-content {
+      flex: 1;
+    }
+
+    .toast-title {
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .toast-message {
+      font-size: 11px;
+      opacity: 0.9;
+    }
+
+    .toast-close {
+      border: none;
+      background: transparent;
+      color: #9ca3af;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0;
+    }
+
+    .toast-success {
+      border-left: 3px solid #22c55e;
+    }
+
+    .toast-error {
+      border-left: 3px solid #ef4444;
+    }
+
+    .toast-info {
+      border-left: 3px solid #3b82f6;
+    }
+
+    @keyframes toast-in {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    .modal-backdrop.active {
+      display: flex;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 420px;
+      background: var(--bg-card);
+      border-radius: 18px;
+      padding: 16px 16px 14px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      animation: modal-in 0.18s ease-out;
+    }
+
+    @keyframes modal-in {
+      from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .modal-body {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .field-label {
+      font-size: 11px;
+      color: var(--text-soft);
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 6px;
+    }
+
+    .badge {
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-size: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: rgba(15, 23, 42, 0.02);
+    }
+
+    .small-text {
+      font-size: 10px;
+      color: var(--text-soft);
+    }
+
+    .flex-row {
+      display: flex;
+      gap: 6px;
+    }
+
+    .flex-1 {
+      flex: 1;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
 </head>
 <body>
-<div class="container">
-<h1>Arbeitszeit Tracker</h1>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="app-title">
+        <h1>
+          ⏱ Arbeitszeit-Tracker
+          <span class="badge">Single-File · LocalStorage</span>
+        </h1>
+        <p>Tracke deine Arbeitszeit mit Filialen, Wochenübersicht, Smart-Fix und JSON-Export – alles im Browser.</p>
+      </div>
+      <div class="header-actions">
+        <button id="btn-json-export" class="btn btn-sm">
+          <span class="icon">📤</span> Export
+        </button>
+        <button id="btn-json-import" class="btn btn-sm">
+          <span class="icon">📥</span> Import
+        </button>
+        <button id="btn-smart-fix" class="btn btn-sm">
+          <span class="icon">🧠</span> Smart Fix
+        </button>
+        <button id="btn-open-manual" class="btn btn-sm btn-primary">
+          <span class="icon">➕</span> Manuelle Eingabe
+        </button>
+        <div title="Dark / Light Mode" id="toggle-theme" class="toggle">
+          <div class="toggle-thumb"></div>
+        </div>
+      </div>
+    </header>
 
-<div class="nav">
-<button id="prevDay">⬅️</button>
-<input type="date" id="date">
-<button id="nextDay">➡️</button>
-</div>
+    <main class="layout">
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">
+              <span class="dot"></span> Filialen & Timer
+            </div>
+            <div class="card-subtitle">Verwalte Filialen, starte deinen Tag und behalte den Status im Blick.</div>
+          </div>
+          <span class="pill" id="current-date-label"></span>
+        </div>
 
-<button id="resetDay">Tag zurücksetzen</button>
+        <div class="branch-input-row">
+          <input id="branch-input" type="text" placeholder="Neue Filiale hinzufügen und Enter drücken" />
+          <button id="branch-add-btn" class="btn btn-sm">
+            <span class="icon">➕</span> Filiale
+          </button>
+        </div>
+        <div class="branch-list" id="branch-list"></div>
 
-<div class="total" id="dayTotal"></div>
-<div class="total" id="weekTotal"></div>
-<div class="total" id="live"></div>
-<div id="weekList" class="total"></div>
+        <div class="timer-display">
+          <div class="timer-main">
+            <div class="timer-time" id="timer-display">00:00:00</div>
+            <div class="timer-label" id="timer-label">Keine aktive Sitzung</div>
+          </div>
+          <div class="status-pill status-incomplete" id="status-pill">
+            <span class="dot"></span>
+            <span id="status-text">unvollständig</span>
+          </div>
+        </div>
 
-<input type="text" id="branchInput" placeholder="Filiale hinzufügen">
-<button id="addBranchBtn">Filiale hinzufügen</button>
+        <div class="timer-actions">
+          <button id="btn-start" class="btn btn-sm btn-green">
+            <span class="icon">▶</span> Start
+          </button>
+          <button id="btn-pause-start" class="btn btn-sm btn-yellow">
+            <span class="icon">⏸</span> Pause Start
+          </button>
+          <button id="btn-pause-end" class="btn btn-sm btn-yellow">
+            <span class="icon">⏯</span> Pause Ende
+          </button>
+          <button id="btn-end" class="btn btn-sm btn-red">
+            <span class="icon">⏹</span> Ende
+          </button>
+        </div>
 
-<button id="exportBtn">Export JSON</button>
-<input type="file" id="importFile">
+        <div class="summary-row">
+          <div class="summary-item">
+            <div class="summary-label">Heute (akt. Filiale)</div>
+            <div class="summary-value" id="summary-today">0:00 h</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Woche (Mo–So)</div>
+            <div class="summary-value" id="summary-week">0:00 h</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Status</div>
+            <div class="summary-value" id="summary-status">–</div>
+          </div>
+        </div>
+        <div id="week-range" style="font-size:13px; margin-bottom:6px; font-weight:500;"></div>
+<div class="flex-row" style="margin-bottom:6px;">
+  <button id="week-prev" class="btn btn-sm">⬅️ Woche zurück</button>
+<button id="week-next" class="btn btn-sm">➡️ Woche vor</button>
+        <div class="week-bar" id="week-bar"></div>
 
-<div id="branches"></div>
-</div>
+        <div class="progress-wrapper">
+          <div class="progress-label">
+            <span>Wochenziel: <span id="week-goal-label">40:00 h</span></span>
+            <span id="week-progress-label">0%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-inner" id="week-progress-inner"></div>
+          </div>
+        </div>
+      </section>
 
-<script>
-const dateInput=document.getElementById("date");
-const branchInput=document.getElementById("branchInput");
-const branchesDiv=document.getElementById("branches");
-const dayTotalDiv=document.getElementById("dayTotal");
-const weekTotalDiv=document.getElementById("weekTotal");
-const liveDiv=document.getElementById("live");
-const weekListDiv=document.getElementById("weekList");
+      <section class="secondary-grid">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">
+                <span class="dot"></span> Logs
+              </div>
+              <div class="card-subtitle">Alle Sitzungen der ausgewählten Filiale, sortiert nach Startzeit.</div>
+            </div>
+            <span class="pill" id="logs-branch-label">Keine Filiale</span>
+          </div>
+          <div class="logs-list" id="logs-list"></div>
+        </div>
 
-let data=JSON.parse(localStorage.getItem("tracker")||"{}");
-let lastClick=0;
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">
+                <span class="dot"></span> JSON & Tools
+              </div>
+              <div class="card-subtitle">Exportiere oder importiere deine Daten. Alles bleibt im Browser.</div>
+            </div>
+            <span class="pill">LocalStorage</span>
+          </div>
+          <div class="field-group">
+            <div class="field-label">JSON Daten (Export / Import)</div>
+            <textarea id="json-area" placeholder="Hier erscheinen deine Daten beim Export. Zum Import JSON einfügen und auf Import klicken."></textarea>
+          </div>
+          <div class="card-footer-actions">
+            <button id="btn-clear-json" class="btn btn-sm btn-ghost">
+              <span class="icon">🧹</span> Feld leeren
+            </button>
+            <button id="btn-json-export-2" class="btn btn-sm">
+              <span class="icon">📤</span> Export
+            </button>
+            <button id="btn-json-import-2" class="btn btn-sm btn-primary">
+              <span class="icon">📥</span> Import
+            </button>
+          </div>
+        </div>
 
-(function(){const d=new Date();dateInput.value=d.toISOString().split('T')[0]})();
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">
+                <span class="dot"></span> Hinweise
+              </div>
+              <div class="card-subtitle">Timer läuft im Hintergrund weiter und überlebt Reloads.</div>
+            </div>
+          </div>
+          <ul class="small-text" style="margin: 0 0 4px 16px; padding: 0; line-height: 1.4;">
+            <li>Start → Pause Start → Pause Ende → Ende – beliebig viele Pausen möglich.</li>
+            <li>Smart Fix schließt offene Starts / Pausen und korrigiert Reihenfolgen, ohne Daten zu löschen.</li>
+            <li>Alle Daten werden im Browser (localStorage) gespeichert.</li>
+          </ul>
+        </div>
+      </section>
+    </main>
+  </div>
 
-function save(){localStorage.setItem("tracker",JSON.stringify(data))}
-function getDay(){return dateInput.value}
-function ensureDay(d){if(!data[d])data[d]={}}
+  <div class="modal-backdrop" id="manual-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Manuelle Eingabe</h2>
+        <button id="manual-close" class="btn btn-icon btn-ghost">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="field-group">
+          <div class="field-label">Filiale</div>
+          <input type="text" id="manual-branch" placeholder="Filialname (optional – sonst aktuelle)" />
+        </div>
+        <div class="field-group">
+          <div class="field-label">Datum</div>
+          <input type="date" id="manual-date" />
+        </div>
+        <div class="field-group">
+          <div class="field-label">Start</div>
+          <input type="time" id="manual-start" />
+        </div>
+        <div class="field-group">
+          <div class="field-label">Pause Start (optional)</div>
+          <input type="time" id="manual-pause-start" />
+        </div>
+        <div class="field-group">
+          <div class="field-label">Pause Ende (optional)</div>
+          <input type="time" id="manual-pause-end" />
+        </div>
+        <div class="field-group">
+          <div class="field-label">Ende</div>
+          <input type="time" id="manual-end" />
+        </div>
+        <div class="small-text">
+          Validierung: Start &lt; Ende, Pause innerhalb der Zeit, keine negativen Zeiten. Mehrere Pausen kannst du später im Log bearbeiten.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="manual-cancel" class="btn btn-sm btn-ghost">Abbrechen</button>
+        <button id="manual-save" class="btn btn-sm btn-primary">
+          <span class="icon">💾</span> Speichern
+        </button>
+      </div>
+    </div>
+  </div>
 
-function changeDay(o){let d=new Date(getDay());d.setDate(d.getDate()+o);dateInput.value=d.toISOString().split('T')[0];render()}
-document.getElementById("prevDay").onclick=()=>changeDay(-1)
-document.getElementById("nextDay").onclick=()=>changeDay(1)
+  <div class="toast-container" id="toast-container"></div>
 
-function nowHM(){let d=new Date();return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`}
-function parseHM(h){let m=/^([01]?\d|2[0-3]):([0-5]\d)$/.exec(h);return m?parseInt(m[1])*60+parseInt(m[2]):NaN}
-function fmt(min){let h=Math.floor(min/60);let m=min%60;return `${h}h ${m}min`}
+  <script>
+    (function () {
+      const STORAGE_KEY = "worktime-tracker-v1";
+      const THEME_KEY = "worktime-tracker-theme";
+      const WEEK_GOAL_HOURS = 40;
 
-function addBranch(){let n=branchInput.value.trim();let d=getDay();if(!n||!d)return;ensureDay(d);if(!data[d][n])data[d][n]=[];branchInput.value="";save();render()}
-document.getElementById("addBranchBtn").onclick=addBranch;
+      const state = {
+  branches: [],
+  selectedBranchId: null,
+  selectedDay: null,
+  selectedWeekStart: null, // ⬅️ أضف هذا السطر
+  timerInterval: null
+};
 
-function sortLogs(l){l.sort((a,b)=>parseHM(a.time)-parseHM(b.time))}
+      function uuid() {
+        return "xxxxxx".replace(/x/g, () =>
+          ((Math.random() * 36) | 0).toString(36)
+        );
+      }
 
-function isToday(day){
- const t=new Date().toISOString().split('T')[0];
- return day===t;
+      function now() {
+        return new Date();
+      }
+
+      function toDateOnlyString(d) {
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      }
+
+      function parseDateTime(dateStr, timeStr) {
+        if (!dateStr || !timeStr) return null;
+        const [y, m, d] = dateStr.split("-").map(Number);
+        const [hh, mm] = timeStr.split(":").map(Number);
+        if (
+          Number.isNaN(y) ||
+          Number.isNaN(m) ||
+          Number.isNaN(d) ||
+          Number.isNaN(hh) ||
+          Number.isNaN(mm)
+        )
+          return null;
+        return new Date(y, m - 1, d, hh, mm, 0, 0);
+      }
+
+      function formatTime(d) {
+        if (!d) return "--:--";
+        const hh = String(d.getHours()).padStart(2, "0");
+        const mm = String(d.getMinutes()).padStart(2, "0");
+        return `${hh}:${mm}`;
+      }
+
+      function formatDuration(ms) {
+        if (!ms || ms <= 0) return "0:00 h";
+        const totalSeconds = Math.floor(ms / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        return `${hours}:${String(minutes).padStart(2, "0")} h`;
+      }
+
+      function formatDurationClock(ms) {
+        if (!ms || ms < 0) ms = 0;
+        const totalSeconds = Math.floor(ms / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+          2,
+          "0"
+        )}:${String(seconds).padStart(2, "0")}`;
+      }
+
+      function getMonday(d) {
+        const date = new Date(d);
+        const day = date.getDay();
+        const diff = (day === 0 ? -6 : 1) - day;
+        date.setDate(date.getDate() + diff);
+        date.setHours(0, 0, 0, 0);
+        return date;
+      }
+
+      function clone(obj) {
+        return JSON.parse(JSON.stringify(obj));
+      }
+
+      function showToast(type, title, message) {
+        const container = document.getElementById("toast-container");
+        const toast = document.createElement("div");
+        toast.className = "toast toast-" + type;
+        const iconSpan = document.createElement("div");
+        iconSpan.className = "toast-icon";
+        iconSpan.textContent =
+          type === "success" ? "✅" : type === "error" ? "⚠️" : "ℹ️";
+        const content = document.createElement("div");
+        content.className = "toast-content";
+        const titleEl = document.createElement("div");
+        titleEl.className = "toast-title";
+        titleEl.textContent = title;
+        const msgEl = document.createElement("div");
+        msgEl.className = "toast-message";
+        msgEl.textContent = message;
+        content.appendChild(titleEl);
+        content.appendChild(msgEl);
+        const closeBtn = document.createElement("button");
+        closeBtn.className = "toast-close";
+        closeBtn.textContent = "✕";
+        closeBtn.onclick = () => {
+          container.removeChild(toast);
+        };
+        toast.appendChild(iconSpan);
+        toast.appendChild(content);
+        toast.appendChild(closeBtn);
+        container.appendChild(toast);
+        setTimeout(() => {
+          if (toast.parentElement === container) {
+            container.removeChild(toast);
+          }
+        }, 4500);
+      }
+
+      function saveState() {
+        const data = clone({
+          branches: state.branches,
+          selectedBranchId: state.selectedBranchId,
+          selectedDay: state.selectedDay
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      }
+
+      function loadState() {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          state.branches = [];
+          state.selectedBranchId = null;
+          state.selectedDay = toDateOnlyString(now());
+          return;
+        }
+        try {
+          const data = JSON.parse(raw);
+          state.branches = Array.isArray(data.branches) ? data.branches : [];
+          state.selectedBranchId = data.selectedBranchId || null;
+          state.selectedDay = data.selectedDay || toDateOnlyString(now());
+        } catch (e) {
+          state.branches = [];
+          state.selectedBranchId = null;
+          state.selectedDay = toDateOnlyString(now());
+        }
+      }
+
+      function getSelectedBranch() {
+        return state.branches.find((b) => b.id === state.selectedBranchId) || null;
+      }
+
+      function ensureBranchSelected() {
+        if (!state.selectedBranchId && state.branches.length > 0) {
+          state.selectedBranchId = state.branches[0].id;
+        }
+      }
+
+      function addBranch(name) {
+        name = (name || "").trim();
+        if (!name) {
+          showToast("error", "Filiale", "Bitte einen Filialnamen eingeben.");
+          return;
+        }
+        const exists = state.branches.some(
+          (b) => b.name.toLowerCase() === name.toLowerCase()
+        );
+        if (exists) {
+          showToast("info", "Filiale", "Diese Filiale existiert bereits.");
+          return;
+        }
+        const branch = {
+          id: uuid(),
+          name,
+          logs: []
+        };
+        state.branches.push(branch);
+        state.selectedBranchId = branch.id;
+        saveState();
+        renderAll();
+        showToast("success", "Filiale", `Filiale "${name}" hinzugefügt.`);
+      }
+
+      function deleteBranch(id) {
+        const branch = state.branches.find((b) => b.id === id);
+        if (!branch) return;
+        if (!confirm(`Filiale "${branch.name}" wirklich löschen?`)) return;
+        state.branches = state.branches.filter((b) => b.id !== id);
+        if (state.selectedBranchId === id) {
+          state.selectedBranchId = state.branches[0]?.id || null;
+        }
+        saveState();
+        renderAll();
+        showToast("info", "Filiale", `Filiale "${branch.name}" gelöscht.`);
+      }
+
+      function selectBranch(id) {
+        state.selectedBranchId = id;
+        saveState();
+        renderAll();
+      }
+
+      function getCurrentLog(branch) {
+        if (!branch) return null;
+        const open = branch.logs
+          .slice()
+          .sort((a, b) => a.start - b.start)
+          .reverse()
+          .find((log) => !log.end);
+        return open || null;
+      }
+
+      function getCurrentPause(log) {
+        if (!log || !Array.isArray(log.pauses)) return null;
+        const last = log.pauses[log.pauses.length - 1];
+        if (last && !last.end) return last;
+        return null;
+      }
+
+      function validateStart(branch) {
+        const open = getCurrentLog(branch);
+        if (open) {
+          showToast(
+            "error",
+            "Start nicht möglich",
+            "Es existiert bereits eine offene Sitzung. Beende diese zuerst."
+          );
+          return false;
+        }
+        return true;
+      }
+
+      function validatePauseStart(branch, log) {
+        if (!log) {
+          showToast(
+            "error",
+            "Pause nicht möglich",
+            "Es gibt keine laufende Sitzung. Starte zuerst."
+          );
+          return false;
+        }
+        const pause = getCurrentPause(log);
+        if (pause) {
+          showToast(
+            "error",
+            "Pause nicht möglich",
+            "Es läuft bereits eine Pause. Beende diese zuerst."
+          );
+          return false;
+        }
+        return true;
+      }
+
+      function validatePauseEnd(branch, log) {
+        if (!log) {
+          showToast(
+            "error",
+            "Pause Ende",
+            "Es gibt keine laufende Sitzung. Starte zuerst."
+          );
+          return false;
+        }
+        const pause = getCurrentPause(log);
+        if (!pause) {
+          showToast(
+            "error",
+            "Pause Ende",
+            "Es gibt keine aktive Pause. Starte zuerst eine Pause."
+          );
+          return false;
+        }
+        return true;
+      }
+
+      function validateEnd(branch, log) {
+        if (!log) {
+          showToast(
+            "error",
+            "Ende nicht möglich",
+            "Es gibt keine laufende Sitzung. Starte zuerst."
+          );
+          return false;
+        }
+        const pause = getCurrentPause(log);
+        if (pause) {
+          showToast(
+            "error",
+            "Ende nicht möglich",
+            "Es läuft noch eine Pause. Beende diese zuerst."
+          );
+          return false;
+        }
+        return true;
+      }
+
+      function startWork() {
+        const branch = getSelectedBranch();
+        if (!branch) {
+          showToast("error", "Start", "Bitte zuerst eine Filiale anlegen.");
+          return;
+        }
+        if (!validateStart(branch)) return;
+        const startTime = now().getTime();
+        const log = {
+          id: uuid(),
+          date: toDateOnlyString(now()),
+          start: startTime,
+          end: null,
+          pauses: [],
+          status: "running"
+        };
+        branch.logs.push(log);
+        saveState();
+        renderAll();
+        showToast("success", "Start", "Arbeitszeit gestartet.");
+      }
+
+      function startPause() {
+        const branch = getSelectedBranch();
+        if (!branch) {
+          showToast("error", "Pause", "Bitte zuerst eine Filiale anlegen.");
+          return;
+        }
+        const log = getCurrentLog(branch);
+        if (!validatePauseStart(branch, log)) return;
+        log.pauses = log.pauses || [];
+        log.pauses.push({
+          start: now().getTime(),
+          end: null
+        });
+        log.status = "paused";
+        saveState();
+        renderAll();
+        showToast("info", "Pause", "Pause gestartet.");
+      }
+
+      function endPause() {
+        const branch = getSelectedBranch();
+        if (!branch) {
+          showToast("error", "Pause Ende", "Bitte zuerst eine Filiale anlegen.");
+          return;
+        }
+        const log = getCurrentLog(branch);
+        if (!validatePauseEnd(branch, log)) return;
+        const pause = getCurrentPause(log);
+        pause.end = now().getTime();
+        log.status = "running";
+        saveState();
+        renderAll();
+        showToast("success", "Pause Ende", "Pause beendet.");
+      }
+
+      function endWork() {
+        const branch = getSelectedBranch();
+        if (!branch) {
+          showToast("error", "Ende", "Bitte zuerst eine Filiale anlegen.");
+          return;
+        }
+        const log = getCurrentLog(branch);
+        if (!validateEnd(branch, log)) return;
+        log.end = now().getTime();
+        log.status = "ended";
+        saveState();
+        renderAll();
+        showToast("success", "Ende", "Sitzung beendet.");
+      }
+
+      function computeLogDuration(log, upToNow) {
+        if (!log || !log.start) return 0;
+        const endTime = log.end || (upToNow ? now().getTime() : log.start);
+        let total = endTime - log.start;
+        if (Array.isArray(log.pauses)) {
+          for (const p of log.pauses) {
+            if (!p.start) continue;
+            const pend = p.end || (upToNow ? now().getTime() : p.start);
+            if (pend > p.start) {
+              total -= pend - p.start;
+            }
+          }
+        }
+        if (total < 0) total = 0;
+        return total;
+      }
+
+      function computeDayDuration(branch, dateStr) {
+        if (!branch) return 0;
+        return branch.logs
+          .filter((log) => log.date === dateStr)
+          .reduce((sum, log) => sum + computeLogDuration(log, true), 0);
+      }
+
+      function computeWeekDurations(branch, mondayDate) {
+        const result = [];
+        if (!branch) {
+          for (let i = 0; i < 7; i++) result.push(0);
+          return result;
+        }
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(mondayDate);
+          d.setDate(d.getDate() + i);
+          const dateStr = toDateOnlyString(d);
+          result.push(computeDayDuration(branch, dateStr));
+        }
+        return result;
+      }
+
+      function computeWeekTotal(branch, mondayDate) {
+        const arr = computeWeekDurations(branch, mondayDate);
+        return arr.reduce((a, b) => a + b, 0);
+      }
+
+      function renderBranches() {
+        const list = document.getElementById("branch-list");
+        list.innerHTML = "";
+        state.branches.forEach((branch) => {
+          const pill = document.createElement("button");
+          pill.className =
+            "branch-pill" +
+            (branch.id === state.selectedBranchId ? " active" : "");
+          pill.innerHTML = `<span>${branch.name}</span><span class="remove" title="Filiale löschen">✕</span>`;
+          pill.onclick = (e) => {
+            if (e.target.classList.contains("remove")) {
+              deleteBranch(branch.id);
+            } else {
+              selectBranch(branch.id);
+            }
+          };
+          list.appendChild(pill);
+        });
+      }
+
+      function renderTimer() {
+        const branch = getSelectedBranch();
+        const timerDisplay = document.getElementById("timer-display");
+        const timerLabel = document.getElementById("timer-label");
+        const statusPill = document.getElementById("status-pill");
+        const statusText = document.getElementById("status-text");
+        const summaryStatus = document.getElementById("summary-status");
+
+        let status = "unvollständig";
+        let statusClass = "status-incomplete";
+        let label = "Keine aktive Sitzung";
+        let ms = 0;
+
+        if (branch) {
+          const log = getCurrentLog(branch);
+          if (log) {
+            const pause = getCurrentPause(log);
+            if (pause) {
+              status = "Pause aktiv";
+              statusClass = "status-paused";
+              label = "Pause läuft – Arbeitszeit pausiert";
+            } else if (!log.end) {
+              status = "läuft";
+              statusClass = "status-running";
+              label = "Arbeitszeit läuft";
+            }
+            ms = computeLogDuration(log, true);
+          } else {
+            const last = branch.logs
+              .slice()
+              .sort((a, b) => (b.start || 0) - (a.start || 0))[0];
+            if (last && last.end) {
+              status = "beendet";
+              statusClass = "status-ended";
+              label = "Letzte Sitzung beendet";
+              ms = computeLogDuration(last, false);
+            }
+          }
+        }
+
+        timerDisplay.textContent = formatDurationClock(ms);
+        timerLabel.textContent = label;
+        statusPill.className = "status-pill " + statusClass;
+        statusText.textContent = status;
+        summaryStatus.textContent = status;
+      }
+
+      function renderSummary() {
+        const branch = getSelectedBranch();
+        const todayStr = toDateOnlyString(now());
+        const monday = new Date(state.selectedWeekStart);
+        const todayMs = computeDayDuration(branch, todayStr);
+        const weekMs = computeWeekTotal(branch, monday);
+        document.getElementById("summary-today").textContent =
+          formatDuration(todayMs);
+        document.getElementById("summary-week").textContent =
+          formatDuration(weekMs);
+
+        const goalMs = WEEK_GOAL_HOURS * 3600 * 1000;
+        const pct = goalMs > 0 ? Math.min(100, (weekMs / goalMs) * 100) : 0;
+        document.getElementById("week-goal-label").textContent =
+          WEEK_GOAL_HOURS + ":00 h";
+        document.getElementById("week-progress-label").textContent =
+          Math.round(pct) + "%";
+        document.getElementById("week-progress-inner").style.width =
+          pct.toFixed(1) + "%";
+      }
+
+      function renderWeekBar() {
+        const bar = document.getElementById("week-bar");
+        bar.innerHTML = "";
+        const branch = getSelectedBranch();
+        const today = now();
+        const monday = new Date(state.selectedWeekStart);
+        const end = new Date(monday);
+end.setDate(end.getDate() + 6);
+
+const format = (d) =>
+  d.getDate().toString().padStart(2, "0") + "." +
+  (d.getMonth() + 1).toString().padStart(2, "0") + "." +
+  d.getFullYear();
+
+document.getElementById("week-range").textContent =
+  "📅 " + format(monday) + " – " + format(end);
+        const durations = computeWeekDurations(branch, monday);
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(monday);
+          d.setDate(d.getDate() + i);
+          const dateStr = toDateOnlyString(d);
+          const label = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"][i];
+          const dayEl = document.createElement("div");
+          dayEl.className = "week-day";
+          if (dateStr === state.selectedDay) {
+            dayEl.classList.add("active");
+          }
+          if (dateStr === toDateOnlyString(today)) {
+            dayEl.classList.add("today");
+          }
+          dayEl.innerHTML = `<span class="label">${label}</span><span class="hours">${formatDuration(
+            durations[i]
+          )}</span>`;
+          dayEl.onclick = () => {
+            state.selectedDay = dateStr;
+            saveState();
+            renderAll();
+          };
+          bar.appendChild(dayEl);
+        }
+      }
+
+      function renderLogs() {
+        const list = document.getElementById("logs-list");
+        const label = document.getElementById("logs-branch-label");
+        list.innerHTML = "";
+        const branch = getSelectedBranch();
+        if (!branch) {
+          label.textContent = "Keine Filiale";
+          return;
+        }
+        label.textContent = branch.name;
+        const logs = branch.logs
+  .filter(log => log.date === state.selectedDay) // ⬅️ المهم
+  .sort((a, b) => (a.start || 0) - (b.start || 0));
+        if (logs.length === 0) {
+          const empty = document.createElement("div");
+          empty.className = "small-text";
+          empty.textContent = "Noch keine Logs vorhanden.";
+          list.appendChild(empty);
+          return;
+        }
+        logs.forEach((log) => {
+          const item = document.createElement("div");
+          item.className = "log-item";
+          const main = document.createElement("div");
+          main.className = "log-main";
+          const title = document.createElement("div");
+          title.textContent = log.date;
+          title.style.fontWeight = "600";
+          title.style.fontSize = "11px";
+          const times = document.createElement("div");
+          times.className = "log-times";
+          const startTag = document.createElement("span");
+          startTag.className = "log-tag badge-green";
+          startTag.textContent = "Start: " + formatTime(new Date(log.start));
+          times.appendChild(startTag);
+          if (Array.isArray(log.pauses) && log.pauses.length > 0) {
+            log.pauses.forEach((p, idx) => {
+              const ps = document.createElement("span");
+              ps.className = "log-tag badge-yellow";
+              ps.textContent =
+                "Pause " +
+                (idx + 1) +
+                ": " +
+                (p.start ? formatTime(new Date(p.start)) : "--:--") +
+                " – " +
+                (p.end ? formatTime(new Date(p.end)) : "--:--");
+              times.appendChild(ps);
+            });
+          }
+          const endTag = document.createElement("span");
+          endTag.className = "log-tag " + (log.end ? "badge-red" : "badge-gray");
+          endTag.textContent =
+            "Ende: " + (log.end ? formatTime(new Date(log.end)) : "--:--");
+          times.appendChild(endTag);
+          const durTag = document.createElement("span");
+          durTag.className = "log-tag";
+          durTag.textContent =
+            "Dauer: " + formatDuration(computeLogDuration(log, true));
+          times.appendChild(durTag);
+          main.appendChild(title);
+          main.appendChild(times);
+
+          const status = document.createElement("div");
+          status.className = "log-status log-tag";
+          let statusClass = "badge-gray";
+          let statusText = "unvollständig";
+          if (log.status === "running") {
+            statusClass = "badge-green";
+            statusText = "läuft";
+          } else if (log.status === "paused") {
+            statusClass = "badge-yellow";
+            statusText = "Pause aktiv";
+          } else if (log.status === "ended") {
+            statusClass = "badge-red";
+            statusText = "beendet";
+          }
+          status.classList.add(statusClass);
+          status.textContent = statusText;
+
+          const actions = document.createElement("div");
+          actions.className = "log-actions";
+          const editBtn = document.createElement("button");
+          editBtn.className = "btn btn-sm btn-ghost";
+          editBtn.textContent = "Bearbeiten";
+          editBtn.onclick = () => editLog(branch.id, log.id);
+          const delBtn = document.createElement("button");
+          delBtn.className = "btn btn-sm btn-ghost";
+          delBtn.textContent = "Löschen";
+          delBtn.onclick = () => deleteLog(branch.id, log.id);
+          actions.appendChild(editBtn);
+          actions.appendChild(delBtn);
+
+          item.appendChild(main);
+          item.appendChild(status);
+          item.appendChild(actions);
+          list.appendChild(item);
+        });
+      }
+
+      function editLog(branchId, logId) {
+        const branch = state.branches.find((b) => b.id === branchId);
+        if (!branch) return;
+        const log = branch.logs.find((l) => l.id === logId);
+        if (!log) return;
+        const dateStr = log.date;
+        const startStr = formatTime(new Date(log.start));
+        const endStr = log.end ? formatTime(new Date(log.end)) : "";
+        const pauseStr = (log.pauses || [])
+          .map((p) => {
+            const s = p.start ? formatTime(new Date(p.start)) : "";
+            const e = p.end ? formatTime(new Date(p.end)) : "";
+            return s + "-" + e;
+          })
+          .join(", ");
+        const input = prompt(
+          "Log bearbeiten (Datum|Start|Ende|Pausen als HH:MM-HH:MM, getrennt durch Komma)\nBeispiel: " +
+            `${dateStr}|${startStr}|${endStr}|${pauseStr}`,
+          `${dateStr}|${startStr}|${endStr}|${pauseStr}`
+        );
+        if (!input) return;
+        const parts = input.split("|");
+        if (parts.length < 3) {
+          showToast("error", "Bearbeiten", "Format ungültig.");
+          return;
+        }
+        const newDate = parts[0].trim();
+        const newStart = parts[1].trim();
+        const newEnd = parts[2].trim();
+        const newPauseStr = (parts[3] || "").trim();
+
+        const startDate = parseDateTime(newDate, newStart);
+        const endDate = newEnd ? parseDateTime(newDate, newEnd) : null;
+        if (!startDate) {
+          showToast("error", "Bearbeiten", "Startzeit ungültig.");
+          return;
+        }
+        if (endDate && endDate <= startDate) {
+          showToast(
+            "error",
+            "Bearbeiten",
+            "Ende muss nach Start liegen."
+          );
+          return;
+        }
+        const pauses = [];
+        if (newPauseStr) {
+          const segments = newPauseStr.split(",");
+          for (const seg of segments) {
+            const [ps, pe] = seg.split("-").map((s) => s.trim());
+            if (!ps && !pe) continue;
+            const psDate = ps ? parseDateTime(newDate, ps) : null;
+            const peDate = pe ? parseDateTime(newDate, pe) : null;
+            if (!psDate || !peDate || peDate <= psDate) {
+              showToast(
+                "error",
+                "Bearbeiten",
+                "Pause-Zeiten ungültig oder nicht in richtiger Reihenfolge."
+              );
+              return;
+            }
+            if (psDate < startDate || (endDate && peDate > endDate)) {
+              showToast(
+                "error",
+                "Bearbeiten",
+                "Pause muss innerhalb der Arbeitszeit liegen."
+              );
+              return;
+            }
+            pauses.push({ start: psDate.getTime(), end: peDate.getTime() });
+          }
+        }
+        log.date = newDate;
+        log.start = startDate.getTime();
+        log.end = endDate ? endDate.getTime() : null;
+        log.pauses = pauses;
+        if (!log.end) {
+          const pause = getCurrentPause(log);
+          log.status = pause ? "paused" : "running";
+        } else {
+          log.status = "ended";
+        }
+        saveState();
+        renderAll();
+        showToast("success", "Bearbeiten", "Log aktualisiert.");
+      }
+
+      function deleteLog(branchId, logId) {
+        const branch = state.branches.find((b) => b.id === branchId);
+        if (!branch) return;
+        const log = branch.logs.find((l) => l.id === logId);
+        if (!log) return;
+        if (!confirm("Diesen Log wirklich löschen?")) return;
+        branch.logs = branch.logs.filter((l) => l.id !== logId);
+        saveState();
+        renderAll();
+        showToast("info", "Log", "Log gelöscht.");
+      }
+
+      function smartFix() {
+        let fixes = 0;
+        const nowMs = now().getTime();
+        for (const branch of state.branches) {
+          for (const log of branch.logs) {
+            if (!log.start) continue;
+            if (!Array.isArray(log.pauses)) log.pauses = [];
+            log.pauses.sort((a, b) => (a.start || 0) - (b.start || 0));
+            for (const p of log.pauses) {
+              if (!p.start) p.start = log.start;
+              if (!p.end) {
+                p.end = log.end || nowMs;
+                fixes++;
+              }
+              if (p.start < log.start) {
+                p.start = log.start;
+                fixes++;
+              }
+              if (log.end && p.end > log.end) {
+                p.end = log.end;
+                fixes++;
+              }
+              if (p.end <= p.start) {
+                p.end = p.start + 1 * 60 * 1000;
+                fixes++;
+              }
+            }
+            if (log.end && log.end <= log.start) {
+              log.end = log.start + 5 * 60 * 1000;
+              fixes++;
+            }
+            const openPauses = log.pauses.filter((p) => !p.end);
+            if (openPauses.length > 1) {
+              for (let i = 1; i < openPauses.length; i++) {
+                openPauses[i].end = nowMs;
+                fixes++;
+              }
+            }
+            if (!log.end && log.status === "ended") {
+              log.status = "running";
+              fixes++;
+            }
+            if (log.end && log.status !== "ended") {
+              log.status = "ended";
+              fixes++;
+            }
+          }
+        }
+        saveState();
+        renderAll();
+        showToast(
+          "info",
+          "Smart Fix",
+          fixes === 0
+            ? "Keine Korrekturen notwendig."
+            : `Smart Fix hat ${fixes} Korrekturen vorgenommen.`
+        );
+      }
+
+      function exportJSON() {
+        const data = {
+          branches: state.branches,
+          selectedBranchId: state.selectedBranchId,
+          selectedDay: state.selectedDay
+        };
+        const json = JSON.stringify(data, null, 2);
+        const area = document.getElementById("json-area");
+        area.value = json;
+        area.select();
+        showToast("success", "Export", "JSON wurde in das Textfeld geschrieben.");
+      }
+
+      function importJSON() {
+        const area = document.getElementById("json-area");
+        const text = area.value.trim();
+        if (!text) {
+          showToast("error", "Import", "Bitte JSON in das Textfeld einfügen.");
+          return;
+        }
+        try {
+          const data = JSON.parse(text);
+          if (!Array.isArray(data.branches)) {
+            throw new Error("branches fehlt");
+          }
+          state.branches = data.branches;
+          state.selectedBranchId = data.selectedBranchId || null;
+          state.selectedDay = data.selectedDay || toDateOnlyString(now());
+          saveState();
+          renderAll();
+          showToast("success", "Import", "JSON erfolgreich importiert.");
+        } catch (e) {
+          showToast("error", "Import", "JSON ungültig: " + e.message);
+        }
+      }
+
+      function openManualModal() {
+        const modal = document.getElementById("manual-modal");
+        modal.classList.add("active");
+        const todayStr = toDateOnlyString(now());
+        document.getElementById("manual-date").value = todayStr;
+        document.getElementById("manual-start").value = "";
+        document.getElementById("manual-pause-start").value = "";
+        document.getElementById("manual-pause-end").value = "";
+        document.getElementById("manual-end").value = "";
+        const branch = getSelectedBranch();
+        document.getElementById("manual-branch").value = branch ? branch.name : "";
+      }
+
+      function closeManualModal() {
+        const modal = document.getElementById("manual-modal");
+        modal.classList.remove("active");
+      }
+
+      function saveManualEntry() {
+        const branchNameInput = document.getElementById("manual-branch").value.trim();
+        const dateStr = document.getElementById("manual-date").value;
+        const startStr = document.getElementById("manual-start").value;
+        const pauseStartStr = document.getElementById("manual-pause-start").value;
+        const pauseEndStr = document.getElementById("manual-pause-end").value;
+        const endStr = document.getElementById("manual-end").value;
+
+        if (!dateStr || !startStr || !endStr) {
+          showToast(
+            "error",
+            "Manuelle Eingabe",
+            "Datum, Start und Ende sind Pflichtfelder."
+          );
+          return;
+        }
+
+        const startDate = parseDateTime(dateStr, startStr);
+        const endDate = parseDateTime(dateStr, endStr);
+        if (!startDate || !endDate || endDate <= startDate) {
+          showToast(
+            "error",
+            "Manuelle Eingabe",
+            "Ende muss nach Start liegen."
+          );
+          return;
+        }
+
+        let pause = null;
+        if (pauseStartStr || pauseEndStr) {
+          if (!pauseStartStr || !pauseEndStr) {
+            showToast(
+              "error",
+              "Manuelle Eingabe",
+              "Pause Start und Pause Ende müssen beide gesetzt sein."
+            );
+            return;
+          }
+          const ps = parseDateTime(dateStr, pauseStartStr);
+          const pe = parseDateTime(dateStr, pauseEndStr);
+          if (!ps || !pe || pe <= ps) {
+            showToast(
+              "error",
+              "Manuelle Eingabe",
+              "Pause muss eine gültige Zeitspanne sein."
+            );
+            return;
+          }
+          if (ps < startDate || pe > endDate) {
+            showToast(
+              "error",
+              "Manuelle Eingabe",
+              "Pause muss innerhalb der Arbeitszeit liegen."
+            );
+            return;
+          }
+          pause = { start: ps.getTime(), end: pe.getTime() };
+        }
+
+        let branch = null;
+        if (branchNameInput) {
+          branch = state.branches.find(
+            (b) => b.name.toLowerCase() === branchNameInput.toLowerCase()
+          );
+          if (!branch) {
+            branch = {
+              id: uuid(),
+              name: branchNameInput,
+              logs: []
+            };
+            state.branches.push(branch);
+          }
+        } else {
+          branch = getSelectedBranch();
+          if (!branch) {
+            showToast(
+              "error",
+              "Manuelle Eingabe",
+              "Bitte eine Filiale angeben oder auswählen."
+            );
+            return;
+          }
+        }
+
+        const log = {
+          id: uuid(),
+          date: dateStr,
+          start: startDate.getTime(),
+          end: endDate.getTime(),
+          pauses: pause ? [pause] : [],
+          status: "ended"
+        };
+        branch.logs.push(log);
+        state.selectedBranchId = branch.id;
+        saveState();
+        renderAll();
+        closeManualModal();
+        showToast("success", "Manuelle Eingabe", "Log wurde angelegt.");
+      }
+
+      function applyThemeFromStorage() {
+        const theme = localStorage.getItem(THEME_KEY);
+        if (theme === "dark") {
+          document.body.classList.add("dark");
+        } else if (theme === "light") {
+          document.body.classList.remove("dark");
+        } else {
+          if (window.matchMedia &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches) {
+            document.body.classList.add("dark");
+          }
+        }
+      }
+
+      function toggleTheme() {
+        const isDark = document.body.classList.toggle("dark");
+        localStorage.setItem(THEME_KEY, isDark ? "dark" : "light");
+      }
+
+      function renderDateLabel() {
+        const label = document.getElementById("current-date-label");
+        const d = now();
+        const days = [
+          "Sonntag",
+          "Montag",
+          "Dienstag",
+          "Mittwoch",
+          "Donnerstag",
+          "Freitag",
+          "Samstag"
+        ];
+        label.textContent =
+          days[d.getDay()] +
+          ", " +
+          d.getDate().toString().padStart(2, "0") +
+          "." +
+          (d.getMonth() + 1).toString().padStart(2, "0") +
+          "." +
+          d.getFullYear();
+      }
+
+      function startTimerLoop() {
+        if (state.timerInterval) {
+          clearInterval(state.timerInterval);
+        }
+        state.timerInterval = setInterval(() => {
+          renderTimer();
+          renderSummary();
+          renderWeekBar();
+        }, 1000);
+      }
+
+      function renderAll() {
+        ensureBranchSelected();
+        renderBranches();
+        renderTimer();
+        renderSummary();
+        renderWeekBar();
+        renderLogs();
+        renderDateLabel();
+      }
+
+      function initEvents() {
+        document.getElementById("week-prev").addEventListener("click", () => {
+  const d = new Date(state.selectedWeekStart);
+  d.setDate(d.getDate() - 7); // ⬅️ أسبوع لورا
+  state.selectedWeekStart = d.getTime();
+  saveState();
+  renderAll();
+});
+
+document.getElementById("week-next").addEventListener("click", () => {
+  const d = new Date(state.selectedWeekStart);
+  d.setDate(d.getDate() + 7); // ➡️ أسبوع لقدام
+  state.selectedWeekStart = d.getTime();
+  saveState();
+  renderAll();
+});
+        document
+          .getElementById("branch-input")
+          .addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+              addBranch(e.target.value);
+              e.target.value = "";
+            }
+          });
+        document
+          .getElementById("branch-add-btn")
+          .addEventListener("click", () => {
+            const input = document.getElementById("branch-input");
+            addBranch(input.value);
+            input.value = "";
+          });
+
+        document
+          .getElementById("btn-start")
+          .addEventListener("click", startWork);
+        document
+          .getElementById("btn-pause-start")
+          .addEventListener("click", startPause);
+        document
+          .getElementById("btn-pause-end")
+          .addEventListener("click", endPause);
+        document.getElementById("btn-end").addEventListener("click", endWork);
+
+        document
+          .getElementById("btn-json-export")
+          .addEventListener("click", exportJSON);
+        document
+          .getElementById("btn-json-import")
+          .addEventListener("click", importJSON);
+        document
+          .getElementById("btn-json-export-2")
+          .addEventListener("click", exportJSON);
+        document
+          .getElementById("btn-json-import-2")
+          .addEventListener("click", importJSON);
+        document
+          .getElementById("btn-clear-json")
+          .addEventListener("click", () => {
+            document.getElementById("json-area").value = "";
+          });
+
+        document
+          .getElementById("btn-smart-fix")
+          .addEventListener("click", smartFix);
+
+        document
+          .getElementById("btn-open-manual")
+          .addEventListener("click", openManualModal);
+        document
+          .getElementById("manual-close")
+          .addEventListener("click", closeManualModal);
+        document
+          .getElementById("manual-cancel")
+          .addEventListener("click", closeManualModal);
+        document
+          .getElementById("manual-save")
+          .addEventListener("click", saveManualEntry);
+
+        document
+          .getElementById("toggle-theme")
+          .addEventListener("click", toggleTheme);
+
+        document
+          .getElementById("manual-modal")
+          .addEventListener("click", (e) => {
+            if (e.target.id === "manual-modal") {
+              closeManualModal();
+            }
+          });
+      }
+
+      function init() {
+        applyThemeFromStorage();
+        loadState();
+        if (!state.selectedWeekStart) {
+  state.selectedWeekStart = getMonday(now()).getTime();
 }
+        if (!state.selectedDay) {
+          state.selectedDay = toDateOnlyString(now());
+        }
+        renderAll();
+        startTimerLoop();
+        initEvents();
+      }
 
-function getStatus(logs, day){
- if(!logs.length) return "Keine Aktivität";
- const last = logs[logs.length-1].type;
-
- if(!isToday(day)){
-  if(logs.some(l=>l.type==='Ende')) return "Beendet";
-  return "Unvollständig";
- }
-
- if(last==='Start') return "Arbeit läuft";
- if(last==='Pause Start') return "Pause aktiv";
- if(last==='Pause Ende') return "Arbeit läuft";
- if(last==='Ende') return "Beendet";
- return "-";
-}
-
-function addLog(branch,type){
- if(Date.now()-lastClick<500)return;
- lastClick=Date.now();
- let d=getDay();ensureDay(d);
- if(!data[d][branch])data[d][branch]=[];
- data[d][branch].push({type,time:nowHM()});
- sortLogs(data[d][branch]);
- save();render()
-}
-
-function deleteLog(b,i){if(!confirm("Bist du sicher?"))return;data[getDay()][b].splice(i,1);save();render()}
-function deleteBranch(b){if(!confirm("Bist du sicher?"))return;delete data[getDay()][b];save();render()}
-
-function calcDay(d){
- let t=0;if(!data[d])return 0;
- Object.values(data[d]).forEach(l=>{
-  let s=null,p=0,ps=null;
-  l.forEach(x=>{
-   let tm=parseHM(x.time);
-   if(x.type==='Start') s=tm;
-
-   if(x.type==='Pause Start') ps=tm;
-
-   if(x.type==='Pause Ende' && ps!=null){
-    let end=tm;
-    if(end < ps) end += 1440;
-    p += end - ps;
-    ps=null;
-   }
-
-   if(x.type==='Ende' && s!=null){
-    let end=tm;
-    if(end < s) end += 1440;
-    t += Math.max(0, end - s - p);
-    s=null; p=0;
-   }
-  })
- })
- return t
-}
-
-function calcWeek(){
- let d=new Date(getDay());
- let idx=(d.getDay()+6)%7;
- let mon=new Date(d);mon.setDate(d.getDate()-idx);
- let t=0;let list="";
- for(let i=0;i<7;i++){
-  let x=new Date(mon);x.setDate(mon.getDate()+i);
-  let ds=x.toISOString().split('T')[0];
-  let v=calcDay(ds);
-  t+=v;
-  list+=`${ds}: ${fmt(v)}\n`;
- }
- weekListDiv.innerText=list;
- return t
-}
-
-function liveTime(){
- let d=getDay();let total=0;
- if(!data[d])return 0;
- Object.values(data[d]).forEach(l=>{
-  let s=null,p=0,ps=null;
-  l.forEach(x=>{
-   let tm=parseHM(x.time);
-   if(x.type==='Start')s=tm;
-   if(x.type==='Pause Start')ps=tm;
-   if(x.type==='Pause Ende'&&ps!=null){p+=tm-ps;ps=null}
-  });
-  if(s!=null){let now=parseHM(nowHM());total+=Math.max(0,now-s-p)}
- });
- return total;
-}
-
-function render(){
- let d=getDay();branchesDiv.innerHTML="";
- dayTotalDiv.innerText="Heute: "+fmt(calcDay(d));
- weekTotalDiv.innerText="Woche: "+fmt(calcWeek());
- liveDiv.innerText=liveTime()>0?"Aktuell: "+fmt(liveTime()):"";
-
- let today=new Date().toISOString().split('T')[0];
- if(d===today)dateInput.classList.add('today'); else dateInput.classList.remove('today');
-
- if(!data[d])return;
-
- Object.keys(data[d]).forEach(b=>{
-  let card=document.createElement("div");card.className="card";
-  let logs=data[d][b];
-
-  let title=document.createElement("div");title.innerHTML=`<b>${b}</b>`;card.appendChild(title);
-
-  let st=document.createElement("div");st.className="status";
-  let s=getStatus(logs, d);
-  st.innerText=s;
-  if(s.includes("läuft"))st.classList.add("running");
-  else if(s.includes("Pause"))st.classList.add("pause");
-  else st.classList.add("done");
-  card.appendChild(st);
-
-  let last=document.createElement("div");last.className='small';
-  if(logs.length){let l=logs[logs.length-1];last.innerText=`Letzte Aktion: ${l.type} um ${l.time}`}
-  card.appendChild(last);
-
-  let row=document.createElement("div");row.className="row";
-  let hasStart = logs.some(l=>l.type==='Start') && !logs.some(l=>l.type==='Ende');
-  let pauseActive = logs.some(l=>l.type==='Pause Start') && !logs.some(l=>l.type==='Pause Ende');
-
-  ['Start','Pause Start','Pause Ende','Ende'].forEach(t=>{
-   let btn=document.createElement("button");btn.innerText=t;
-   btn.onclick=()=>addLog(b,t);
-
-   if(t==='Pause Ende' && !pauseActive) btn.disabled=true;
-   if(t==='Ende' && !hasStart) btn.disabled=true;
-
-   row.appendChild(btn);
-  });
-  card.appendChild(row);
-
-  let del=document.createElement("button");del.innerText="Filiale löschen";del.onclick=()=>deleteBranch(b);
-  card.appendChild(del);
-
-  if(!logs.length){let empty=document.createElement("div");empty.innerText="Keine Aktivität";card.appendChild(empty)}
-
-  logs.forEach((l,i)=>{
-   let div=document.createElement("div");div.className="log";
-   div.innerHTML=`${l.type} - ${l.time}`;
-   let act=document.createElement("div");
-   let e=document.createElement("button");e.innerText="✏️";e.onclick=()=>editLog(b,i);
-   let x=document.createElement("button");x.innerText="X";x.onclick=()=>deleteLog(b,i);
-   act.appendChild(e);act.appendChild(x);
-   div.appendChild(act);
-   card.appendChild(div);
-  });
-
-  branchesDiv.appendChild(card);
- });
-}
-
-function editLog(b,i){
- let v=prompt("Zeit HH:MM",data[getDay()][b][i].time);
- if(!v||isNaN(parseHM(v)))return;
- data[getDay()][b][i].time=v;
- sortLogs(data[getDay()][b]);
- save();render();
-}
-
-window.onbeforeunload=function(){
- let d=getDay();
- if(!data[d])return;
- let open=false;
- Object.values(data[d]).forEach(l=>{
-  if(l.some(x=>x.type==='Start') && !l.some(x=>x.type==='Ende')) open=true;
- });
- if(open) return "Du hast deine Arbeit noch nicht beendet";
-}
-
-document.getElementById("exportBtn").onclick=function(){
- const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
- const a=document.createElement('a');
- a.href=URL.createObjectURL(blob);
- a.download='backup.json';
- a.click();
-}
-
-document.getElementById("importFile").onchange=function(e){
- const file=e.target.files[0];
- if(!file)return;
- const reader=new FileReader();
- reader.onload=function(){
-  try{data=JSON.parse(reader.result);save();render()}catch{alert('Fehler beim Import')}
- }
- reader.readAsText(file);
-}
-
-document.getElementById("resetDay").onclick=function(){
- if(!confirm("Tag wirklich löschen?"))return;
- delete data[getDay()];save();render();
-}
-
-setInterval(render,60000);
-
-dateInput.onchange=render;
-render();
-</script>
-
-<script>
-if('serviceWorker' in navigator){
- window.addEventListener('load',()=>{
-  navigator.serviceWorker.register('sw.js').catch(()=>{});
- });
-}
-</script>
-
+      init();
+    })();
+  </script>
 </body>
 </html>
