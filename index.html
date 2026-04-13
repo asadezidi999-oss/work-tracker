@@ -2202,8 +2202,9 @@ document.getElementById("week-next").addEventListener("click", () => {
 
   renderAll();
 
-  // ✅ هنا الحل الصح
-  setTimeout(scrollToToday, 500);
+  requestAnimationFrame(() => {
+  requestAnimationFrame(scrollToToday);
+});
 
   startTimerLoop();
   initEvents();
