@@ -2202,9 +2202,7 @@ document.getElementById("week-next").addEventListener("click", () => {
 
   renderAll();
 
-  requestAnimationFrame(() => {
-  requestAnimationFrame(scrollToToday);
-});
+  setTimeout(scrollToToday, 0);
 
   startTimerLoop();
   initEvents();
