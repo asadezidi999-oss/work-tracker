@@ -478,16 +478,19 @@
       font-weight: 600;
     }
 
-    .week-bar {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 6px;
-      margin-top: 4px;
-    }
+      .week-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  margin-top: 4px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scroll-snap-type: x mandatory;
+}
 
     .week-day {
-      flex: 1;
+      flex: 0 0 120px;
       padding: 6px 4px;
       border-radius: 999px;
       border: 1px solid var(--border);
@@ -498,6 +501,7 @@
       display: flex;
       flex-direction: column;
       gap: 2px;
+      scroll-snap-align: center;
       transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease,
         transform 0.15s ease;
     }
@@ -919,8 +923,10 @@
         <div id="week-range" style="font-size:13px; margin-bottom:6px; font-weight:500;"></div>
 <div class="flex-row" style="margin-bottom:6px;">
   <button id="week-prev" class="btn btn-sm">⬅️ Woche zurück</button>
-<button id="week-next" class="btn btn-sm">➡️ Woche vor</button>
-        <div class="week-bar" id="week-bar"></div>
+  <button id="week-next" class="btn btn-sm">➡️ Woche vor</button>
+</div>
+
+<div class="week-bar" id="week-bar"></div>
 
         <div class="progress-wrapper">
           <div class="progress-label">
@@ -2051,6 +2057,7 @@ document.getElementById("week-range").textContent =
         renderTimer();
         renderSummary();
         renderWeekBar();
+        setTimeout(scrollToToday, 300);
         renderLogs();
         renderDateLabel();
       }
@@ -2159,7 +2166,18 @@ document.getElementById("week-next").addEventListener("click", () => {
         startTimerLoop();
         initEvents();
       }
+function scrollToToday() {
+  const bar = document.getElementById("week-bar");
+  if (!bar) return;
 
+  const todayEl = bar.querySelector(".week-day.today");
+  if (!todayEl) return;
+
+  todayEl.scrollIntoView({
+    behavior: "smooth",
+    inline: "center"
+  });
+}
       init();
     })();
   </script>
