@@ -1,1 +1,8 @@
-
+{
+  "name": "Challenge App",
+  "short_name": "Challenge",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#22c55e"
+}
