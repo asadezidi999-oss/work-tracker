@@ -1,1 +1,1285 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>30‑Tage Fitness‑Challenge – 4 Spieler</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #020617;
+      --card: #020617;
+      --accent: #22c55e;
+      --accent-soft: rgba(34, 197, 94, 0.15);
+      --danger: #f97373;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --border: #1f2937;
+      --yellow: #facc15;
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --radius-pill: 999px;
+      --transition-fast: 0.18s ease-out;
+    }
 
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1f2937 0, #020617 55%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      padding: 16px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 1100px;
+      background: linear-gradient(145deg, #020617 0, #020617 40%, #020617 100%);
+      border-radius: 24px;
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.55);
+      padding: 18px 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .app::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background:
+        radial-gradient(circle at 0 0, rgba(56, 189, 248, 0.12) 0, transparent 55%),
+        radial-gradient(circle at 100% 0, rgba(52, 211, 153, 0.12) 0, transparent 55%);
+      opacity: 0.9;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      letter-spacing: 0.03em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h1 span.logo-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid rgba(34, 197, 94, 0.4);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #bbf7d0;
+    }
+
+    .subtitle {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      font-size: 0.7rem;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .header-badge span.dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 0 5px rgba(34, 197, 94, 0.25);
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr);
+      gap: 14px;
+    }
+
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .app {
+        padding: 14px 12px 16px;
+      }
+    }
+
+    .card {
+      background: radial-gradient(circle at top left, #020617 0, #020617 55%);
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      padding: 12px 12px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top right, rgba(148, 163, 184, 0.12), transparent 55%);
+      opacity: 0.5;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #e5e7eb;
+    }
+
+    .card-subtitle {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .pill {
+      padding: 4px 8px;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      font-size: 0.7rem;
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .pill span.dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #38bdf8;
+    }
+
+    .players {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    @media (max-width: 600px) {
+      .players {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .player-card {
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      padding: 8px 9px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .player-card::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background: radial-gradient(circle at top, rgba(34, 197, 94, 0.18), transparent 55%);
+      opacity: 0;
+      transition: opacity var(--transition-fast);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .player-card.leader::before {
+      opacity: 1;
+    }
+
+    .player-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .player-name-input {
+      background: transparent;
+      border: none;
+      border-bottom: 1px dashed rgba(148, 163, 184, 0.5);
+      color: var(--text);
+      font-size: 0.9rem;
+      padding: 2px 0;
+      width: 100%;
+      outline: none;
+    }
+
+    .player-name-input::placeholder {
+      color: rgba(148, 163, 184, 0.7);
+    }
+
+    .score-badge {
+      padding: 4px 8px;
+      border-radius: var(--radius-pill);
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      font-size: 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .score-badge span.value {
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+
+    .score-badge.leader {
+      border-color: rgba(34, 197, 94, 0.9);
+      background: rgba(22, 163, 74, 0.15);
+      color: #bbf7d0;
+    }
+
+    .score-badge.leader span.crown {
+      color: var(--yellow);
+    }
+
+    .player-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.7rem;
+      color: var(--muted);
+      flex-wrap: wrap;
+    }
+
+    .vs-banner {
+      margin-top: 4px;
+      padding: 7px 9px;
+      border-radius: var(--radius-md);
+      background: radial-gradient(circle at left, rgba(34, 197, 94, 0.18), transparent 55%);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      flex-wrap: wrap;
+    }
+
+    .vs-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      flex-wrap: wrap;
+    }
+
+    .vs-pill {
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #e5e7eb;
+    }
+
+    .vs-leader {
+      font-size: 0.8rem;
+      color: #bbf7d0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .vs-leader span.crown {
+      color: var(--yellow);
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      flex-wrap: wrap;
+    }
+
+    .summary-row span.highlight {
+      color: #e5e7eb;
+    }
+
+    .summary-row span.completed-count {
+      color: #bbf7d0;
+    }
+
+    .summary-row span.remaining-count {
+      color: #fca5a5;
+    }
+
+    .days-grid {
+      margin-top: 4px;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    @media (max-width: 700px) {
+      .days-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 500px) {
+      .days-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    .day-cell {
+      position: relative;
+      border-radius: 12px;
+      padding: 6px 5px 7px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      cursor: pointer;
+      transition: background var(--transition-fast), border-color var(--transition-fast),
+        transform var(--transition-fast), box-shadow var(--transition-fast);
+      min-height: 80px;
+    }
+
+    .day-cell:hover {
+      border-color: rgba(148, 163, 184, 0.7);
+      transform: translateY(-1px);
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.7);
+    }
+
+    .day-cell.completed {
+      background: radial-gradient(circle at top, rgba(34, 197, 94, 0.18), #020617);
+      border-color: rgba(34, 197, 94, 0.9);
+      box-shadow: 0 12px 30px rgba(22, 163, 74, 0.45);
+    }
+
+    .day-cell .day-number {
+      font-size: 0.7rem;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .day-cell .day-number span.badge {
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      font-size: 0.65rem;
+      color: var(--muted);
+    }
+
+    .day-cell.completed .day-number span.badge {
+      border-color: rgba(34, 197, 94, 0.9);
+      color: #bbf7d0;
+    }
+
+    .day-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.68rem;
+      color: var(--muted);
+    }
+
+    .toggle-row span.name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 70px;
+    }
+
+    .toggle {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      cursor: pointer;
+      background: rgba(15, 23, 42, 0.9);
+      transition: background var(--transition-fast), border-color var(--transition-fast),
+        transform var(--transition-fast), box-shadow var(--transition-fast), color var(--transition-fast);
+    }
+
+    .toggle.done {
+      background: rgba(34, 197, 94, 0.18);
+      border-color: rgba(34, 197, 94, 0.9);
+      color: #bbf7d0;
+      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.4);
+      transform: translateY(-0.5px);
+    }
+
+    .toggle.bonus {
+      border-style: dashed;
+      border-color: rgba(234, 179, 8, 0.9);
+      color: rgba(234, 179, 8, 0.9);
+    }
+
+    .toggle.bonus.active {
+      background: rgba(234, 179, 8, 0.18);
+      color: #fef9c3;
+      box-shadow: 0 0 0 1px rgba(234, 179, 8, 0.5);
+    }
+
+    .btn {
+      border: none;
+      border-radius: var(--radius-pill);
+      padding: 7px 12px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background var(--transition-fast), transform var(--transition-fast),
+        box-shadow var(--transition-fast), opacity var(--transition-fast), border-color var(--transition-fast);
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #022c22;
+      box-shadow: 0 12px 30px rgba(22, 163, 74, 0.6);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 40px rgba(22, 163, 74, 0.8);
+    }
+
+    .btn-outline {
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--muted);
+      border: 1px solid rgba(148, 163, 184, 0.6);
+    }
+
+    .btn-outline:hover {
+      border-color: rgba(248, 250, 252, 0.9);
+      color: #e5e7eb;
+      transform: translateY(-1px);
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.8);
+    }
+
+    .btn-danger {
+      background: rgba(248, 113, 113, 0.12);
+      color: #fecaca;
+      border: 1px solid rgba(248, 113, 113, 0.8);
+    }
+
+    .btn-danger:hover {
+      background: rgba(248, 113, 113, 0.2);
+      transform: translateY(-1px);
+      box-shadow: 0 12px 30px rgba(248, 113, 113, 0.6);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: default;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .punishment-card {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .punishment-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 0.7rem;
+    }
+
+    .punishment-tag {
+      padding: 4px 8px;
+      border-radius: var(--radius-pill);
+      border: 1px dashed rgba(148, 163, 184, 0.5);
+      color: var(--muted);
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .punishment-result {
+      margin-top: 4px;
+      padding: 8px 9px;
+      border-radius: var(--radius-md);
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      font-size: 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .punishment-result span.label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+    }
+
+    .punishment-result span.value {
+      font-size: 0.95rem;
+      color: #fecaca;
+    }
+
+    .punishment-meta {
+      font-size: 0.7rem;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .footer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: 2px;
+      flex-wrap: wrap;
+    }
+
+    .footer-row .left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .footer-row .left span.badge {
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .footer-row .right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .link-reset {
+      border: none;
+      background: none;
+      color: #fca5a5;
+      font-size: 0.7rem;
+      text-decoration: underline;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .link-reset:hover {
+      color: #fecaca;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="title-block">
+        <h1>
+          30‑Tage Challenge
+          <span class="logo-pill">4 Spieler · VS‑Mode</span>
+        </h1>
+        <div class="subtitle">
+          Vier Personen, 30 Tage, tägliche Punkte & eine zufällige Bestrafung am Ende.
+        </div>
+      </div>
+      <div class="header-badge">
+        <span class="dot"></span>
+        <span>Offline · Daten bleiben im Browser</span>
+      </div>
+    </header>
+
+    <main>
+      <!-- Linke Seite: Spieler & Punkte -->
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Spieler & Punkte</div>
+            <div class="card-subtitle">Namen anpassen, Fortschritt sehen, direkten Vergleich genießen.</div>
+          </div>
+          <div class="pill">
+            <span class="dot"></span>
+            <span>30 Tage · 4 Spieler</span>
+          </div>
+        </div>
+
+        <div class="players">
+          <div class="player-card" id="player1-card">
+            <div class="player-header">
+              <input
+                id="player1-name"
+                class="player-name-input"
+                type="text"
+                placeholder="Spieler 1"
+              />
+              <div class="score-badge" id="player1-score-badge">
+                <span>Score</span>
+                <span class="value" id="player1-score">0</span>
+              </div>
+            </div>
+            <div class="player-footer">
+              <span id="player1-completed-label">0/30 Tage erledigt</span>
+              <span id="player1-bonus-label">0 Bonuspunkte</span>
+            </div>
+          </div>
+
+          <div class="player-card" id="player2-card">
+            <div class="player-header">
+              <input
+                id="player2-name"
+                class="player-name-input"
+                type="text"
+                placeholder="Spieler 2"
+              />
+              <div class="score-badge" id="player2-score-badge">
+                <span>Score</span>
+                <span class="value" id="player2-score">0</span>
+              </div>
+            </div>
+            <div class="player-footer">
+              <span id="player2-completed-label">0/30 Tage erledigt</span>
+              <span id="player2-bonus-label">0 Bonuspunkte</span>
+            </div>
+          </div>
+
+          <div class="player-card" id="player3-card">
+            <div class="player-header">
+              <input
+                id="player3-name"
+                class="player-name-input"
+                type="text"
+                placeholder="Spieler 3"
+              />
+              <div class="score-badge" id="player3-score-badge">
+                <span>Score</span>
+                <span class="value" id="player3-score">0</span>
+              </div>
+            </div>
+            <div class="player-footer">
+              <span id="player3-completed-label">0/30 Tage erledigt</span>
+              <span id="player3-bonus-label">0 Bonuspunkte</span>
+            </div>
+          </div>
+
+          <div class="player-card" id="player4-card">
+            <div class="player-header">
+              <input
+                id="player4-name"
+                class="player-name-input"
+                type="text"
+                placeholder="Spieler 4"
+              />
+              <div class="score-badge" id="player4-score-badge">
+                <span>Score</span>
+                <span class="value" id="player4-score">0</span>
+              </div>
+            </div>
+            <div class="player-footer">
+              <span id="player4-completed-label">0/30 Tage erledigt</span>
+              <span id="player4-bonus-label">0 Bonuspunkte</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="vs-banner" id="vs-banner">
+          <div class="vs-left">
+            <span class="vs-pill">Head‑to‑Head</span>
+            <span id="vs-status-text">Noch alles offen – legt los!</span>
+          </div>
+          <div class="vs-leader" id="vs-leader">
+            <span class="crown">👑</span>
+            <span id="vs-leader-text">Noch kein Leader</span>
+          </div>
+        </div>
+
+        <div class="summary-row">
+          <span>
+            <span class="highlight">Gesamt erledigte Tage:</span>
+            <span class="completed-count" id="total-completed">0</span> / 120
+          </span>
+          <span>
+            <span class="highlight">Verbleibende Tage:</span>
+            <span class="remaining-count" id="total-remaining">120</span>
+          </span>
+        </div>
+      </section>
+
+      <!-- Rechte Seite: Tage & Bestrafung -->
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">30‑Tage Übersicht</div>
+            <div class="card-subtitle">Tippe auf einen Tag, um Training & Bonus für alle zu setzen.</div>
+          </div>
+          <button class="btn btn-outline" id="reset-btn" type="button">
+            🔄 Challenge zurücksetzen
+          </button>
+        </div>
+
+        <div class="days-grid" id="days-grid"></div>
+
+        <div class="punishment-card">
+          <div class="card-header" style="margin-top: 4px;">
+            <div>
+              <div class="card-title">Zufällige Bestrafung</div>
+              <div class="card-subtitle">
+                Am Ende der Challenge zieht der Verlierer eine Strafe. Fair & zufällig.
+              </div>
+            </div>
+          </div>
+
+          <div class="punishment-list" id="punishment-list">
+            <!-- Tags werden per JS gefüllt -->
+          </div>
+
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn btn-primary" id="draw-punishment-btn" type="button">
+              🎲 Bestrafung auswählen
+            </button>
+            <button class="btn btn-danger" id="draw-loser-only-btn" type="button">
+              🎯 Nur Verlierer bestrafen
+            </button>
+          </div>
+
+          <div class="punishment-result" id="punishment-result" style="display: none;">
+            <span class="label">Gezogene Bestrafung</span>
+            <span class="value" id="punishment-text"></span>
+            <div class="punishment-meta">
+              <span id="punishment-meta-who"></span>
+              <span id="punishment-meta-time"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-row">
+          <div class="left">
+            <span class="badge">Mobile‑first · 1–2 Klicks pro Tag</span>
+            <span>Fortschritt wird automatisch im Browser gespeichert.</span>
+          </div>
+          <div class="right">
+            <button class="link-reset" id="hard-reset-btn" type="button">
+              Alles löschen & neu starten
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script>
+    (function () {
+      const STORAGE_KEY = "fitnessChallenge30_4players_v1";
+
+      const defaultState = {
+        players: [
+          { name: "Spieler 1" },
+          { name: "Spieler 2" },
+          { name: "Spieler 3" },
+          { name: "Spieler 4" }
+        ],
+        days: Array.from({ length: 30 }, (_, i) => ({
+          day: i + 1,
+          done: [false, false, false, false],
+          bonus: [false, false, false, false]
+        })),
+        punishmentHistory: null
+      };
+
+      const punishments = [
+        "20 € an den Gewinner zahlen",
+        "Essen für den Gewinner ausgeben",
+        "Wohnung des Gewinners komplett putzen",
+        "3 km Joggen gehen (und Beweisfoto schicken)",
+        "Kein Gaming für 2 Tage",
+        "Peinliches Video in die Familiengruppe posten",
+        "1 Woche lang den Müll rausbringen",
+        "Eine Trainingseinheit nach Wahl des Gewinners mitmachen",
+        "1 Tag lang Handy nur 1 Stunde benutzen",
+        "Dem Gewinner einen motivierenden Brief schreiben"
+      ];
+
+      const els = {
+        playerNames: [
+          document.getElementById("player1-name"),
+          document.getElementById("player2-name"),
+          document.getElementById("player3-name"),
+          document.getElementById("player4-name")
+        ],
+        playerCards: [
+          document.getElementById("player1-card"),
+          document.getElementById("player2-card"),
+          document.getElementById("player3-card"),
+          document.getElementById("player4-card")
+        ],
+        playerScoreBadges: [
+          document.getElementById("player1-score-badge"),
+          document.getElementById("player2-score-badge"),
+          document.getElementById("player3-score-badge"),
+          document.getElementById("player4-score-badge")
+        ],
+        playerScores: [
+          document.getElementById("player1-score"),
+          document.getElementById("player2-score"),
+          document.getElementById("player3-score"),
+          document.getElementById("player4-score")
+        ],
+        playerCompletedLabels: [
+          document.getElementById("player1-completed-label"),
+          document.getElementById("player2-completed-label"),
+          document.getElementById("player3-completed-label"),
+          document.getElementById("player4-completed-label")
+        ],
+        playerBonusLabels: [
+          document.getElementById("player1-bonus-label"),
+          document.getElementById("player2-bonus-label"),
+          document.getElementById("player3-bonus-label"),
+          document.getElementById("player4-bonus-label")
+        ],
+        vsStatusText: document.getElementById("vs-status-text"),
+        vsLeaderText: document.getElementById("vs-leader-text"),
+        vsLeader: document.getElementById("vs-leader"),
+        totalCompleted: document.getElementById("total-completed"),
+        totalRemaining: document.getElementById("total-remaining"),
+        daysGrid: document.getElementById("days-grid"),
+        punishmentList: document.getElementById("punishment-list"),
+        drawPunishmentBtn: document.getElementById("draw-punishment-btn"),
+        drawLoserOnlyBtn: document.getElementById("draw-loser-only-btn"),
+        punishmentResult: document.getElementById("punishment-result"),
+        punishmentText: document.getElementById("punishment-text"),
+        punishmentMetaWho: document.getElementById("punishment-meta-who"),
+        punishmentMetaTime: document.getElementById("punishment-meta-time"),
+        resetBtn: document.getElementById("reset-btn"),
+        hardResetBtn: document.getElementById("hard-reset-btn")
+      };
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return structuredClone(defaultState);
+          const parsed = JSON.parse(raw);
+          const state = structuredClone(defaultState);
+
+          if (parsed.players && Array.isArray(parsed.players)) {
+            for (let i = 0; i < 4; i++) {
+              state.players[i].name = parsed.players[i]?.name || state.players[i].name;
+            }
+          }
+
+          if (parsed.days && Array.isArray(parsed.days) && parsed.days.length === 30) {
+            state.days = parsed.days.map((d, i) => ({
+              day: i + 1,
+              done: Array.isArray(d.done) && d.done.length === 4
+                ? d.done.map(Boolean)
+                : [false, false, false, false],
+              bonus: Array.isArray(d.bonus) && d.bonus.length === 4
+                ? d.bonus.map(Boolean)
+                : [false, false, false, false]
+            }));
+          }
+
+          if (parsed.punishmentHistory) {
+            state.punishmentHistory = parsed.punishmentHistory;
+          }
+
+          return state;
+        } catch (e) {
+          console.warn("Konnte gespeicherten Zustand nicht laden, starte neu.", e);
+          return structuredClone(defaultState);
+        }
+      }
+
+      function saveState() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (e) {
+          console.warn("Konnte Zustand nicht speichern.", e);
+        }
+      }
+
+      let state = loadState();
+
+      function renderPunishmentTags() {
+        els.punishmentList.innerHTML = "";
+        punishments.forEach((p) => {
+          const tag = document.createElement("span");
+          tag.className = "punishment-tag";
+          tag.textContent = p;
+          els.punishmentList.appendChild(tag);
+        });
+      }
+
+      function renderDays() {
+        els.daysGrid.innerHTML = "";
+        state.days.forEach((dayData, dayIndex) => {
+          const cell = document.createElement("div");
+          cell.className = "day-cell";
+          const anyDone = dayData.done.some(Boolean);
+          if (anyDone) cell.classList.add("completed");
+
+          const header = document.createElement("div");
+          header.className = "day-number";
+          const left = document.createElement("span");
+          left.textContent = "Tag " + dayData.day;
+          const badge = document.createElement("span");
+          badge.className = "badge";
+          const doneCount = dayData.done.filter(Boolean).length;
+          badge.textContent = doneCount + "/4 erledigt";
+          header.appendChild(left);
+          header.appendChild(badge);
+
+          const actions = document.createElement("div");
+          actions.className = "day-actions";
+
+          for (let i = 0; i < 4; i++) {
+            const row = document.createElement("div");
+            row.className = "toggle-row";
+
+            const toggleDone = document.createElement("button");
+            toggleDone.type = "button";
+            toggleDone.className = "toggle";
+            toggleDone.textContent = "✔";
+            if (dayData.done[i]) toggleDone.classList.add("done");
+            toggleDone.addEventListener("click", (e) => {
+              e.stopPropagation();
+              state.days[dayIndex].done[i] = !state.days[dayIndex].done[i];
+              saveState();
+              fullRender();
+            });
+
+            const nameSpan = document.createElement("span");
+            nameSpan.className = "name";
+            nameSpan.textContent = state.players[i].name || `Spieler ${i + 1}`;
+
+            const toggleBonus = document.createElement("button");
+            toggleBonus.type = "button";
+            toggleBonus.className = "toggle bonus";
+            toggleBonus.textContent = "+1";
+            if (dayData.bonus[i]) toggleBonus.classList.add("active");
+            toggleBonus.title = "Bonus für " + (state.players[i].name || `Spieler ${i + 1}`);
+            toggleBonus.addEventListener("click", (e) => {
+              e.stopPropagation();
+              state.days[dayIndex].bonus[i] = !state.days[dayIndex].bonus[i];
+              saveState();
+              fullRender();
+            });
+
+            row.appendChild(toggleDone);
+            row.appendChild(nameSpan);
+            row.appendChild(toggleBonus);
+            actions.appendChild(row);
+          }
+
+          cell.appendChild(header);
+          cell.appendChild(actions);
+
+          cell.addEventListener("click", () => {
+            const allDone = dayData.done.every(Boolean);
+            const noneDone = dayData.done.every((v) => !v);
+            if (noneDone) {
+              state.days[dayIndex].done = [true, true, true, true];
+            } else if (allDone) {
+              state.days[dayIndex].done = [false, false, false, false];
+            } else {
+              state.days[dayIndex].done = [true, true, true, true];
+            }
+            saveState();
+            fullRender();
+          });
+
+          els.daysGrid.appendChild(cell);
+        });
+      }
+
+      function computeScores() {
+        const scores = [0, 0, 0, 0];
+        const daysDone = [0, 0, 0, 0];
+        const bonus = [0, 0, 0, 0];
+
+        state.days.forEach((d) => {
+          for (let i = 0; i < 4; i++) {
+            if (d.done[i]) {
+              scores[i] += 1;
+              daysDone[i] += 1;
+            }
+            if (d.bonus[i]) {
+              scores[i] += 1;
+              bonus[i] += 1;
+            }
+          }
+        });
+
+        return { scores, daysDone, bonus };
+      }
+
+      function renderScores() {
+        const { scores, daysDone, bonus } = computeScores();
+
+        let totalCompleted = 0;
+        const totalPossible = 30 * 4;
+
+        for (let i = 0; i < 4; i++) {
+          els.playerScores[i].textContent = scores[i];
+          els.playerCompletedLabels[i].textContent = `${daysDone[i]}/30 Tage erledigt`;
+          els.playerBonusLabels[i].textContent = `${bonus[i]} Bonuspunkte`;
+          totalCompleted += daysDone[i];
+        }
+
+        els.totalCompleted.textContent = totalCompleted;
+        els.totalRemaining.textContent = totalPossible - totalCompleted;
+
+        els.playerCards.forEach((c) => c.classList.remove("leader"));
+        els.playerScoreBadges.forEach((b) => b.classList.remove("leader"));
+
+        const maxScore = Math.max(...scores);
+        const leaders = scores
+          .map((s, i) => ({ s, i }))
+          .filter((x) => x.s === maxScore && maxScore > 0)
+          .map((x) => x.i);
+
+        if (leaders.length === 1) {
+          const li = leaders[0];
+          els.playerCards[li].classList.add("leader");
+          els.playerScoreBadges[li].classList.add("leader");
+        }
+
+        let statusText = "";
+        let leaderText = "";
+
+        const sorted = scores
+          .map((s, i) => ({ s, i }))
+          .sort((a, b) => b.s - a.s);
+
+        if (maxScore === 0) {
+          statusText = "Noch alles offen – legt los!";
+          leaderText = "Noch kein Leader";
+          els.vsLeader.style.opacity = "0.7";
+        } else {
+          const first = sorted[0];
+          const second = sorted[1];
+          if (first.s === second.s) {
+            statusText = "Enges Rennen – mehrere Spieler gleichauf!";
+            const tiedNames = sorted
+              .filter((x) => x.s === first.s)
+              .map((x) => state.players[x.i].name || `Spieler ${x.i + 1}`)
+              .join(", ");
+            leaderText = `Gleichstand: ${tiedNames}`;
+            els.vsLeader.style.opacity = "1";
+          } else {
+            const diff = first.s - second.s;
+            const leaderName = state.players[first.i].name || `Spieler ${first.i + 1}`;
+            statusText = `${leaderName} führt mit ${diff} Punkt${diff === 1 ? "" : "en"}.`;
+            leaderText = `${leaderName} liegt vorne`;
+            els.vsLeader.style.opacity = "1";
+          }
+        }
+
+        els.vsStatusText.textContent = statusText;
+        els.vsLeaderText.textContent = leaderText;
+      }
+
+      function renderNames() {
+        for (let i = 0; i < 4; i++) {
+          els.playerNames[i].value = state.players[i].name;
+        }
+      }
+
+      function renderPunishmentHistory() {
+        if (!state.punishmentHistory) {
+          els.punishmentResult.style.display = "none";
+          return;
+        }
+        els.punishmentResult.style.display = "flex";
+        els.punishmentText.textContent = state.punishmentHistory.text;
+        els.punishmentMetaWho.textContent = state.punishmentHistory.who || "";
+        els.punishmentMetaTime.textContent = state.punishmentHistory.time || "";
+      }
+
+      function fullRender() {
+        renderNames();
+        renderDays();
+        renderScores();
+        renderPunishmentHistory();
+      }
+
+      function randomPunishment() {
+        const idx = Math.floor(Math.random() * punishments.length);
+        return punishments[idx];
+      }
+
+      function formatDateTime() {
+        const d = new Date();
+        return (
+          d.toLocaleDateString("de-DE", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric"
+          }) +
+          " · " +
+          d.toLocaleTimeString("de-DE", {
+            hour: "2-digit",
+            minute: "2-digit"
+          })
+        );
+      }
+
+      function drawPunishment(forLoserOnly) {
+        const { scores } = computeScores();
+        const text = randomPunishment();
+        let who = "";
+
+        if (forLoserOnly) {
+          const minScore = Math.min(...scores);
+          const losers = scores
+            .map((s, i) => ({ s, i }))
+            .filter((x) => x.s === minScore);
+
+          if (losers.length === 1) {
+            const li = losers[0].i;
+            const name = state.players[li].name || `Spieler ${li + 1}`;
+            who = `${name} (Verlierer) muss die Strafe machen.`;
+          } else {
+            const names = losers
+              .map((x) => state.players[x.i].name || `Spieler ${x.i + 1}`)
+              .join(", ");
+            who = `Mehrere Verlierer (${names}) – ihr entscheidet, wer es macht.`;
+          }
+        } else {
+          who = "Ihr entscheidet selbst, wer die Strafe bekommt.";
+        }
+
+        const time = formatDateTime();
+        state.punishmentHistory = { text, who, time };
+        saveState();
+        renderPunishmentHistory();
+      }
+
+      function softReset() {
+        state.days = structuredClone(defaultState.days);
+        state.punishmentHistory = null;
+        saveState();
+        fullRender();
+      }
+
+      function hardReset() {
+        if (!confirm("Willst du wirklich alles löschen und komplett neu starten?")) return;
+        state = structuredClone(defaultState);
+        saveState();
+        fullRender();
+      }
+
+      function initEvents() {
+        for (let i = 0; i < 4; i++) {
+          els.playerNames[i].addEventListener("input", () => {
+            state.players[i].name = els.playerNames[i].value.trim() || `Spieler ${i + 1}`;
+            saveState();
+            renderScores();
+            renderDays();
+          });
+        }
+
+        els.drawPunishmentBtn.addEventListener("click", () => {
+          drawPunishment(false);
+        });
+
+        els.drawLoserOnlyBtn.addEventListener("click", () => {
+          drawPunishment(true);
+        });
+
+        els.resetBtn.addEventListener("click", () => {
+          softReset();
+        });
+
+        els.hardResetBtn.addEventListener("click", () => {
+          hardReset();
+        });
+      }
+
+      renderPunishmentTags();
+      initEvents();
+      fullRender();
+    })();
+  </script>
+</body>
+</html>
