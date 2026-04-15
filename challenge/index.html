@@ -795,7 +795,83 @@ if ('serviceWorker' in navigator) {
           </span>
         </div>
       </section>
+      <!-- 🔥 Kalorien Rechner -->
+<section class="card">
+  <div class="card-header">
+    <div>
+      <div class="card-title">Kalorien Rechner</div>
+      <div class="card-subtitle">Berechne deinen täglichen Bedarf</div>
+    </div>
+  </div>
 
+  <div style="display:flex; flex-direction:column; gap:10px;">
+
+    <input id="age2" type="number" placeholder="Alter" class="player-name-input">
+<input id="weight2" type="number" placeholder="Gewicht (kg)" class="player-name-input">
+<input id="height2" type="number" placeholder="Größe (cm)" class="player-name-input">
+
+<select id="gender2" class="player-name-input">
+      <option value="male">Mann</option>
+      <option value="female">Frau</option>
+    </select>
+
+    <select id="activity" class="player-name-input">
+      <option value="1.2">Wenig aktiv</option>
+      <option value="1.375">Leicht aktiv</option>
+      <option value="1.55">Mittel aktiv</option>
+      <option value="1.725">Sehr aktiv</option>
+    </select>
+
+    <button class="btn btn-primary" id="calcCalories">
+      🔥 Berechnen
+    </button>
+
+    <div id="calorieResult" style="color:#bbf7d0;"></div>
+
+  </div>
+</section>
+<!-- 🔥 PRO Fitness Rechner -->
+<section class="card">
+  <div class="card-header">
+    <div>
+      <div class="card-title">Fitness Rechner PRO</div>
+      <div class="card-subtitle">Kalorien + Protein automatisch nach Ziel</div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:10px;">
+
+    <input id="age" type="number" placeholder="Alter" class="player-name-input">
+    <input id="weight" type="number" placeholder="Gewicht (kg)" class="player-name-input">
+    <input id="height" type="number" placeholder="Größe (cm)" class="player-name-input">
+
+    <select id="gender" class="player-name-input">
+      <option value="male">Mann</option>
+      <option value="female">Frau</option>
+    </select>
+
+    <select id="activity2" class="player-name-input">
+      <option value="1.2">Wenig aktiv</option>
+      <option value="1.375">Leicht aktiv</option>
+      <option value="1.55">Mittel aktiv</option>
+      <option value="1.725">Sehr aktiv</option>
+    </select>
+
+    <!-- 🔥 NEU -->
+    <select id="goal" class="player-name-input">
+      <option value="lose">Abnehmen</option>
+      <option value="maintain">Gewicht halten</option>
+      <option value="gain">Muskelaufbau</option>
+    </select>
+
+    <button class="btn btn-primary" id="calcAll">
+      🚀 Berechnen
+    </button>
+
+    <div id="resultBox" style="color:#bbf7d0;"></div>
+
+  </div>
+</section>
       <!-- Rechte Seite: Tage & Bestrafung -->
       <section class="card">
         <div class="card-header">
@@ -858,6 +934,29 @@ if ('serviceWorker' in navigator) {
     </main>
   </div>
   <script>
+  // 🔥 Kalorien Rechner
+document.getElementById("calcCalories").addEventListener("click", () => {
+  const age = parseInt(document.getElementById("age2").value);
+  const weight = parseFloat(document.getElementById("weight2").value);
+  const height = parseFloat(document.getElementById("height2").value);
+  const gender = document.getElementById("gender2").value;
+  const activity = parseFloat(document.getElementById("activity").value);
+  const result = document.getElementById("calorieResult");
+
+  if (!age || !weight || !height) {
+    result.textContent = "Bitte alles ausfüllen!";
+    return;
+  }
+
+  const bmr =
+    gender === "male"
+      ? 10 * weight + 6.25 * height - 5 * age + 5
+      : 10 * weight + 6.25 * height - 5 * age - 161;
+
+  const calories = Math.round(bmr * activity);
+
+  result.textContent = `🔥 Dein Bedarf: ${calories} kcal`;
+});  
     (function () {
       const STORAGE_KEY = "fitnessChallenge30_4players_v1";
 
@@ -1289,6 +1388,60 @@ if ('serviceWorker' in navigator) {
       initEvents();
       fullRender();
     })();
+    // 🔥 Kalorien Rechner
+// 🚀 PRO Fitness Rechner
+document.getElementById("calcAll").addEventListener("click", () => {
+  const age = parseInt(document.getElementById("age").value);
+  const weight = parseFloat(document.getElementById("weight").value);
+  const height = parseFloat(document.getElementById("height").value);
+  const gender = document.getElementById("gender").value;
+  const activity = parseFloat(document.getElementById("activity2").value);
+  const goal = document.getElementById("goal").value;
+  const result = document.getElementById("resultBox");
+
+  if (!age || !weight || !height) {
+    result.textContent = "Bitte alles ausfüllen!";
+    return;
+  }
+
+  const bmr =
+    gender === "male"
+      ? 10 * weight + 6.25 * height - 5 * age + 5
+      : 10 * weight + 6.25 * height - 5 * age - 161;
+
+  let calories = bmr * activity;
+  let protein = 0;
+
+  if (goal === "lose") {
+    calories -= 400;
+    protein = weight * 1.8;
+  } else if (goal === "maintain") {
+    protein = weight * 1.4;
+  } else if (goal === "gain") {
+    calories += 300;
+    protein = weight * 2;
+  }
+
+  result.innerHTML = `
+    🔥 Kalorien: <b>${Math.round(calories)} kcal</b><br>
+    💪 Protein: <b>${Math.round(protein)} g</b>
+  `;
+});
+// 💪 Protein Rechner
+document.getElementById("calcProtein").addEventListener("click", () => {
+  const weight = parseFloat(document.getElementById("proteinWeight").value);
+  const goal = parseFloat(document.getElementById("proteinGoal").value);
+  const result = document.getElementById("proteinResult");
+
+  if (!weight) {
+    result.textContent = "Bitte Gewicht eingeben!";
+    return;
+  }
+
+  const protein = Math.round(weight * goal);
+
+  result.textContent = `Du brauchst ca. ${protein} g Protein pro Tag`;
+});
   </script>
 </body>
 </html>
