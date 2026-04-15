@@ -1,10 +1,9 @@
 {
-  "name": "Challenge App",
+  "name": "Fitness Challenge",
   "short_name": "Challenge",
-  "start_url": "/work-tracker/challenge/index.html",
-  "scope": "/work-tracker/challenge/",
+  "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#000000",
+  "background_color": "#020617",
   "theme_color": "#22c55e",
   "icons": [
     {
