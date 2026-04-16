@@ -1602,7 +1602,7 @@
               <span class="quiz-word-de" id="quizWordDE">Wort</span>
 <span class="quiz-word-ar hidden" id="quizWordAR"></span>
             </div>
-            <div class="quiz-question" id="quizQuestionText">Was bedeutet dieses Wort?</div>
+            <div class="quiz-question" id="quizQuestionText">Wie sagt man das auf Deutsch?</div>
           </div>
 
           <!-- Multiple Choice -->
@@ -2317,27 +2317,31 @@ document.getElementById("repeatModeBtn").onclick = () => {
 function loadQuizQuestion() {
   const q = state.quizList[state.quizIndex];
 
-  // ❗ wichtig – verhindert leeren Bildschirm
   if (!q) {
     toast("Keine Fragen gefunden!", "error");
     showScreen("dashboard");
     return;
   }
 
-  // Wort anzeigen
-  document.getElementById("quizWordDE").textContent = q.de;
+  // 👇 أضف هذا هنا
+  const questionText = document.getElementById("quizQuestionText");
+  questionText.textContent =
+    state.quizMode === "input"
+      ? "Schreibe auf Deutsch:"
+      : "Wähle die richtige Antwort:";
 
-  // Fortschritt anzeigen
+  document.getElementById("quizWordDE").textContent = q.ar;
+
   document.getElementById("quizProgress").textContent =
     `${state.quizIndex + 1} / ${state.quizList.length}`;
 
-  // Quiz-Modus
   if (state.quizMode === "choice") {
     renderMultipleChoice(q);
   } else {
     renderInputMode(q);
   }
 }
+
 
 /* ------------------------------------------------------------
    12) MULTIPLE CHOICE
@@ -2358,18 +2362,30 @@ function renderMultipleChoice(q) {
   answers.forEach(a => {
     const btn = document.createElement("div");
     btn.className = "quiz-option";
-    btn.textContent = a.ar;
+    btn.textContent = a.de;
 
     btn.onclick = () => {
-      if (a.ar === q.ar) {
-        btn.classList.add("correct");
-        handleCorrect(q);
-      } else {
-        btn.classList.add("wrong");
-        handleWrong(q);
-      }
-      setTimeout(() => loadNext(), 600);
-    };
+
+  // 👇 هون نحط الكود تبعك
+  const allButtons = document.querySelectorAll(".quiz-option");
+
+  allButtons.forEach(b => {
+    if (b.textContent === q.de) {
+      b.classList.add("correct");
+    } else {
+      b.classList.add("wrong");
+    }
+  });
+
+  // 👇 منطق الصح والغلط
+  if (a.de === q.de) {
+    handleCorrect(q);
+  } else {
+    handleWrong(q);
+  }
+
+  setTimeout(() => loadNext(), 800);
+};
 
     options.appendChild(btn);
   });
@@ -2387,7 +2403,7 @@ function renderInputMode(q) {
   input.focus();
 
   document.getElementById("submitInputAnswer").onclick = () => {
-    if (input.value.trim() === q.ar) {
+    if (input.value.trim().toLowerCase().includes(q.de.toLowerCase())) {
       handleCorrect(q);
     } else {
       handleWrong(q);
