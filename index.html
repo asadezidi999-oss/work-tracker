@@ -961,6 +961,12 @@ html, body {
   <button id="week-prev" class="btn btn-sm">⬅️ Woche zurück</button>
   <button id="week-next" class="btn btn-sm">➡️ Woche vor</button>
 </div>
+<div id="month-label" style="font-size:13px; margin-bottom:6px; font-weight:500;"></div>
+<div id="month-total" style="font-size:12px; color:gray;"></div>
+<div class="flex-row" style="margin-bottom:6px;">
+  <button id="month-prev" class="btn btn-sm">⬅️ Monat zurück</button>
+  <button id="month-next" class="btn btn-sm">➡️ Monat vor</button>
+</div>
 
 <div class="week-bar" id="week-bar"></div>
 
@@ -1092,8 +1098,29 @@ html, body {
   selectedBranchId: null,
   selectedDay: null,
   selectedWeekStart: null, // ⬅️ أضف هذا السطر
+  selectedMonth: null,
   timerInterval: null
 };
+function getLocation() {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      resolve(null);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        resolve({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude
+        });
+      },
+      () => {
+        resolve(null);
+      }
+    );
+  });
+}
 
       function uuid() {
         return "xxxxxx".replace(/x/g, () =>
@@ -1378,28 +1405,39 @@ html, body {
         return true;
       }
 
-      function startWork() {
-        const branch = getSelectedBranch();
-        if (!branch) {
-          showToast("error", "Start", "Bitte zuerst eine Filiale anlegen.");
-          return;
-        }
-        if (!validateStart(branch)) return;
-        const startTime = now().getTime();
-        const log = {
-          id: uuid(),
-          date: toDateOnlyString(now()),
-          start: startTime,
-          end: null,
-          pauses: [],
-          status: "running"
-        };
-        branch.logs.push(log);
-        saveState();
-        renderAll();
-        showToast("success", "Start", "Arbeitszeit gestartet.");
-      }
+      async function startWork() {
+  const branch = getSelectedBranch();
+  if (!branch) {
+    showToast("error", "Start", "Bitte zuerst eine Filiale anlegen.");
+    return;
+  }
 
+  if (!validateStart(branch)) return;
+
+  const location = await getLocation(); // 📍 هنا نجيب الموقع
+
+  const log = {
+    id: uuid(),
+    date: toDateOnlyString(now()),
+    start: now().getTime(),
+    end: null,
+    pauses: [],
+    status: "running",
+
+    // 👇 جديد
+    location: location
+  };
+
+  branch.logs.push(log);
+  saveState();
+  renderAll();
+
+  if (location) {
+    showToast("success", "Start", "Arbeitszeit gestartet + Standort gespeichert 📍");
+  } else {
+    showToast("info", "Start", "Gestartet ohne Standort.");
+  }
+}
       function startPause() {
         const branch = getSelectedBranch();
         if (!branch) {
@@ -1583,47 +1621,65 @@ html, body {
       }
 
       function renderWeekBar() {
-        const bar = document.getElementById("week-bar");
-        bar.innerHTML = "";
-        const branch = getSelectedBranch();
-        const today = now();
-        const monday = new Date(state.selectedWeekStart);
-        const end = new Date(monday);
-end.setDate(end.getDate() + 6);
+  const bar = document.getElementById("week-bar");
+  bar.innerHTML = "";
 
-const format = (d) =>
-  d.getDate().toString().padStart(2, "0") + "." +
-  (d.getMonth() + 1).toString().padStart(2, "0") + "." +
-  d.getFullYear();
+  const branch = getSelectedBranch();
+  const today = now();
+  const monday = new Date(state.selectedWeekStart);
 
-document.getElementById("week-range").textContent =
-  "📅 " + format(monday) + " – " + format(end);
-        const durations = computeWeekDurations(branch, monday);
-        for (let i = 0; i < 7; i++) {
-          const d = new Date(monday);
-          d.setDate(d.getDate() + i);
-          const dateStr = toDateOnlyString(d);
-          const label = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"][i];
-          const dayEl = document.createElement("div");
-          dayEl.className = "week-day";
-          if (dateStr === state.selectedDay) {
-            dayEl.classList.add("active");
-          }
-          if (dateStr === toDateOnlyString(today)) {
-            dayEl.classList.add("today");
-          }
-          dayEl.innerHTML = `<span class="label">${label}</span><span class="hours">${formatDuration(
-            durations[i]
-          )}</span>`;
-          dayEl.onclick = () => {
-            state.selectedDay = dateStr;
-            saveState();
-            renderAll();
-          };
-          bar.appendChild(dayEl);
-        }
-      }
+  const end = new Date(monday);
+  end.setDate(end.getDate() + 6);
 
+  const format = (d) =>
+    d.getDate().toString().padStart(2, "0") + "." +
+    (d.getMonth() + 1).toString().padStart(2, "0") + "." +
+    d.getFullYear();
+
+  document.getElementById("week-range").textContent =
+    "📅 " + format(monday) + " – " + format(end);
+
+  const durations = computeWeekDurations(branch, monday);
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(d.getDate() + i);
+
+    const dateStr = toDateOnlyString(d);
+    const label = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"][i];
+
+    const dayEl = document.createElement("div");
+    dayEl.className = "week-day";
+
+    // ✅ إذا اشتغلت بهذا اليوم → أخضر
+    if (durations[i] > 0) {
+      dayEl.style.background = "rgba(34,197,94,0.2)";
+      dayEl.style.borderColor = "#22c55e";
+    }
+
+    // ✅ اليوم الحالي
+    if (dateStr === toDateOnlyString(today)) {
+      dayEl.classList.add("today");
+    }
+    // اليوم المختار (المهم 🔥)
+if (dateStr === state.selectedDay) {
+  dayEl.classList.add("active");
+}
+
+    dayEl.innerHTML = `
+      <span class="label">${label}</span>
+      <span class="hours">${formatDuration(durations[i])}</span>
+    `;
+
+    dayEl.onclick = () => {
+      state.selectedDay = dateStr;
+      saveState();
+      renderAll();
+    };
+
+    bar.appendChild(dayEl);
+  }
+}
       function renderLogs() {
         const list = document.getElementById("logs-list");
         const label = document.getElementById("logs-branch-label");
@@ -1685,6 +1741,13 @@ document.getElementById("week-range").textContent =
           times.appendChild(durTag);
           main.appendChild(title);
           main.appendChild(times);
+          if (log.location) {
+  const loc = document.createElement("div");
+  loc.className = "small-text";
+  loc.textContent =
+    "📍 " + log.location.lat.toFixed(4) + ", " + log.location.lng.toFixed(4);
+  main.appendChild(loc);
+}
 
           const status = document.createElement("div");
           status.className = "log-status log-tag";
@@ -2088,6 +2151,8 @@ document.getElementById("week-range").textContent =
       }
 
       function renderAll() {
+        renderDateLabel();
+        renderMonth(); // 👈 DAS HIER HINZUFÜGEN
         ensureBranchSelected();
         renderBranches();
         renderTimer();
@@ -2100,16 +2165,58 @@ document.getElementById("week-range").textContent =
       function initEvents() {
         document.getElementById("week-prev").addEventListener("click", () => {
   const d = new Date(state.selectedWeekStart);
-  d.setDate(d.getDate() - 7); // ⬅️ أسبوع لورا
+  d.setDate(d.getDate() - 7);
+
   state.selectedWeekStart = d.getTime();
+
+  // 🔥 جديد: تحديث الشهر
+  state.selectedMonth = new Date(
+    d.getFullYear(),
+    d.getMonth(),
+    1
+  ).getTime();
+
   saveState();
   renderAll();
 });
+document.getElementById("month-prev").addEventListener("click", () => {
+  const d = new Date(state.selectedMonth);
+  d.setMonth(d.getMonth() - 1);
+
+  state.selectedMonth = d.getTime();
+
+  // 🔥 خلي الأسبوع يبدأ من أول أسبوع في الشهر
+  state.selectedWeekStart = getMonday(d).getTime();
+
+  renderAll();
+});
+
+document.getElementById("month-next").addEventListener("click", () => {
+  const d = new Date(state.selectedMonth);
+  d.setMonth(d.getMonth() + 1);
+
+  state.selectedMonth = d.getTime();
+
+  // 🔥
+  state.selectedWeekStart = getMonday(d).getTime();
+
+  renderAll();
+});
+
 
 document.getElementById("week-next").addEventListener("click", () => {
   const d = new Date(state.selectedWeekStart);
-  d.setDate(d.getDate() + 7); // ➡️ أسبوع لقدام
+  d.setDate(d.getDate() + 7);
+
   state.selectedWeekStart = d.getTime();
+
+  // 🔥 جديد
+  state.selectedMonth = new Date(
+    d.getFullYear(),
+    d.getMonth(),
+    1
+  ).getTime();
+
   saveState();
   renderAll();
 });
@@ -2192,18 +2299,24 @@ document.getElementById("week-next").addEventListener("click", () => {
   applyThemeFromStorage();
   loadState();
 
+  if (!state.selectedMonth) {
+    const nowDate = new Date();
+    state.selectedMonth = new Date(
+      nowDate.getFullYear(),
+      nowDate.getMonth(),
+      1
+    ).getTime();
+  }
+
   if (!state.selectedWeekStart) {
     state.selectedWeekStart = getMonday(now()).getTime();
   }
 
-  if (!state.selectedDay) {
-    state.selectedDay = toDateOnlyString(now());
-  }
+  state.selectedDay = toDateOnlyString(now());
 
+  // ✅ ALLES HIER REIN
   renderAll();
-
   setTimeout(scrollToToday, 0);
-
   startTimerLoop();
   initEvents();
 }
@@ -2218,6 +2331,45 @@ function scrollToToday() {
     behavior: "smooth",
     inline: "center"
   });
+}
+function computeMonthTotal(branch, monthDate) {
+  if (!branch) return 0;
+
+  const d = new Date(monthDate);
+  const month = d.getMonth();
+  const year = d.getFullYear();
+
+  let total = 0;
+
+  branch.logs.forEach(log => {
+    const logDate = new Date(log.start);
+
+    if (
+      logDate.getMonth() === month &&
+      logDate.getFullYear() === year
+    ) {
+      total += computeLogDuration(log, true);
+    }
+  });
+
+  return total;
+}
+function renderMonth() {
+  const d = new Date(state.selectedMonth);
+
+  const months = [
+    "Januar","Februar","März","April","Mai","Juni",
+    "Juli","August","September","Oktober","November","Dezember"
+  ];
+
+  document.getElementById("month-label").textContent =
+    "📅 " + months[d.getMonth()] + " " + d.getFullYear();
+
+  const branch = getSelectedBranch();
+  const total = computeMonthTotal(branch, state.selectedMonth);
+
+  document.getElementById("month-total").textContent =
+    "⏱ Monat gesamt: " + formatDuration(total);
 }
       init();
     })();
