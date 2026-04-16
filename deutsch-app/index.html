@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
-<link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#22c55e">
+<link rel="manifest" href="manifest.json">
 <head>
   <meta charset="UTF-8" />
   <title>DeutschLernen – Deutsch & Arabisch</title>
@@ -1350,6 +1350,24 @@
   animation-delay: 0.3s; /* WICHTIG */
   color: #f87171;
 }
+  .heart {
+  position: fixed;
+  bottom: 0;
+  font-size: 20px;
+  animation: floatUp 2.5s linear forwards;
+  pointer-events: none;
+}
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-300px) scale(1.5);
+    opacity: 0;
+  }
+}
   </style>
 </head>
 <body>
@@ -2217,8 +2235,12 @@ function updateDashboard() {
 
   // XP Bar
   const xpFill = document.getElementById("xpBarFill");
-  xpFill.style.width = `${(state.xp / 1000) * 100}%`;
-  document.getElementById("xpText").textContent = `${state.xp} / 1000 XP`;
+  let maxXP = state.level === "A1" ? 1000 :
+            state.level === "A2" ? 2000 : 3000;
+
+xpFill.style.width = `${(state.xp / maxXP) * 100}%`;
+document.getElementById("xpText").textContent =
+  `${state.xp} / ${maxXP} XP`;
 
   // Badges
   if (state.wordsLearned >= 10)
@@ -2447,6 +2469,13 @@ function getDailyWords() {
 
 function loadNext() {
   state.quizIndex++;
+
+  if (state.quizIndex >= state.quizList.length) {
+    toast("Quiz fertig 🎉", "success");
+    showScreen("dashboard");
+    return;
+  }
+
   loadQuizQuestion();
 }
 
@@ -2551,9 +2580,19 @@ document.getElementById("levelSelect").addEventListener("change", () => {
 });
 function speak(text) {
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "de-DE";
-  utterance.rate = 0.9; // langsamer sprechen
-  speechSynthesis.cancel(); // stoppt alte Stimme
+
+  let voices = speechSynthesis.getVoices();
+
+if (!voices.length) {
+  speechSynthesis.onvoiceschanged = () => {
+    voices = speechSynthesis.getVoices();
+  };
+}
+
+  utterance.rate = 0.85;   // سرعة مناسبة
+  utterance.pitch = 1;
+
+  speechSynthesis.cancel();
   speechSynthesis.speak(utterance);
 }
 function showLoveMessage() {
@@ -2569,6 +2608,7 @@ function showLoveMessage() {
   setTimeout(() => {
     box.style.transform = "scale(1)";
   }, 100);
+  createHearts();
 
   setTimeout(() => {
     screen.style.opacity = "0";
@@ -2595,6 +2635,23 @@ function showLoveMessage() {
 <script>
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js");
+}
+function createHearts() {
+  for (let i = 0; i < 12; i++) {
+    const heart = document.createElement("div");
+    heart.className = "heart";
+    heart.textContent = "❤️";
+
+    heart.style.left = Math.random() * 100 + "vw";
+    heart.style.animationDuration = (2 + Math.random() * 2) + "s";
+    heart.style.fontSize = (16 + Math.random() * 20) + "px";
+
+    document.body.appendChild(heart);
+
+    setTimeout(() => {
+      heart.remove();
+    }, 3000);
+  }
 }
 </script>
 </body>
