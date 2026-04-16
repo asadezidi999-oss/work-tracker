@@ -831,11 +831,6 @@ overflow-x: hidden;
   display: none !important;
 }
 
-/* ⬇️ أضف هذا تحت */
-html, body {
-  overflow-x: hidden;
-}
-
 .week-bar {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -864,6 +859,14 @@ html, body {
 .app-shell {
   width: 100%;
   max-width: 100%;
+}
+.header-actions {
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.btn {
+  min-height: 36px;
 }
 </style>
 </head>
@@ -1230,33 +1233,37 @@ function getLocation() {
       }
 
       function saveState() {
-        const data = clone({
-          branches: state.branches,
-          selectedBranchId: state.selectedBranchId,
-          selectedDay: state.selectedDay
-        });
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      }
+  const data = {
+    branches: state.branches,
+    selectedBranchId: state.selectedBranchId,
+    selectedDay: state.selectedDay,
+    selectedWeekStart: state.selectedWeekStart, // ✅ جديد
+    selectedMonth: state.selectedMonth // ✅ جديد
+  };
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
 
       function loadState() {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) {
-          state.branches = [];
-          state.selectedBranchId = null;
-          state.selectedDay = toDateOnlyString(now());
-          return;
-        }
-        try {
-          const data = JSON.parse(raw);
-          state.branches = Array.isArray(data.branches) ? data.branches : [];
-          state.selectedBranchId = data.selectedBranchId || null;
-          state.selectedDay = data.selectedDay || toDateOnlyString(now());
-        } catch (e) {
-          state.branches = [];
-          state.selectedBranchId = null;
-          state.selectedDay = toDateOnlyString(now());
-        }
-      }
+  const raw = localStorage.getItem(STORAGE_KEY);
+
+  if (!raw) return;
+
+  try {
+    const data = JSON.parse(raw);
+
+    state.branches = data.branches || [];
+    state.selectedBranchId = data.selectedBranchId || null;
+    state.selectedDay = data.selectedDay || toDateOnlyString(now());
+
+    // ✅ جديد
+    state.selectedWeekStart = data.selectedWeekStart || getMonday(now()).getTime();
+    state.selectedMonth = data.selectedMonth || new Date().getTime();
+
+  } catch (e) {
+    console.error(e);
+  }
+}
 
       function getSelectedBranch() {
         return state.branches.find((b) => b.id === state.selectedBranchId) || null;
@@ -2140,15 +2147,15 @@ if (dateStr === state.selectedDay) {
       }
 
       function startTimerLoop() {
-        if (state.timerInterval) {
-          clearInterval(state.timerInterval);
-        }
-        state.timerInterval = setInterval(() => {
-          renderTimer();
-          renderSummary();
-          renderWeekBar();
-        }, 1000);
-      }
+  if (state.timerInterval) {
+    clearInterval(state.timerInterval);
+  }
+
+  state.timerInterval = setInterval(() => {
+    renderTimer();
+    renderSummary();
+  }, 1000);
+}
 
       function renderAll() {
         renderDateLabel();
