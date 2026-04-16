@@ -831,6 +831,11 @@ overflow-x: hidden;
   display: none !important;
 }
 
+/* ⬇️ أضف هذا تحت */
+html, body {
+  overflow-x: hidden;
+}
+
 .week-bar {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -2334,9 +2339,9 @@ function scrollToToday() {
   const todayEl = bar.querySelector(".week-day.today");
   if (!todayEl) return;
 
-  bar.scrollTo({
-    left: todayEl.offsetLeft - bar.offsetWidth / 2 + todayEl.offsetWidth / 2,
-    behavior: "smooth"
+  todayEl.scrollIntoView({
+    behavior: "smooth",
+    inline: "center"
   });
 }
 function computeMonthTotal(branch, monthDate) {
