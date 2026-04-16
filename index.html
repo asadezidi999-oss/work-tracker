@@ -2334,9 +2334,9 @@ function scrollToToday() {
   const todayEl = bar.querySelector(".week-day.today");
   if (!todayEl) return;
 
-  todayEl.scrollIntoView({
-    behavior: "smooth",
-    inline: "center"
+  bar.scrollTo({
+    left: todayEl.offsetLeft - bar.offsetWidth / 2 + todayEl.offsetWidth / 2,
+    behavior: "smooth"
   });
 }
 function computeMonthTotal(branch, monthDate) {
