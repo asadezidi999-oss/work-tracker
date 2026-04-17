@@ -1,9 +1,9 @@
 {
   "name": "Gym Tracker",
   "short_name": "Gym",
-  "start_url": "./index.html",
+  "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#020617",
+  "background_color": "#000000",
   "theme_color": "#22c55e",
   "icons": [
     {
