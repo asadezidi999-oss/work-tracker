@@ -942,11 +942,13 @@ if ("serviceWorker" in navigator) {
           notes: "",
           exercises: day.exercises.reduce((acc, ex) => {
             acc[ex.id] = {
-              weight: "",
-              reps: "",
-              done: false,
-              lastTrend: "none"
-            };
+  sets: [
+    { weight: "", reps: "", done: false },
+    { weight: "", reps: "", done: false },
+    { weight: "", reps: "", done: false }
+  ],
+  lastTrend: "none"
+};
             return acc;
           }, {})
         })),
@@ -1012,11 +1014,13 @@ if (state.lastOpenDate !== todayKey) {
               const exercises = dayTemplate.exercises.reduce((acc, ex) => {
                 const existing = d.exercises?.[ex.id] || {};
                 acc[ex.id] = {
-                  weight: existing.weight ?? "",
-                  reps: existing.reps ?? "",
-                  done: !!existing.done,
-                  lastTrend: existing.lastTrend || "none"
-                };
+  sets: existing.sets || [
+    { weight: "", reps: "", done: false },
+    { weight: "", reps: "", done: false },
+    { weight: "", reps: "", done: false }
+  ],
+  lastTrend: existing.lastTrend || "none"
+};
                 return acc;
               }, {});
               return {
@@ -1121,13 +1125,14 @@ if (state.lastOpenDate !== todayKey) {
   const dayState = state.days[state.currentDayIndex];
   const dayPlan = PLAN[state.currentDayIndex];
 
-  const total = dayPlan.exercises.length;
+  let total = 0;
   let done = 0;
 
   dayPlan.exercises.forEach((ex) => {
-    if (dayState.exercises[ex.id]?.done) {
-      done++;
-    }
+    const sets = dayState.exercises[ex.id].sets || [];
+
+    total += sets.length;
+    done += sets.filter(s => s.done).length;
   });
 
   return { done, total };
@@ -1172,142 +1177,132 @@ if (state.lastOpenDate !== todayKey) {
       }
 
       function renderExercises() {
-        els.exercisesList.innerHTML = "";
-        const dayPlan = PLAN[state.currentDayIndex];
-        const dayState = state.days[state.currentDayIndex];
+  els.exercisesList.innerHTML = "";
+  const dayPlan = PLAN[state.currentDayIndex];
+  const dayState = state.days[state.currentDayIndex];
 
-        dayPlan.exercises.forEach((ex) => {
-          const exState = dayState.exercises[ex.id];
+  dayPlan.exercises.forEach((ex) => {
+    const exState = dayState.exercises[ex.id];
+    if (!exState.sets) {
+  exState.sets = [
+    { weight: "", reps: "", done: false },
+    { weight: "", reps: "", done: false },
+    { weight: "", reps: "", done: false }
+  ];
+}
 
-          const card = document.createElement("div");
-          card.className = "exercise-card";
-          if (exState.done) card.classList.add("exercise-done");
+    const card = document.createElement("div");
+    card.className = "exercise-card";
 
-          const header = document.createElement("div");
-          header.className = "exercise-header";
+    // ✅ إذا كل الستات Done → أخضر
+    const allDone = exState.sets.every(s => s.done);
+    if (allDone) card.classList.add("exercise-done");
 
-          const left = document.createElement("div");
-          const nameEl = document.createElement("div");
-          nameEl.className = "exercise-name";
-          nameEl.textContent = ex.name;
-          nameEl.style.cursor = "pointer";
+    // HEADER
+    const header = document.createElement("div");
+    header.className = "exercise-header";
 
-nameEl.addEventListener("click", () => {
-  window.lastChartExId = ex.id; // نحفظ آخر تمرين
-  drawChart(ex.id);
-});
-          const muscleEl = document.createElement("div");
-          muscleEl.className = "exercise-muscle";
-          muscleEl.textContent = "Gewicht & Reps eintragen, dann Done.";
+    const left = document.createElement("div");
 
-          left.appendChild(nameEl);
-          left.appendChild(muscleEl);
+    const nameEl = document.createElement("div");
+    nameEl.className = "exercise-name";
+    nameEl.textContent = ex.name;
+    nameEl.style.cursor = "pointer";
 
-          const trend = document.createElement("div");
-          trend.className = "trend-pill";
-          const stats = state.exerciseStats[ex.id];
-          let trendText = "Keine Historie";
-          let trendClass = "trend-same";
+    nameEl.addEventListener("click", () => {
+      window.lastChartExId = ex.id;
+      drawChart(ex.id);
+    });
 
-          if (exState.lastTrend && exState.lastTrend !== "none") {
-            if (exState.lastTrend === "up") {
-              trendText = "🔼 besser als letztes Mal";
-              trendClass = "trend-up";
-            } else if (exState.lastTrend === "down") {
-              trendText = "🔽 schlechter als letztes Mal";
-              trendClass = "trend-down";
-            } else if (exState.lastTrend === "same") {
-              trendText = "➖ gleich wie letztes Mal";
-              trendClass = "trend-same";
-            }
-          } else if (stats && (stats.lastWeight || stats.lastReps)) {
-            trendText = "Vergleich nach Done verfügbar";
-          }
+    const muscleEl = document.createElement("div");
+    muscleEl.className = "exercise-muscle";
+    muscleEl.textContent = "3 Sets";
 
-          trend.classList.add(trendClass);
-          trend.textContent = trendText;
+    left.appendChild(nameEl);
+    left.appendChild(muscleEl);
 
-          header.appendChild(left);
-          header.appendChild(trend);
+    const trend = document.createElement("div");
+    trend.className = "trend-pill";
+    trend.textContent = "3 Sets Tracking";
 
-          const body = document.createElement("div");
-          body.className = "exercise-body";
+    header.appendChild(left);
+    header.appendChild(trend);
 
-          const weightGroup = document.createElement("div");
-          weightGroup.className = "input-group";
-          const weightLabel = document.createElement("label");
-          weightLabel.textContent = "Gewicht (kg)";
-          const weightInput = document.createElement("input");
-          weightInput.type = "number";
-          weightInput.min = "0";
-          weightInput.step = "0.5";
-          weightInput.value = exState.weight || "";
-          weightInput.placeholder = "z.B. 60";
-          weightInput.addEventListener("input", () => {
-            exState.weight = weightInput.value;
-            saveState();
-          });
-          weightGroup.appendChild(weightLabel);
-          weightGroup.appendChild(weightInput);
+    card.appendChild(header);
 
-          const repsGroup = document.createElement("div");
-          repsGroup.className = "input-group";
-          const repsLabel = document.createElement("label");
-          repsLabel.textContent = "Wiederholungen";
-          const repsInput = document.createElement("input");
-          repsInput.type = "number";
-          repsInput.min = "0";
-          repsInput.step = "1";
-          repsInput.value = exState.reps || "";
-          repsInput.placeholder = "z.B. 8";
-          repsInput.addEventListener("input", () => {
-            exState.reps = repsInput.value;
-            saveState();
-          });
-          repsGroup.appendChild(repsLabel);
-          repsGroup.appendChild(repsInput);
+    // ✅ 3 SETS
+    exState.sets.forEach((set, index) => {
 
-          const actions = document.createElement("div");
-          actions.className = "exercise-actions";
-          const undoBtn = document.createElement("button");
-undoBtn.className = "btn btn-outline";
-undoBtn.textContent = "Undo";
-undoBtn.disabled = !exState.done;
+      const row = document.createElement("div");
+      row.style.display = "flex";
+      row.style.gap = "6px";
+      row.style.marginTop = "6px";
 
-undoBtn.addEventListener("click", () => {
-  exState.done = false;
-  exState.lastTrend = "none";
+      const label = document.createElement("span");
+      label.textContent = "Set " + (index + 1);
+      label.style.width = "50px";
+
+      const weight = document.createElement("input");
+      weight.type = "number";
+      weight.placeholder = "kg";
+      weight.value = set.weight;
+
+      weight.oninput = () => {
+        set.weight = weight.value;
+        saveState();
+      };
+
+      const reps = document.createElement("input");
+      reps.type = "number";
+      reps.placeholder = "reps";
+      reps.value = set.reps;
+
+      reps.oninput = () => {
+        set.reps = reps.value;
+        saveState();
+      };
+
+      const done = document.createElement("button");
+done.textContent = set.done ? "✔" : "Done";
+done.className = "btn btn-outline";
+done.disabled = set.done;
+
+done.onclick = () => {
+  set.done = true;
+
+  if (!state.history[ex.id]) {
+    state.history[ex.id] = [];
+  }
+
+  state.history[ex.id].push({
+    weight: Number(set.weight),
+    reps: Number(set.reps),
+    date: new Date().toISOString()
+  });
+
+  if (state.history[ex.id].length > 30) {
+    state.history[ex.id].shift();
+  }
 
   saveState();
   renderExercises();
   updateProgressUI();
-});
+  maybeAdvanceDay(); // 🔥 مهم
+  updateStreakIfNeeded();
+  startTimer();
+};
 
-actions.appendChild(undoBtn);
+      row.appendChild(label);
+      row.appendChild(weight);
+      row.appendChild(reps);
+      row.appendChild(done);
 
-          const doneBtn = document.createElement("button");
-          doneBtn.type = "button";
-          doneBtn.className = "btn btn-primary";
-          doneBtn.textContent = exState.done ? "Done ✔" : "Done";
-          doneBtn.disabled = exState.done;
-weightInput.disabled = exState.done;
-repsInput.disabled = exState.done;
-          doneBtn.addEventListener("click", () => {
-            handleExerciseDone(ex.id, exState, weightInput, repsInput, card, trend);
-          });
+      card.appendChild(row);
+    });
 
-          actions.appendChild(doneBtn);
-
-          body.appendChild(weightGroup);
-          body.appendChild(repsGroup);
-          body.appendChild(actions);
-
-          card.appendChild(header);
-          card.appendChild(body);
-
-          els.exercisesList.appendChild(card);
-        });
-      }
+    els.exercisesList.appendChild(card);
+  });
+}
 
       function handleExerciseDone(exId, exState, weightInput, repsInput, cardEl, trendEl) {
         const weight = weightInput.value.trim();
@@ -1354,7 +1349,7 @@ if (state.history[exId].length > 30) {
       function maybeAdvanceDay() {
   const { done, total } = computeProgressForCurrentDay();
 
-  if (done === total) {
+  if (done === total && total > 0) {
     showToast("Training abgeschlossen 💪");
 
     setTimeout(() => {
@@ -1383,9 +1378,11 @@ if (state.history[exId].length > 30) {
         const newDay = state.days[state.currentDayIndex];
 
 Object.values(newDay.exercises).forEach(ex => {
-  ex.done = false;
-  ex.weight = "";
-  ex.reps = "";
+  ex.sets.forEach(set => {
+    set.done = false;
+    set.weight = "";
+    set.reps = "";
+  });
 });
         saveState();
         updateDayHeaderUI();
@@ -1515,11 +1512,13 @@ Object.values(newDay.exercises).forEach(ex => {
             const exercises = dayTemplate.exercises.reduce((acc, ex) => {
               const existing = d.exercises?.[ex.id] || {};
               acc[ex.id] = {
-                weight: existing.weight ?? "",
-                reps: existing.reps ?? "",
-                done: !!existing.done,
-                lastTrend: existing.lastTrend || "none"
-              };
+  sets: existing.sets || [
+    { weight: "", reps: "", done: false },
+    { weight: "", reps: "", done: false },
+    { weight: "", reps: "", done: false }
+  ],
+  lastTrend: existing.lastTrend || "none"
+};
               return acc;
             }, {});
             return {
