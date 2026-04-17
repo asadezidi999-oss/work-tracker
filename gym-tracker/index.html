@@ -348,6 +348,22 @@
       font-size: 0.7rem;
       color: var(--muted);
     }
+    .exercise-progress-bar {
+  width: 100%;
+  height: 5px;
+  border-radius: 999px;
+  background: #1f2933;
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+.exercise-progress-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #22c55e, #60a5fa);
+  transition: width 0.3s ease;
+}
 
     .trend-pill {
       padding: 3px 8px;
@@ -789,6 +805,9 @@
         </div>
 
         <div class="exercises-list" id="exercises-list"></div>
+        <button class="btn btn-ghost" id="add-exercise-btn">
+  ➕ Übung hinzufügen
+</button>
 
         <div class="timer-card" id="timer-card">
           <div class="timer-left">
@@ -933,12 +952,14 @@
         days: PLAN.map((day) => ({
           dayId: day.id,
           notes: "",
+          customExercises: [],
           exercises: day.exercises.reduce((acc, ex) => {
             acc[ex.id] = {
               weight: "",
               reps: "",
-              done: false,
-              lastTrend: "none"
+              setsLeft: 3,
+done: false,
+lastTrend: "none"
             };
             return acc;
           }, {})
@@ -948,6 +969,7 @@
 
       const els = {
         dayName: document.getElementById("day-name"),
+        addExerciseBtn: document.getElementById("add-exercise-btn"),
         dayTag: document.getElementById("day-tag"),
         dayPillText: document.getElementById("day-pill-text"),
         exercisesList: document.getElementById("exercises-list"),
@@ -1000,14 +1022,16 @@
                 acc[ex.id] = {
                   weight: existing.weight ?? "",
                   reps: existing.reps ?? "",
-                  done: !!existing.done,
-                  lastTrend: existing.lastTrend || "none"
+                  setsLeft: existing.setsLeft ?? 3,
+done: !!existing.done,
+lastTrend: existing.lastTrend || "none"
                 };
                 return acc;
               }, {});
               return {
                 dayId: dayTemplate.id,
                 notes: d.notes ?? "",
+                customExercises: Array.isArray(d.customExercises) ? d.customExercises : [],
                 exercises
               };
             });
@@ -1102,11 +1126,13 @@
 
       function computeProgressForCurrentDay() {
         const dayState = state.days[state.currentDayIndex];
-        const dayPlan = PLAN[state.currentDayIndex];
-        const total = dayPlan.exercises.length;
+        const baseExercises = PLAN[state.currentDayIndex].exercises;
+        const customExercises = dayState.customExercises || [];
+        const allExercises = [...baseExercises, ...customExercises];
+        const total = allExercises.length;
         let done = 0;
-        dayPlan.exercises.forEach((ex) => {
-          if (dayState.exercises[ex.id]?.done) done += 1;
+        allExercises.forEach((ex) => {
+          if (dayState.exercises[ex.id]?.setsLeft === 0) done += 1;
         });
         return { done, total };
       }
@@ -1153,10 +1179,12 @@
         els.exercisesList.innerHTML = "";
         const dayPlan = PLAN[state.currentDayIndex];
         const dayState = state.days[state.currentDayIndex];
+        const customExercises = dayState.customExercises || [];
+        const allExercises = [...dayPlan.exercises, ...customExercises];
 
-        dayPlan.exercises.forEach((ex) => {
+        allExercises.forEach((ex) => {
           const exState = dayState.exercises[ex.id];
-
+          if (!exState) return;
           const card = document.createElement("div");
           card.className = "exercise-card";
           if (exState.done) card.classList.add("exercise-done");
@@ -1167,17 +1195,22 @@
           const left = document.createElement("div");
           const nameEl = document.createElement("div");
           nameEl.className = "exercise-name";
-          nameEl.textContent = ex.name;
+          nameEl.textContent = `${ex.name} (${exState.setsLeft})`;
           const muscleEl = document.createElement("div");
           muscleEl.className = "exercise-muscle";
-          muscleEl.textContent = "Gewicht & Reps eintragen, dann Done.";
+
+          const stats = state.exerciseStats[ex.id];
+
+          if (stats && (stats.lastWeight || stats.lastReps)) {
+            muscleEl.textContent = `⬅️ ${stats.lastWeight || "-"}kg × ${stats.lastReps || "-"}`;
+          } else {
+            muscleEl.textContent = "Erstes Training 💪";
+          }
 
           left.appendChild(nameEl);
           left.appendChild(muscleEl);
-
           const trend = document.createElement("div");
           trend.className = "trend-pill";
-          const stats = state.exerciseStats[ex.id];
           let trendText = "Keine Historie";
           let trendClass = "trend-same";
 
@@ -1241,17 +1274,47 @@
 
           const actions = document.createElement("div");
           actions.className = "exercise-actions";
+          const deleteBtn = document.createElement("button");
+deleteBtn.type = "button";
+deleteBtn.className = "btn btn-danger";
+deleteBtn.textContent = "🗑️";
 
+deleteBtn.addEventListener("click", () => {
+  if (!confirm("Übung wirklich löschen?")) return;
+
+  deleteExercise(ex.id);
+});
           const doneBtn = document.createElement("button");
           doneBtn.type = "button";
           doneBtn.className = "btn btn-primary";
-          doneBtn.textContent = exState.done ? "Done ✔" : "Done";
+          doneBtn.textContent =
+  exState.setsLeft > 0
+    ? `Set (${exState.setsLeft})`
+    : "Done ✔";
           doneBtn.addEventListener("click", () => {
-            handleExerciseDone(ex.id, exState, weightInput, repsInput, card, trend);
-          });
+  if (!weightInput.value || !repsInput.value) {
+    weightInput.focus();
+    return;
+  }
+
+  if (exState.setsLeft > 0) {
+    exState.setsLeft--;
+
+    if (exState.setsLeft === 0) {
+      handleExerciseDone(ex.id, exState, weightInput, repsInput, card, trend);
+    }
+
+    saveState();
+    renderExercises();
+    updateProgressUI();
+    maybeAdvanceDay();
+    updateStreakIfNeeded();
+    startTimer();
+  }
+});
 
           actions.appendChild(doneBtn);
-
+          actions.appendChild(deleteBtn);
           body.appendChild(weightGroup);
           body.appendChild(repsGroup);
           body.appendChild(actions);
@@ -1262,6 +1325,7 @@
           els.exercisesList.appendChild(card);
         });
       }
+
 
       function handleExerciseDone(exId, exState, weightInput, repsInput, cardEl, trendEl) {
         const weight = weightInput.value.trim();
@@ -1278,10 +1342,51 @@
         exState.done = true;
         exState.lastTrend = trend;
 
-        state.exerciseStats[exId] = {
-          lastWeight: weight,
-          lastReps: reps
-        };
+        // Initialize stats if not exists
+        if (!state.exerciseStats[exId]) {
+          state.exerciseStats[exId] = {
+            history: []
+          };
+        }
+
+       // تأكد أن stats موجود
+if (!state.exerciseStats[exId]) {
+  state.exerciseStats[exId] = {
+    lastWeight: null,
+    lastReps: null,
+    history: []
+  };
+}
+
+const history = state.exerciseStats[exId].history;
+
+// 1️⃣ احسب أفضل رقم قبل الإضافة
+let bestBefore = 0;
+history.forEach(h => {
+  const score = h.weight * h.reps;
+  if (score > bestBefore) bestBefore = score;
+});
+
+// 2️⃣ احسب السكور الحالي
+const currentScore = Number(weight) * Number(reps);
+
+// 3️⃣ أضف التمرين
+history.push({
+  date: new Date().toISOString(),
+  weight: Number(weight),
+  reps: Number(reps)
+});
+
+// 4️⃣ تحديث آخر قيم
+state.exerciseStats[exId].lastWeight = weight;
+state.exerciseStats[exId].lastReps = reps;
+
+// 5️⃣ تحقق PR (بدون alert ❌)
+if (currentScore > bestBefore) {
+  trendEl.textContent = "🔥 NEW PR!";
+  trendEl.className = "trend-pill trend-up";
+  cardEl.classList.add("exercise-done");
+}
 
         saveState();
         renderExercises();
@@ -1306,6 +1411,11 @@
 
       function advanceDay() {
         state.currentDayIndex = (state.currentDayIndex + 1) % PLAN.length;
+        const newDay = state.days[state.currentDayIndex];
+Object.values(newDay.exercises).forEach(ex => {
+  ex.setsLeft = 3;
+  ex.done = false;
+});
         saveState();
         updateDayHeaderUI();
         updateProgressUI();
@@ -1326,7 +1436,27 @@
       function skipDay() {
         advanceDay();
       }
+function deleteExercise(exId) {
+  const dayState = state.days[state.currentDayIndex];
 
+  const isCustom = (dayState.customExercises || []).some(e => e.id === exId);
+
+  // ❌ لا تسمح بحذف التمارين الأساسية
+  if (!isCustom) {
+    alert("❌ لا يمكن حذف التمارين الأساسية");
+    return;
+  }
+
+  dayState.customExercises =
+    dayState.customExercises.filter(ex => ex.id !== exId);
+
+  delete dayState.exercises[exId];
+  delete state.exerciseStats[exId];
+
+  saveState();
+  renderExercises();
+  updateProgressUI();
+}
       function softReset() {
         state.days = structuredClone(defaultState.days);
         state.exerciseStats = {};
@@ -1423,16 +1553,18 @@
             const exercises = dayTemplate.exercises.reduce((acc, ex) => {
               const existing = d.exercises?.[ex.id] || {};
               acc[ex.id] = {
-                weight: existing.weight ?? "",
-                reps: existing.reps ?? "",
-                done: !!existing.done,
-                lastTrend: existing.lastTrend || "none"
-              };
+  weight: existing.weight ?? "",
+  reps: existing.reps ?? "",
+  setsLeft: existing.setsLeft ?? 3,
+  done: !!existing.done,
+  lastTrend: existing.lastTrend || "none"
+};
               return acc;
             }, {});
             return {
               dayId: dayTemplate.id,
               notes: d.notes ?? "",
+              customExercises: Array.isArray(d.customExercises) ? d.customExercises : [],
               exercises
             };
           });
@@ -1468,6 +1600,33 @@
             els.notesStatus.textContent = "Auto‑Save aktiv";
           }, 800);
         });
+        els.addExerciseBtn.addEventListener("click", () => {
+  const name = prompt("Name der Übung?");
+  if (!name) return;
+
+  const id = "ex_" + Date.now();
+
+  // أضف للـ PLAN
+  state.days[state.currentDayIndex].customExercises =
+  state.days[state.currentDayIndex].customExercises || [];
+
+state.days[state.currentDayIndex].customExercises.push({
+  id,
+  name
+});
+
+  // أضف للـ state
+  state.days[state.currentDayIndex].exercises[id] = {
+    weight: "",
+    reps: "",
+    setsLeft: 3,
+    done: false,
+    lastTrend: "none"
+  };
+
+  saveState();
+  renderExercises();
+});
 
         els.skipDayBtn.addEventListener("click", () => {
           skipDay();
