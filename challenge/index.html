@@ -652,6 +652,84 @@
     .link-reset:hover {
       color: #fecaca;
     }
+
+    /* PRO DESIGN FEATURES */
+    body {
+      background: radial-gradient(circle at top, #0f172a, #020617 60%);
+    }
+
+    body.light {
+      --bg: #ffffff;
+      --text: #000000;
+      background: #f5f5f5;
+    }
+
+    .card {
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(14px);
+      transition: all 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 25px 60px rgba(0,0,0,0.7);
+    }
+
+    .btn-primary {
+      box-shadow: 0 0 20px rgba(34,197,94,0.6);
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 0 30px rgba(34,197,94,1);
+    }
+
+    .player-card.leader {
+      animation: glow 2s infinite alternate;
+    }
+
+    @keyframes glow {
+      from { box-shadow: 0 0 10px rgba(34,197,94,0.4); }
+      to { box-shadow: 0 0 25px rgba(34,197,94,1); }
+    }
+
+    .progress-bar {
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+
+    .progress {
+      height: 100%;
+      background: linear-gradient(90deg, #22c55e, #38bdf8);
+      transition: width 0.3s ease;
+    }
+
+    .toggle:active {
+      transform: scale(0.85);
+    }
+
+    h1 {
+      background: linear-gradient(90deg, #22c55e, #38bdf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .app {
+      animation: fadeIn 0.6s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; }
+    }
+
+    #progressChart {
+      max-height: 300px;
+      margin: 20px 0;
+    }
   </style>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="web-app-manifest-192x192.png">
@@ -793,6 +871,11 @@ if ('serviceWorker' in navigator) {
             <span class="highlight">Verbleibende Tage:</span>
             <span class="remaining-count" id="total-remaining">120</span>
           </span>
+        </div>
+
+        <div style="margin-top: 30px;">
+          <h3 style="text-align: center; margin-bottom: 20px;">Trainingsfortschritt</h3>
+          <canvas id="progressChart"></canvas>
         </div>
       </section>
       <!-- 🔥 Kalorien Rechner -->
@@ -1442,6 +1525,150 @@ document.getElementById("calcProtein").addEventListener("click", () => {
 
   result.textContent = `Du brauchst ca. ${protein} g Protein pro Tag`;
 });
+
+/* NOTIFICATIONS */
+if ("Notification" in window) {
+  Notification.requestPermission();
+}
+
+function dailyReminder() {
+  if (Notification.permission === "granted") {
+    new Notification("Fitness Challenge", {
+      body: "Vergiss dein Training heute nicht",
+      icon: "web-app-manifest-192x192.png"
+    });
+  }
+}
+
+setInterval(dailyReminder, 1000 * 60 * 60 * 24);
+
+/* ACHIEVEMENTS SYSTEM */
+function getAchievement(days) {
+  if (days >= 30) return "Legend";
+  if (days >= 7) return "Strong";
+  if (days >= 1) return "Starter";
+  return "";
+}
+
+/* DARK/LIGHT MODE */
+function toggleTheme() {
+  document.body.classList.toggle("light");
+  localStorage.setItem("theme", document.body.classList.contains("light") ? "light" : "dark");
+}
+
+const savedTheme = localStorage.getItem("theme");
+if (savedTheme === "light") {
+  document.body.classList.add("light");
+}
+
+/* SOUND EFFECTS */
+function playClick() {
+  try {
+    new Audio("https://www.soundjay.com/buttons/sounds/button-16.mp3").play().catch(() => {});
+  } catch (e) {}
+}
+
+/* EXPORT / IMPORT */
+function exportData() {
+  if (typeof state !== 'undefined') {
+    const data = JSON.stringify(state);
+    navigator.clipboard.writeText(data);
+    alert("Daten kopiert!");
+  }
+}
+
+function importData() {
+  const data = prompt("Daten einfuegen:");
+  if (!data) return;
+  try {
+    const imported = JSON.parse(data);
+    if (typeof state !== 'undefined') {
+      Object.assign(state, imported);
+      if (typeof saveState === 'function') saveState();
+      alert("Daten importiert!");
+      location.reload();
+    }
+  } catch (e) {
+    alert("Fehler beim Importieren!");
+  }
+}
+
+/* STREAK SYSTEM */
+function calculateStreak(playerIndex) {
+  if (typeof state === 'undefined' || !state.days) return 0;
+  let streak = 0;
+  for (let d of state.days) {
+    if (d.done && d.done[playerIndex]) streak++;
+    else break;
+  }
+  return streak;
+}
+
+/* RANDOM WORKOUT */
+const workouts = ["Push-ups", "Running", "Plank", "Squats", "Burpees"];
+
+function randomWorkout() {
+  return workouts[Math.floor(Math.random() * workouts.length)];
+}
+
+/* CHART RENDERING */
+function renderChart() {
+  const canvas = document.getElementById("progressChart");
+  if (!canvas) return;
+  
+  try {
+    const labels = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+    const data = [12, 19, 3, 5, 2, 3, 9];
+    
+    new Chart(canvas, {
+      type: "bar",
+      data: {
+        labels: labels,
+        datasets: [{
+          label: "Training (min)",
+          data: data,
+          backgroundColor: "rgba(34, 197, 94, 0.6)",
+          borderColor: "#22c55e",
+          borderWidth: 2,
+          borderRadius: 5
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: true, labels: { color: "#e5e7eb" } }
+        },
+        scales: {
+          y: { beginAtZero: true, ticks: { color: "#e5e7eb" }, grid: { color: "rgba(255,255,255,0.1)" } },
+          x: { ticks: { color: "#e5e7eb" }, grid: { display: false } }
+        }
+      }
+    });
+  } catch (e) {}
+}
+
+/* PWA INSTALL BUTTON */
+let deferredPrompt;
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  deferredPrompt = e;
+  const btn = document.createElement("button");
+  btn.textContent = "Install App";
+  btn.className = "btn btn-primary";
+  btn.style.margin = "10px";
+  btn.onclick = () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt = null;
+    }
+  };
+  const header = document.querySelector("header");
+  if (header) header.appendChild(btn);
+});
+
+if (typeof renderChart === 'function') {
+  setTimeout(renderChart, 500);
+}
   </script>
 </body>
 </html>
