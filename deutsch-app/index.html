@@ -1555,7 +1555,7 @@
         <span id="xpDisplay">0 XP</span>
       </div>
 
-      <button class="small-btn" id="themeToggle" onclick="toggleTheme()">🌗</button>
+      <button class="small-btn" id="themeToggle" onclick="applyTheme(true)">🌗</button>
 
       <div class="nav-tabs">
         <button class="nav-tab active" data-screen="dashboard">
@@ -1971,42 +1971,88 @@
 /* ------------------------------------------------------------
    1) GLOBALER APP-STATE
 ------------------------------------------------------------ */
-const GAME_MODES = {
-  QUIZ: "quiz",
-  SPEED: "speed"
-};
-
 const state = {
-  level: "A1",
-  xp: 0,
-  correct: 0,
-  wrong: 0,
-  username: "Farida",
-  streak: 0,
-  lastDay: null,
-  difficultWords: [],
-  wordsLearned: 0,
-  quizMode: "choice", // "choice" oder "input"
-  mode: GAME_MODES.QUIZ,
-  quizList: [],
-  quizIndex: 0,
-  quizCorrectInRow: 0,
-  dailyWords: [],
-  favorites: [],
-  favoritesView: false,
-  dailyLimit: 5,
-  lastDailyDate: null,
-  xpHistory: [],
-  wordMemory: {},
-  achievements: [],
-  users: [],
-  currentUser: null,
-  studyTime: 0,
-  currentWord: null,
+  currentUserId: null,
+  users: {}
 };
 
-let studyInterval = null;
-let speedInterval = null;
+function createEmptyUserState() {
+  return {
+    profile: {
+      name: "Gast",
+      level: "A1"
+    },
+
+    progress: {
+      xp: 0,
+      streak: 0,
+      lastSession: null
+    },
+
+    settings: {
+      sound: true,
+      speechRate: 1,
+      interfaceLang: "de",
+      theme: "auto",
+      dailyLimit: 5,
+      quizMode: "choice"
+    },
+
+    words: {
+      A1: WORDS.A1 || [],
+      A2: WORDS.A2 || [],
+      B1: WORDS.B1 || []
+    },
+
+    stats: {
+      dailyXP: [],
+      accuracyHistory: [],
+      learnedPerDay: [],
+      timePerDay: [],
+      errorsPerWord: {},
+      perCategory: {},
+      correct: 0,
+      wrong: 0,
+      wordsLearned: 0
+    },
+
+    difficultWords: [],
+    favorites: [],
+    wordMemory: {},
+
+    achievements: [],
+    currentMode: "learn",
+    quizCorrectInRow: 0,
+    dailyWords: [],
+    lastDailyDate: null,
+    xpHistory: [],
+    studyTime: 0,
+    learnedToday: [],
+    quizList: [],
+    quizIndex: 0,
+    currentWord: null,
+    favoritesView: false,
+    lastReset: null
+  };
+}
+
+function getCurrentUser() {
+  if (!state.currentUserId || !state.users[state.currentUserId]) {
+    const id = "user-1";
+    state.currentUserId = id;
+    state.users[id] = createEmptyUserState();
+  }
+  return state.users[state.currentUserId];
+}
+
+function saveState() {
+  localStorage.setItem("appState", JSON.stringify(state));
+}
+
+function loadState() {
+  const raw = localStorage.getItem("appState");
+  if (raw) Object.assign(state, JSON.parse(raw));
+}
 
 /* ------------------------------------------------------------
    2) WÖRTERLISTEN (DEUTSCH + ARABISCH)
@@ -2272,12 +2318,14 @@ A1: [
 ]
 };
 
-const SENTENCES = [
-  {
-    words: ["Ich", "gehe", "heute", "zur Schule"],
-    correct: "Ich gehe heute zur Schule"
-  }
-];
+const SENTENCES = {
+  A1: [
+    {
+      words: ["Ich", "gehe", "heute", "zur Schule"],
+      correctOrder: ["Ich", "gehe", "heute", "zur Schule"]
+    }
+  ]
+};
 
 const GRAMMAR = {
   A1: [
@@ -2289,66 +2337,231 @@ const GRAMMAR = {
 };
 
 /* ------------------------------------------------------------
-   3) SPEICHERUNG (localStorage)
+   3) SMART LEARNING + SPACED REPETITION (FINAL)
 ------------------------------------------------------------ */
-function saveState() {
-  localStorage.setItem("deutschApp", JSON.stringify(state));
-}
+function updateWordMemory(word, correct) {
+  const user = getCurrentUser();
 
-function loadState() {
-  const saved = localStorage.getItem("deutschApp");
-  if (saved) {
-    Object.assign(state, JSON.parse(saved));
+  if (!user.wordMemory[word]) {
+    user.wordMemory[word] = {
+      score: 0,
+      nextReview: Date.now()
+    };
   }
-  state.favorites = state.favorites || [];
-  state.dailyWords = state.dailyWords || [];
-  state.learnedToday = state.learnedToday || [];
-  state.lastReset = state.lastReset || null;
-  state.dailyLimit = state.dailyLimit || 5;
-  state.favoritesView = state.favoritesView || false;
-  state.wordMemory = state.wordMemory || {};
-  state.achievements = state.achievements || [];
-  state.users = state.users || [];
-  state.currentUser = state.currentUser || null;
-  state.studyTime = state.studyTime || 0;
-  state.mode = state.mode || GAME_MODES.QUIZ;
-  state.currentWord = state.currentWord || null;
-}
-loadState();
-initUser();
-resetDailyData();
 
-function initUser() {
-  if (!state.username || state.username === "Farida") {
-    const name = prompt("Wie heißt du?");
-    if (name) {
-      state.username = name;
-      saveState();
-    }
+  const entry = user.wordMemory[word];
+
+  if (correct) {
+    entry.score = Math.min(entry.score + 1, 10);
+  } else {
+    entry.score = Math.max(entry.score - 2, -5);
   }
+
+  let days;
+  if (entry.score <= 0) days = 1;
+  else if (entry.score <= 2) days = 1;
+  else if (entry.score <= 4) days = 3;
+  else if (entry.score <= 7) days = 7;
+  else days = 30;
+
+  entry.nextReview = Date.now() + days * 86400000;
+
+  saveState();
 }
 
-function toggleTheme() {
-  document.body.classList.toggle("light");
-  localStorage.setItem("theme", document.body.classList.contains("light"));
+function getDueWords(level) {
+  const user = getCurrentUser();
+  const now = Date.now();
+
+  return (user.words[level] || []).filter(w => {
+    const mem = user.wordMemory[w.de];
+    return !mem || mem.nextReview <= now;
+  });
 }
 
-if (localStorage.getItem("theme") === "true") {
-  document.body.classList.add("light");
+function getSmartWordsAdvanced() {
+  const user = getCurrentUser();
+  const level = user.profile.level;
+
+  return getDueWords(level)
+    .map(w => {
+      const difficulty = user.difficultWords.includes(w.de) ? 3 : 1;
+      const favorite = user.favorites.includes(w.de) ? 2 : 0;
+      const memScore = user.wordMemory[w.de]?.score ?? 0;
+
+      return {
+        ...w,
+        score: difficulty + favorite - memScore + Math.random()
+      };
+    })
+    .sort((a, b) => b.score - a.score);
+}
+
+/* ------------------------------------------------------------
+   4) SPEECH + PRONUNCIATION
+------------------------------------------------------------ */
+function speak(text, lang = "de-DE") {
+  const user = getCurrentUser();
+
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = lang;
+  utter.rate = user.settings.speechRate;
+
+  speechSynthesis.speak(utter);
+}
+
+function simpleSimilarity(a, b) {
+  a = a.toLowerCase().trim();
+  b = b.toLowerCase().trim();
+
+  if (a === b) return 1;
+
+  let same = 0;
+  for (let i = 0; i < Math.min(a.length, b.length); i++) {
+    if (a[i] === b[i]) same++;
+  }
+
+  return same / Math.max(a.length, b.length);
+}
+
+function evaluatePronunciation(expected, recognized) {
+  const score = simpleSimilarity(expected, recognized);
+
+  if (score > 0.9) return "perfect";
+  if (score > 0.7) return "almost";
+  return "wrong";
 }
 
 function startSpeech() {
+  const user = getCurrentUser();
   const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
   recognition.lang = "de-DE";
 
   recognition.onresult = (e) => {
     const text = e.results[0][0].transcript;
     document.getElementById("quizInput").value = text;
-    evaluatePronunciation(state.currentWord?.de, text);
+    const result = evaluatePronunciation(user.currentWord?.de, text);
+    if (result === "perfect") {
+      handleCorrect(user.currentWord);
+    } else {
+      handleWrong(user.currentWord);
+    }
+    setTimeout(() => loadNext(), 600);
   };
 
   recognition.start();
 }
+
+/* ------------------------------------------------------------
+   5) SENTENCE TRAINING + GRAMMAR
+------------------------------------------------------------ */
+function checkSentence(inputArray, correctArray) {
+  return JSON.stringify(inputArray) === JSON.stringify(correctArray);
+}
+
+/* ------------------------------------------------------------
+   6) GAME MODES
+------------------------------------------------------------ */
+const GAME_MODES = {
+  QUIZ: "quiz",
+  SPEED: "speed",
+  MEMORY: "memory",
+  LETTERS: "letters"
+};
+
+function setGameMode(mode) {
+  const user = getCurrentUser();
+  user.currentMode = mode;
+  saveState();
+}
+
+function startSpeedMode() {
+  setGameMode(GAME_MODES.SPEED);
+
+  let time = 10;
+  const timer = setInterval(() => {
+    time--;
+    if (time <= 0) {
+      clearInterval(timer);
+      setGameMode(GAME_MODES.QUIZ);
+    }
+  }, 1000);
+}
+
+/* ------------------------------------------------------------
+   7) ACHIEVEMENTS SYSTEM
+------------------------------------------------------------ */
+const ACHIEVEMENT_DEFS = [
+  {
+    id: "100_words",
+    check: u => u.stats.learnedPerDay.reduce((a,c)=>a+c.count,0) >= 100
+  },
+  {
+    id: "1000_xp",
+    check: u => u.progress.xp >= 1000
+  }
+];
+
+function checkAchievements() {
+  const user = getCurrentUser();
+
+  ACHIEVEMENT_DEFS.forEach(a => {
+    if (!user.achievements.includes(a.id) && a.check(user)) {
+      user.achievements.push(a.id);
+    }
+  });
+
+  saveState();
+}
+
+/* ------------------------------------------------------------
+   8) ANALYTICS
+------------------------------------------------------------ */
+function trackSession({ xp, accuracy, learned, duration }) {
+  const user = getCurrentUser();
+  const today = new Date().toISOString().slice(0,10);
+
+  user.stats.dailyXP.push({ date: today, xp });
+  user.stats.accuracyHistory.push({ date: today, accuracy });
+  user.stats.learnedPerDay.push({ date: today, count: learned });
+  user.stats.timePerDay.push({ date: today, ms: duration });
+
+  user.progress.xp += xp;
+
+  saveState();
+}
+
+/* ------------------------------------------------------------
+   9) THEME SYSTEM
+------------------------------------------------------------ */
+function applyTheme(toggle = false) {
+  const user = getCurrentUser();
+  if (toggle) {
+    user.settings.theme = user.settings.theme === "light" ? "dark" : "light";
+  }
+  let mode = user.settings.theme;
+
+  if (mode === "auto") {
+    mode = window.matchMedia("(prefers-color-scheme: light)").matches
+      ? "light"
+      : "dark";
+  }
+
+  document.body.classList.toggle("light", mode === "light");
+}
+
+/* ------------------------------------------------------------
+   10) PERFORMANCE (WICHTIG)
+------------------------------------------------------------ */
+function debounce(fn, delay = 200) {
+  let t;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), delay);
+  };
+}
+
+loadState();
 
 function explainWord(word) {
   const modal = document.getElementById("modalOverlay");
@@ -2469,88 +2682,9 @@ function evaluatePronunciation(correct, spoken) {
   }
 }
 
-function updateWordMemory(word, correct) {
-  if (!word) return;
-  state.wordMemory = state.wordMemory || {};
-  const entry = state.wordMemory[word] || { correct: 0, wrong: 0, strength: 0, last: null };
-  if (correct) {
-    entry.correct++;
-    entry.strength = Math.min(5, entry.strength + 1);
-    state.difficultWords = state.difficultWords.filter(w => w.de !== word);
-  } else {
-    entry.wrong++;
-    entry.strength = Math.max(-3, entry.strength - 1);
-    if (!state.difficultWords.some(w => w.de === word)) {
-      const found = [...(WORDS[state.level] || [])].find(w => w.de === word);
-      if (found) state.difficultWords.push(found);
-    }
-  }
-  entry.last = new Date().toISOString();
-  state.wordMemory[word] = entry;
-  saveState();
-}
-
-function getSmartWordsAdvanced(level) {
-  const allWords = WORDS[level] || [];
-  return [...allWords].sort((a, b) => {
-    const memoryA = state.wordMemory[a.de] || { strength: 0, correct: 0, wrong: 0 };
-    const memoryB = state.wordMemory[b.de] || { strength: 0, correct: 0, wrong: 0 };
-
-    const needA = Math.max(0, 2 - memoryA.strength) + (state.difficultWords.some(w => w.de === a.de) ? 2 : 0) - (state.favorites.includes(a.de) ? 1 : 0);
-    const needB = Math.max(0, 2 - memoryB.strength) + (state.difficultWords.some(w => w.de === b.de) ? 2 : 0) - (state.favorites.includes(b.de) ? 1 : 0);
-
-    if (needA !== needB) return needB - needA;
-    return (memoryA.correct - memoryA.wrong) - (memoryB.correct - memoryB.wrong);
-  });
-}
-
-function getSmartWords() {
-  return getSmartWordsAdvanced(state.level);
-}
-
-function checkAchievements() {
-  if (state.wordsLearned >= 100) unlock("100_words");
-  if (state.xp >= 1000) unlock("1000_xp");
-  if (state.streak >= 10) unlock("streak_10");
-}
-
-function unlock(id) {
-  state.achievements = state.achievements || [];
-  if (!state.achievements.includes(id)) {
-    state.achievements.push(id);
-    toast(`🏆 Achievement freigeschaltet: ${id}`, "success");
-    saveState();
-  }
-}
-
-function startSpeedMode() {
-  state.mode = GAME_MODES.SPEED;
-  let timer = 10;
-  toast("Speed Mode gestartet!", "info");
-  speedInterval && clearInterval(speedInterval);
-  speedInterval = setInterval(() => {
-    timer--;
-    if (timer <= 0) {
-      clearInterval(speedInterval);
-      toast("Zeit vorbei ⏱️", "error");
-      state.mode = GAME_MODES.QUIZ;
-    }
-  }, 1000);
-}
-
-function checkSentence(input, correct) {
-  if (input.trim() === correct) {
-    toast("Richtig ✅", "success");
-    state.xp += 15;
-    saveXPHistory();
-    saveState();
-  } else {
-    toast("Falsch ❌", "error");
-  }
-}
-
 function trackTime(seconds) {
-  state.studyTime += seconds;
+  const user = getCurrentUser();
+  user.studyTime += seconds;
   saveState();
 }
 
@@ -2591,7 +2725,7 @@ function autoTheme() {
   }
 }
 
-autoTheme();
+applyTheme();
 
 function checkSentenceTraining() {
   const sentence = SENTENCES[0];
@@ -2601,7 +2735,8 @@ function checkSentenceTraining() {
 }
 
 function showGrammar() {
-  const lesson = GRAMMAR[state.level]?.[0];
+  const user = getCurrentUser();
+  const lesson = GRAMMAR[user.profile.level]?.[0];
   if (lesson) {
     toast(`${lesson.title}: ${lesson.content}`, "info");
   }
@@ -2616,20 +2751,21 @@ function handleCloudBackup() {
 }
 
 function addUser(name) {
-  state.users = state.users || [];
-  const newUser = { id: Date.now(), name, xp: 0, stats: {} };
-  state.users.push(newUser);
-  state.currentUser = newUser.id;
+  const id = Date.now().toString();
+  state.users[id] = createEmptyUserState();
+  state.users[id].profile.name = name;
+  state.currentUserId = id;
   saveState();
 }
 
 function saveXPHistory() {
-  if (!state.xpHistory) state.xpHistory = [];
+  const user = getCurrentUser();
+  if (!user.xpHistory) user.xpHistory = [];
 
-  state.xpHistory.push(state.xp);
+  user.xpHistory.push(user.progress.xp);
 
-  if (state.xpHistory.length > 7) {
-    state.xpHistory.shift(); // nur letzte 7 Tage
+  if (user.xpHistory.length > 7) {
+    user.xpHistory.shift(); // nur letzte 7 Tage
   }
 
   saveState();
@@ -2662,11 +2798,12 @@ function animateXP() {
 }
 
 function resetDailyData() {
+  const user = getCurrentUser();
   const today = new Date().toISOString().split("T")[0];
 
-  if (state.lastReset !== today) {
-    state.learnedToday = [];
-    state.lastReset = today;
+  if (user.lastReset !== today) {
+    user.learnedToday = [];
+    user.lastReset = today;
     saveState();
   }
 }
@@ -2700,14 +2837,15 @@ function showScreen(name) {
   if (name === "dashboard") updateDashboard();
 }
 function checkLevelUp() {
-  if (state.level === "A1" && state.xp >= 1000) {
-    state.level = "A2";
-    state.xp = 0;
+  const user = getCurrentUser();
+  if (user.profile.level === "A1" && user.progress.xp >= 1000) {
+    user.profile.level = "A2";
+    user.progress.xp = 0;
     levelUpEffect("A2");
   } 
-  else if (state.level === "A2" && state.xp >= 2000) {
-    state.level = "B1";
-    state.xp = 0;
+  else if (user.profile.level === "A2" && user.progress.xp >= 2000) {
+    user.profile.level = "B1";
+    user.progress.xp = 0;
     levelUpEffect("B1");
   }
 }
@@ -2732,7 +2870,8 @@ function levelUpEffect(newLevel) {
   document.getElementById("levelSelect").value = newLevel;
 
   // reset daily words
-  state.lastDailyDate = null;
+  const user = getCurrentUser();
+  user.lastDailyDate = null;
 
   renderWordList();
   saveState();
@@ -2833,45 +2972,46 @@ function clickSound() {
    8) DASHBOARD RENDERING
 ------------------------------------------------------------ */
 function updateDashboard() {
-  document.getElementById("xpDisplay").textContent = `${state.xp} XP`;
-  document.getElementById("currentLevelLabel").textContent = state.level;
+  const user = getCurrentUser();
+  document.getElementById("xpDisplay").textContent = `${user.progress.xp} XP`;
+  document.getElementById("currentLevelLabel").textContent = user.profile.level;
 
-  document.getElementById("statWords").textContent = state.wordsLearned;
-  document.getElementById("statCorrect").textContent = state.correct;
-  document.getElementById("statWrong").textContent = state.wrong;
-  document.getElementById("statStreak").textContent = state.streak;
+  document.getElementById("statWords").textContent = user.stats.wordsLearned;
+  document.getElementById("statCorrect").textContent = user.stats.correct;
+  document.getElementById("statWrong").textContent = user.stats.wrong;
+  document.getElementById("statStreak").textContent = user.progress.streak;
 
   // XP Bar
   const xpFill = document.getElementById("xpBarFill");
-  let maxXP = state.level === "A1" ? 1000 :
-            state.level === "A2" ? 2000 : 3000;
+  let maxXP = user.profile.level === "A1" ? 1000 :
+            user.profile.level === "A2" ? 2000 : 3000;
 
-  xpFill.style.width = `${(state.xp / maxXP) * 100}%`;
+  xpFill.style.width = `${(user.progress.xp / maxXP) * 100}%`;
   document.getElementById("xpText").textContent =
-    `${state.xp} / ${maxXP} XP`;
+    `${user.progress.xp} / ${maxXP} XP`;
 
   updateDailyProgress();
 
   // Badges
-  if (state.wordsLearned >= 10)
+  if (user.stats.wordsLearned >= 10)
     document.getElementById("badge10Words").classList.add("badge-earned");
 
-  if (state.streak >= 7)
+  if (user.progress.streak >= 7)
     document.getElementById("badgeStreak7").classList.add("badge-earned");
 
-  if (state.quizCorrectInRow >= 10)
+  if (user.quizCorrectInRow >= 10)
     document.getElementById("badgePerfectQuiz").classList.add("badge-earned");
 
   // More achievements
-  if (state.wordsLearned >= 50) {
+  if (user.stats.wordsLearned >= 50) {
     toast("🏆 50 Wörter gelernt!", "success");
   }
 
-  if (state.xp >= 1000) {
+  if (user.progress.xp >= 1000) {
     toast("⚡ 1000 XP erreicht!", "success");
   }
 
-  if (state.streak >= 3) {
+  if (user.progress.streak >= 3) {
     toast("🔥 3 Tage Streak!", "success");
   }
 }
@@ -2880,19 +3020,20 @@ function updateDashboard() {
    9) WÖRTERLISTE RENDERING
 ------------------------------------------------------------ */
 function renderWordList() {
+  const user = getCurrentUser();
   const list = document.getElementById("wordList");
   list.innerHTML = "";
 
   const level = document.getElementById("levelSelect").value;
-  state.level = level;
+  user.profile.level = level;
   resetDailyData();
 
-  const words = state.favoritesView
-    ? getSmartWords().filter(w => state.favorites.includes(w.de))
+  const words = user.favoritesView
+    ? getSmartWords().filter(w => user.favorites.includes(w.de))
     : getDailyWords();
   document.getElementById("wordCountLabel").textContent = `${words.length} Wörter`;
   const dailyLimitSelect = document.getElementById("dailyLimitSelect");
-  if (dailyLimitSelect) dailyLimitSelect.value = state.dailyLimit;
+  if (dailyLimitSelect) dailyLimitSelect.value = user.settings.dailyLimit;
 
   words.forEach((w, i) => {
     const card = document.createElement("div");
@@ -2910,9 +3051,9 @@ function renderWordList() {
   <div class="word-example">${w.ex}</div>
 `;
     card.addEventListener("click", () => {
-      if (!state.learnedToday.includes(w.de)) {
-        state.learnedToday.push(w.de);
-        state.xp += 2;
+      if (!user.learnedToday.includes(w.de)) {
+        user.learnedToday.push(w.de);
+        user.progress.xp += 2;
         toast("+2 XP fürs Lernen 📘", "success");
         updateDashboard();
         saveState();
@@ -2929,20 +3070,21 @@ function renderWordList() {
    10) QUIZ STARTEN
 ------------------------------------------------------------ */
 function startQuiz(repeatMode = false) {
+  const user = getCurrentUser();
 
-  if (!WORDS[state.level]) state.level = "A1";
+  if (!WORDS[user.profile.level]) user.profile.level = "A1";
 
-  const levelWords = getSmartWordsAdvanced(state.level);
+  const levelWords = getSmartWordsAdvanced(user.profile.level);
 
-  state.quizList = repeatMode
-    ? state.difficultWords.length > 0
-      ? state.difficultWords
+  user.quizList = repeatMode
+    ? user.difficultWords.length > 0
+      ? user.difficultWords
       : levelWords
     : levelWords;
 
-  state.mode = GAME_MODES.QUIZ;
-  state.quizIndex = 0;
-  state.quizCorrectInRow = 0;
+  user.currentMode = GAME_MODES.QUIZ;
+  user.quizIndex = 0;
+  user.quizCorrectInRow = 0;
 
   showScreen("quiz");
   loadQuizQuestion();
@@ -2958,7 +3100,8 @@ document.getElementById("repeatModeBtn").onclick = () => {
    11) QUIZ FRAGE LADEN
 ------------------------------------------------------------ */
 function loadQuizQuestion() {
-  const q = state.quizList[state.quizIndex];
+  const user = getCurrentUser();
+  const q = user.quizList[user.quizIndex];
 
   if (!q) {
     toast("Keine Fragen gefunden!", "error");
@@ -2966,21 +3109,21 @@ function loadQuizQuestion() {
     return;
   }
 
-  state.currentWord = q;
+  user.currentWord = q;
 
   // 👇 أضف هذا هنا
   const questionText = document.getElementById("quizQuestionText");
   questionText.textContent =
-    state.quizMode === "input"
+    user.settings.quizMode === "input"
       ? "Schreibe auf Deutsch:"
       : "Wähle die richtige Antwort:";
 
   document.getElementById("quizWordDE").textContent = q.ar;
 
   document.getElementById("quizProgress").textContent =
-    `${state.quizIndex + 1} / ${state.quizList.length}`;
+    `${user.quizIndex + 1} / ${user.quizList.length}`;
 
-  if (state.quizMode === "choice") {
+  if (user.settings.quizMode === "choice") {
     renderMultipleChoice(q);
   } else {
     renderInputMode(q);
@@ -3061,6 +3204,7 @@ function renderInputMode(q) {
    14) QUIZ ERGEBNISSE
 ------------------------------------------------------------ */
 function handleCorrect(q) {
+  const user = getCurrentUser();
   playSound("correct");
   navigator.vibrate?.(20);
 
@@ -3076,15 +3220,15 @@ function handleCorrect(q) {
 
   toast("Richtig!", "success");
 
-  state.correct++;
-  state.quizCorrectInRow++;
-  state.xp += 10;
+  user.stats.correct++;
+  user.quizCorrectInRow++;
+  user.progress.xp += 10;
 
   updateWordMemory(q.de, true);
   checkAchievements();
 
-  if (state.quizCorrectInRow % 5 === 0) {
-    state.xp += 20;
+  if (user.quizCorrectInRow % 5 === 0) {
+    user.progress.xp += 20;
     toast("🔥 Combo Bonus +20 XP", "success");
   }
 
@@ -3095,70 +3239,74 @@ function handleCorrect(q) {
   updateDailyProgress();
 
   // ❤️ إذا خلص كلمات اليوم
-  if (state.quizCorrectInRow === state.dailyWords.length) {
+  if (user.quizCorrectInRow === user.dailyWords.length) {
     showLoveMessage();
   }
 
-  if (!state.difficultWords.some(w => w.de === q.de))
-    state.wordsLearned++;
+  if (!user.difficultWords.some(w => w.de === q.de))
+    user.stats.wordsLearned++;
 
   saveState();
 }
 
 function handleWrong(q) {
+  const user = getCurrentUser();
   playSound("wrong");
   navigator.vibrate?.(20);
   toast(`❌ Falsch! Richtige Antwort: ${q.de}`, "error");
 
-  state.wrong++;
-  state.quizCorrectInRow = 0;
+  user.stats.wrong++;
+  user.quizCorrectInRow = 0;
   updateWordMemory(q.de, false);
   updateDailyProgress();
 
-  if (!state.difficultWords.some(w => w.de === q.de))
-    state.difficultWords.push(q);
+  if (!user.difficultWords.some(w => w.de === q.de))
+    user.difficultWords.push(q);
 
   saveState();
 }
 function getDailyWords() {
+  const user = getCurrentUser();
   const today = new Date().toISOString().split("T")[0];
 
-  if (state.lastDailyDate !== today) {
+  if (user.lastDailyDate !== today) {
       const allWords = getSmartWords();
 
     const shuffled = [...allWords].sort(() => Math.random() - 0.5);
 
-    state.dailyWords = shuffled.slice(0, state.dailyLimit);
-    state.lastDailyDate = today;
+    user.dailyWords = shuffled.slice(0, user.settings.dailyLimit || 5);
+    user.lastDailyDate = today;
 
     // 🔥 Reset streak daily logic
-    const last = new Date(state.lastDay || 0);
+    const last = new Date(user.progress.lastSession || 0);
     const now = new Date();
 
     const diff = Math.floor((now - last) / (1000 * 60 * 60 * 24));
 
     if (diff === 1) {
-      state.streak++;
+      user.progress.streak++;
     } else if (diff > 1) {
-      state.streak = 1;
+      user.progress.streak = 1;
     }
 
-    state.lastDay = now.toISOString();
+    user.progress.lastSession = now.toISOString();
 
     saveState();
   }
 
-  return state.dailyWords;
+  return user.dailyWords;
 }
 
 function getSmartWords() {
-  return getSmartWordsAdvanced(state.level);
+  const user = getCurrentUser();
+  return getSmartWordsAdvanced(user.profile.level);
 }
 
 function loadNext() {
-  state.quizIndex++;
+  const user = getCurrentUser();
+  user.quizIndex++;
 
-  if (state.quizIndex >= state.quizList.length) {
+  if (user.quizIndex >= user.quizList.length) {
     toast("Quiz fertig 🎉", "success");
     showScreen("dashboard");
     stopStudyTimer();
@@ -3174,9 +3322,10 @@ function loadNext() {
    15) QUIZ MODUS WECHSELN
 ------------------------------------------------------------ */
 document.getElementById("switchQuizMode").onclick = () => {
-  state.quizMode = state.quizMode === "choice" ? "input" : "choice";
+  const user = getCurrentUser();
+  user.settings.quizMode = user.settings.quizMode === "choice" ? "input" : "choice";
   document.getElementById("quizModeLabel").textContent =
-    state.quizMode === "choice" ? "Multiple Choice" : "Eingabe";
+    user.settings.quizMode === "choice" ? "Multiple Choice" : "Eingabe";
   loadQuizQuestion();
 };
 
@@ -3195,19 +3344,20 @@ document.getElementById("quitQuiz").onclick = () => {
    17) STATISTIKEN
 ------------------------------------------------------------ */
 function renderStats() {
-  document.getElementById("statsWordsLearned").textContent = state.wordsLearned;
+  const user = getCurrentUser();
+  document.getElementById("statsWordsLearned").textContent = user.stats.wordsLearned;
 
-  const total = state.correct + state.wrong;
-  const acc = total === 0 ? 0 : Math.round((state.correct / total) * 100);
+  const total = user.stats.correct + user.stats.wrong;
+  const acc = total === 0 ? 0 : Math.round((user.stats.correct / total) * 100);
   document.getElementById("statsAccuracy").textContent = acc + "%";
 
-  document.getElementById("statsStreak").textContent = state.streak;
-  document.getElementById("statsLevel").textContent = state.level;
+  document.getElementById("statsStreak").textContent = user.progress.streak;
+  document.getElementById("statsLevel").textContent = user.profile.level;
 
   // Balken
-  document.getElementById("barA1").style.width = state.level === "A1" ? "100%" : "20%";
-  document.getElementById("barA2").style.width = state.level === "A2" ? "100%" : "20%";
-  document.getElementById("barB1").style.width = state.level === "B1" ? "100%" : "20%";
+  document.getElementById("barA1").style.width = user.profile.level === "A1" ? "100%" : "20%";
+  document.getElementById("barA2").style.width = user.profile.level === "A2" ? "100%" : "20%";
+  document.getElementById("barB1").style.width = user.profile.level === "B1" ? "100%" : "20%";
 }
 
 /* ------------------------------------------------------------
@@ -3217,7 +3367,8 @@ updateDashboard();
 renderWordList();
 initNavigation();
 setTimeout(() => {
-  toast("Hallo " + state.username + " 👋 Willkommen zurück!", "success");
+  const user = getCurrentUser();
+  toast("Hallo " + user.profile.name + " 👋 Willkommen zurück!", "success");
 }, 400);
 showWelcome();
 
@@ -3227,7 +3378,7 @@ const progressChart = new Chart(document.getElementById("progressChart"), {
     labels: ["Tag 1","Tag 2","Tag 3","Tag 4","Tag 5","Tag 6","Tag 7"],
     datasets: [{
       label: "XP",
-      data: state.xpHistory || [],
+      data: getCurrentUser().xpHistory || [],
       borderColor: "#22c55e",
       backgroundColor: "rgba(34,197,94,0.2)",
       fill: true,
@@ -3257,19 +3408,20 @@ const progressChart = new Chart(document.getElementById("progressChart"), {
 document.getElementById("levelSelect").addEventListener("change", function(e) {
   clickSound(); // 🔊 صوت
 
-  state.level = e.target.value;
-  state.favoritesView = false;
+  const user = getCurrentUser();
+  user.profile.level = e.target.value;
+  user.favoritesView = false;
 
   // reset daily words
-  state.lastDailyDate = null;
+  user.lastDailyDate = null;
 
   renderWordList();      // تحديث الكلمات
   updateDashboard();     // تحديث الإحصائيات
 
-  document.getElementById("currentLevelLabel").textContent = state.level;
-  document.getElementById("levelText").textContent = state.level;
+  document.getElementById("currentLevelLabel").textContent = user.profile.level;
+  document.getElementById("levelText").textContent = user.profile.level;
 
-  toast("Level geändert zu " + state.level, "info");
+  toast("Level geändert zu " + user.profile.level, "info");
 
   saveState();
 });
@@ -3279,7 +3431,8 @@ function showWelcome() {
   const nameEl = document.getElementById("welcomeName");
 
   // اسم المستخدم من state
-  nameEl.textContent = state.username;
+  const user = getCurrentUser();
+  nameEl.textContent = user.profile.name;
 
   // إظهار الشاشة
   screen.style.opacity = "1";
@@ -3344,33 +3497,37 @@ function speak(text) {
 }
 
 function toggleFavorite(word) {
-  if (state.favorites.includes(word)) {
-    state.favorites = state.favorites.filter(w => w !== word);
+  const user = getCurrentUser();
+  if (user.favorites.includes(word)) {
+    user.favorites = user.favorites.filter(w => w !== word);
     toast("Removed from favorites");
   } else {
-    state.favorites.push(word);
+    user.favorites.push(word);
     toast("Added to favorites ⭐");
   }
   saveState();
 }
 
 function updateDailyProgress() {
-  const progress = state.dailyWords.length
-    ? Math.min(100, Math.max(0, (state.quizCorrectInRow / state.dailyWords.length) * 100))
+  const user = getCurrentUser();
+  const progress = user.dailyWords.length
+    ? Math.min(100, Math.max(0, (user.quizCorrectInRow / user.dailyWords.length) * 100))
     : 0;
   document.getElementById("dailyBar").style.width = progress + "%";
 }
 
 function changeDailyLimit(val) {
-  state.dailyLimit = parseInt(val, 10);
-  state.lastDailyDate = null;
-  state.favoritesView = false;
+  const user = getCurrentUser();
+  user.settings.dailyLimit = parseInt(val, 10);
+  user.lastDailyDate = null;
+  user.favoritesView = false;
   renderWordList();
 }
 
 function showFavorites() {
+  const user = getCurrentUser();
   const favWords = getSmartWords().filter(w =>
-    state.favorites.includes(w.de)
+    user.favorites.includes(w.de)
   );
 
   if (favWords.length === 0) {
@@ -3378,8 +3535,8 @@ function showFavorites() {
     return;
   }
 
-  state.favoritesView = true;
-  state.dailyWords = favWords;
+  user.favoritesView = true;
+  user.dailyWords = favWords;
   renderWordList();
 }
 
