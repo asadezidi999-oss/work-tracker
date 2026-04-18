@@ -7,6 +7,9 @@
   <title>DeutschLernen – Deutsch & Arabisch</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Moderne Web-App zum Deutschlernen mit arabischer Übersetzung, Quiz, XP-System und Statistiken." />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icon-192.png">
 
   <style>
     :root {
@@ -37,11 +40,29 @@
       --transition-med: 0.25s ease-out;
     }
 
+    body.light {
+      --bg: #f8fafc;
+      --bg-elevated: #ffffff;
+      --bg-soft: #f8fafc;
+      --card: #ffffff;
+      --card-soft: #f1f5f9;
+      --accent: #22c55e;
+      --accent-soft: rgba(34, 197, 94, 0.16);
+      --text: #0f172a;
+      --text-soft: #64748b;
+      --border-subtle: rgba(148, 163, 184, 0.35);
+      --border-strong: rgba(148, 163, 184, 0.55);
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
+
+    /* =========================================
+       🌌 1. GLOBAL BACKGROUND (ULTRA MODERN)
+    ========================================= */
 
     html, body {
       height: 100%;
@@ -50,14 +71,44 @@
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
         "Segoe UI", sans-serif;
-      background:
-        radial-gradient(circle at top, #0b1120 0, #020617 55%),
-        radial-gradient(circle at bottom, #020617 0, #000 60%);
+      background: radial-gradient(circle at 20% 20%, #0f172a 0%, #020617 60%, #000 100%);
       color: var(--text);
       display: flex;
       justify-content: center;
-      align-items: stretch;
       padding: 12px;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Glow Effects */
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      pointer-events: none;
+      z-index: -1;
+      filter: blur(120px);
+      opacity: 0.9;
+      will-change: transform;
+      transform: translateZ(0);
+    }
+
+    body::before {
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(34,197,94,0.25), transparent 70%);
+      top: -220px;
+      left: -220px;
+    }
+
+    body::after {
+      width: 550px;
+      height: 550px;
+      background: radial-gradient(circle, rgba(56,189,248,0.25), transparent 70%);
+      bottom: -220px;
+      right: -220px;
     }
 
     @media (min-width: 900px) {
@@ -69,10 +120,12 @@
     .app-shell {
       width: 100%;
       max-width: 1100px;
-      background: radial-gradient(circle at top left, #020617 0, #020617 55%);
-      border-radius: 24px;
-      border: 1px solid rgba(148, 163, 184, 0.22);
-      box-shadow: var(--shadow-soft);
+      background: rgba(2, 6, 23, 0.6);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border-radius: 28px;
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
       display: flex;
       flex-direction: column;
       position: relative;
@@ -92,18 +145,51 @@
       z-index: -1;
     }
 
+    /* =========================================
+       💥 6. HEADER
+    ========================================= */
+
     .app-header {
-      padding: 14px 14px 10px;
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      background: rgba(2,6,23,0.55);
+      border-bottom: 1px solid rgba(148,163,184,0.18);
+      padding: 14px 18px;
+      font-size: 18px;
+      font-weight: 600;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-      border-bottom: 1px solid rgba(15, 23, 42, 0.9);
-      background: linear-gradient(
-        135deg,
-        rgba(15, 23, 42, 0.96),
-        rgba(15, 23, 42, 0.98)
-      );
+    }
+
+    /* =========================================
+       🧠 7. SCREEN TRANSITIONS
+    ========================================= */
+
+    .screen {
+      animation: fadeIn 0.35s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* =========================================
+       🔊 8. MICRO INTERACTIONS
+    ========================================= */
+
+    button:active,
+    .btn:active,
+    .word-card:active {
+      transform: scale(0.96);
     }
 
     @media (min-width: 900px) {
@@ -289,10 +375,18 @@
       }
     }
 
+    /* =========================================
+       💎 2. GLASS CARD DESIGN
+    ========================================= */
+
     .card {
-      background: radial-gradient(circle at top left, #020617 0, #020617 55%);
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--border-subtle);
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(22px) saturate(180%);
+      -webkit-backdrop-filter: blur(22px) saturate(180%);
+      border-radius: 22px;
+      border: 1px solid rgba(148,163,184,0.18);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.65);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
       padding: 10px 10px 11px;
       display: flex;
       flex-direction: column;
@@ -308,11 +402,17 @@
       }
     }
 
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 25px 70px rgba(0,0,0,0.95);
+    }
+
     .card::before {
       content: "";
       position: absolute;
       inset: 0;
-      background: radial-gradient(circle at top right, rgba(148, 163, 184, 0.16), transparent 55%);
+      border-radius: 22px;
+      background: radial-gradient(circle at top right, rgba(34,197,94,0.15), transparent 60%);
       opacity: 0.6;
       pointer-events: none;
       z-index: -1;
@@ -456,13 +556,24 @@
       position: relative;
     }
 
+    /* =========================================
+       🔥 5. XP BAR (ANIMATION)
+    ========================================= */
+
     .xp-bar-fill {
       height: 100%;
       width: 0%;
-      border-radius: 999px;
-      background: linear-gradient(90deg, #22c55e, #16a34a, #0ea5e9);
+      border-radius: 10px;
+      background: linear-gradient(90deg, #22c55e, #0ea5e9, #22c55e);
+      background-size: 200% 100%;
+      animation: moveXP 3s linear infinite;
       box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.5);
       transition: width var(--transition-med);
+    }
+
+    @keyframes moveXP {
+      0% { background-position: 0% }
+      100% { background-position: 200% }
     }
 
     .xp-bar-glow {
@@ -491,29 +602,38 @@
       }
     }
 
+    /* =========================================
+       ⚡ 3. BUTTONS (PREMIUM)
+    ========================================= */
+
     .btn {
-      border: none;
-      border-radius: var(--radius-md);
-      padding: 8px 10px;
-      font-size: 0.8rem;
-      font-weight: 500;
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-weight: 600;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
       cursor: pointer;
+      user-select: none;
       display: flex;
       flex-direction: column;
       align-items: flex-start;
       gap: 2px;
-      transition: background var(--transition-fast), transform var(--transition-fast),
-        box-shadow var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
       background: rgba(15, 23, 42, 0.98);
       color: var(--text);
       border: 1px solid rgba(31, 41, 55, 0.95);
       text-align: left;
+      position: relative;
+      overflow: hidden;
     }
 
     .btn-main {
-      background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.22), rgba(15, 23, 42, 0.98));
-      border-color: rgba(34, 197, 94, 0.9);
-      box-shadow: 0 12px 30px rgba(22, 163, 74, 0.7);
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: white;
+      box-shadow: 0 10px 30px rgba(34,197,94,0.45);
+    }
+
+    .btn-main:hover {
+      transform: scale(1.05);
+      box-shadow: 0 20px 45px rgba(34,197,94,0.75);
     }
 
     .btn-secondary {
@@ -537,9 +657,12 @@
       transform: translateY(-1px);
       box-shadow: 0 14px 32px rgba(0, 0, 0, 0.85);
     }
-    .btn:active {
-  transform: scale(0.95);
-}
+
+    .btn:active,
+    button:active,
+    .word-card:active {
+      transform: scale(0.96);
+    }
 
 .word-card:hover {
   transform: scale(1.02);
@@ -657,6 +780,10 @@
       flex-wrap: wrap;
     }
 
+    .word-list-controls {
+      margin-top: 10px;
+    }
+
     .select {
       border-radius: var(--radius-pill);
       border: 1px solid rgba(148, 163, 184, 0.5);
@@ -682,23 +809,38 @@
       margin-top: 2px;
     }
 
+    /* =========================================
+       🧠 4. WORD CARDS
+    ========================================= */
+
     .word-card {
-      transition: all 0.25s ease;
-  cursor: pointer;
-      border-radius: var(--radius-md);
-      border: 1px solid rgba(31, 41, 55, 0.95);
-      background: rgba(15, 23, 42, 0.98);
-      padding: 6px 7px;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      font-size: 0.8rem;
+      border-radius: 16px;
+      padding: 14px;
+      background: rgba(15,23,42,0.65);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(148,163,184,0.18);
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .word-card:hover {
+      transform: scale(1.03);
+      background: rgba(30,41,59,0.85);
+    }
+
+    .word-card:active {
+      transform: scale(0.98);
     }
 
     .word-row {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
+      gap: 6px;
+    }
+
+    .word-actions {
+      display: flex;
+      align-items: center;
       gap: 6px;
     }
 
@@ -1017,6 +1159,15 @@
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 6px;
       margin-top: 2px;
+    }
+
+    .stats-chart canvas {
+      grid-column: 1 / -1;
+      width: 100%;
+      min-height: 220px;
+      border-radius: 16px;
+      background: rgba(15, 23, 42, 0.9);
+      padding: 10px;
     }
 
     @media (max-width: 640px) {
@@ -1404,6 +1555,8 @@
         <span id="xpDisplay">0 XP</span>
       </div>
 
+      <button class="small-btn" id="themeToggle" onclick="toggleTheme()">🌗</button>
+
       <div class="nav-tabs">
         <button class="nav-tab active" data-screen="dashboard">
           <span class="icon">🏠</span> Dashboard
@@ -1460,6 +1613,13 @@
               </div>
             </div>
 
+            <div class="xp-bar-wrapper">
+              <div>Daily Goal</div>
+              <div class="xp-bar-track">
+                <div class="xp-bar-fill" id="dailyBar"></div>
+              </div>
+            </div>
+
             <!-- STATS -->
             <div class="stats-row">
               <div class="stat-chip">
@@ -1504,6 +1664,12 @@
                 <div class="btn-label"><span class="icon">📊</span> Statistiken</div>
                 <div class="btn-sub">Fortschritt ansehen</div>
               </button>
+            </div>
+
+            <!-- EXPORT/IMPORT -->
+            <div class="secondary-actions">
+              <button onclick="exportData()">📤 Export</button>
+              <button onclick="importData()">📥 Import</button>
             </div>
 
           </div>
@@ -1570,7 +1736,17 @@
             </div>
             <div class="word-list-header-right">
               <span id="wordCountLabel">0 Wörter</span>
+              <button class="small-btn" onclick="showFavorites()">⭐ Favoriten</button>
             </div>
+          </div>
+
+          <div class="word-list-controls">
+            <input type="text" id="searchInput" placeholder="🔍 Wort suchen..." class="quiz-input" />
+            <select id="dailyLimitSelect" class="select" onchange="changeDailyLimit(this.value)">
+              <option value="5">5 Wörter</option>
+              <option value="10">10 Wörter</option>
+              <option value="20">20 Wörter</option>
+            </select>
           </div>
 
           <div class="word-list" id="wordList"></div>
@@ -1611,6 +1787,7 @@
           <!-- Text Input -->
           <div class="quiz-input-row hidden" id="quizInputRow">
             <input type="text" id="quizInput" class="quiz-input" placeholder="Antwort eingeben..." />
+            <button onclick="startSpeech()">🎤 Sprechen</button>
             <button class="small-btn primary" id="submitInputAnswer">OK</button>
           </div>
 
@@ -1708,6 +1885,8 @@
                 </div>
               </div>
 
+              <canvas id="progressChart"></canvas>
+
             </div>
 
           </div>
@@ -1777,12 +1956,13 @@
     transition: transform 0.4s ease;
     box-shadow: 0 20px 60px rgba(0,0,0,0.9);
   ">
-    👋 Hallo <span id="welcomeName">Farida ❤️</span>
+    👋 Hallo <span id="welcomeName"></span>
   </div>
 </div>
 <div class="loader-overlay" id="loaderOverlay">
   <div class="loader"></div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 /* ============================================================
    DEUTSCHLERNEN – JAVASCRIPT LOGIK
@@ -1791,6 +1971,11 @@
 /* ------------------------------------------------------------
    1) GLOBALER APP-STATE
 ------------------------------------------------------------ */
+const GAME_MODES = {
+  QUIZ: "quiz",
+  SPEED: "speed"
+};
+
 const state = {
   level: "A1",
   xp: 0,
@@ -1802,12 +1987,26 @@ const state = {
   difficultWords: [],
   wordsLearned: 0,
   quizMode: "choice", // "choice" oder "input"
+  mode: GAME_MODES.QUIZ,
   quizList: [],
   quizIndex: 0,
   quizCorrectInRow: 0,
   dailyWords: [],
-lastDailyDate: null,
+  favorites: [],
+  favoritesView: false,
+  dailyLimit: 5,
+  lastDailyDate: null,
+  xpHistory: [],
+  wordMemory: {},
+  achievements: [],
+  users: [],
+  currentUser: null,
+  studyTime: 0,
+  currentWord: null,
 };
+
+let studyInterval = null;
+let speedInterval = null;
 
 /* ------------------------------------------------------------
    2) WÖRTERLISTEN (DEUTSCH + ARABISCH)
@@ -2073,6 +2272,22 @@ A1: [
 ]
 };
 
+const SENTENCES = [
+  {
+    words: ["Ich", "gehe", "heute", "zur Schule"],
+    correct: "Ich gehe heute zur Schule"
+  }
+];
+
+const GRAMMAR = {
+  A1: [
+    {
+      title: "Artikel",
+      content: "der = männlich, die = weiblich, das = neutral"
+    }
+  ]
+};
+
 /* ------------------------------------------------------------
    3) SPEICHERUNG (localStorage)
 ------------------------------------------------------------ */
@@ -2085,8 +2300,376 @@ function loadState() {
   if (saved) {
     Object.assign(state, JSON.parse(saved));
   }
+  state.favorites = state.favorites || [];
+  state.dailyWords = state.dailyWords || [];
+  state.learnedToday = state.learnedToday || [];
+  state.lastReset = state.lastReset || null;
+  state.dailyLimit = state.dailyLimit || 5;
+  state.favoritesView = state.favoritesView || false;
+  state.wordMemory = state.wordMemory || {};
+  state.achievements = state.achievements || [];
+  state.users = state.users || [];
+  state.currentUser = state.currentUser || null;
+  state.studyTime = state.studyTime || 0;
+  state.mode = state.mode || GAME_MODES.QUIZ;
+  state.currentWord = state.currentWord || null;
 }
 loadState();
+initUser();
+resetDailyData();
+
+function initUser() {
+  if (!state.username || state.username === "Farida") {
+    const name = prompt("Wie heißt du?");
+    if (name) {
+      state.username = name;
+      saveState();
+    }
+  }
+}
+
+function toggleTheme() {
+  document.body.classList.toggle("light");
+  localStorage.setItem("theme", document.body.classList.contains("light"));
+}
+
+if (localStorage.getItem("theme") === "true") {
+  document.body.classList.add("light");
+}
+
+function startSpeech() {
+  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  recognition.lang = "de-DE";
+
+  recognition.onresult = (e) => {
+    const text = e.results[0][0].transcript;
+    document.getElementById("quizInput").value = text;
+    evaluatePronunciation(state.currentWord?.de, text);
+  };
+
+  recognition.start();
+}
+
+function explainWord(word) {
+  const modal = document.getElementById("modalOverlay");
+  const title = document.getElementById("modalTitle");
+  const body = document.getElementById("modalBody");
+
+  if (!modal || !title || !body) {
+    console.warn("Modal-Elemente fehlen");
+    return;
+  }
+
+  title.textContent = "📘 Erklärung";
+
+  const allWords = [
+    ...(WORDS.A1 || []),
+    ...(WORDS.A2 || []),
+    ...(WORDS.B1 || [])
+  ];
+
+  const found = allWords.find(w => w.de === word);
+
+  const fallback = {
+    "Haus": {
+      de: "Haus",
+      meaning: "Ein Gebäude, in dem Menschen wohnen.",
+      ar: "منزل",
+      ex: "Ich wohne in einem Haus."
+    },
+    "Auto": {
+      de: "Auto",
+      meaning: "Ein Fahrzeug zum Fahren.",
+      ar: "سيارة",
+      ex: "Ich fahre ein Auto."
+    },
+    "Wasser": {
+      de: "Wasser",
+      meaning: "Eine Flüssigkeit zum Trinken.",
+      ar: "ماء",
+      ex: "Ich trinke Wasser."
+    },
+    "Nacht": {
+      de: "Nacht",
+      meaning: "Die Zeit, wenn es dunkel ist.",
+      ar: "ليل",
+      ex: "In der Nacht schlafe ich."
+    },
+    "Buch": {
+      de: "Buch",
+      meaning: "Etwas zum Lesen.",
+      ar: "كتاب",
+      ex: "Ich lese ein Buch."
+    }
+  };
+
+  const data = found || fallback[word];
+
+  if (data) {
+    body.innerHTML = `
+      <b>${data.de}</b><br><br>
+      <b>🇩🇪 Bedeutung:</b> ${data.meaning || "-"}<br><br>
+      <b>🇸🇦 Arabisch:</b> ${data.ar || "-"}<br><br>
+      <b>📌 Beispiel:</b> ${data.ex || "-"}
+    `;
+  } else {
+    body.innerHTML = `
+      ❗ <b>Keine Erklärung verfügbar</b><br>
+      Für dieses Wort gibt es noch keine gespeicherte Bedeutung.
+    `;
+  }
+
+  modal.classList.add("visible");
+}
+
+const modalOverlay = document.getElementById("modalOverlay");
+const modalClose = document.getElementById("modalClose");
+const modalConfirm = document.getElementById("modalConfirm");
+
+if (modalOverlay) {
+  modalOverlay.addEventListener("click", (event) => {
+    if (event.target === modalOverlay) {
+      modalOverlay.classList.remove("visible");
+    }
+  });
+}
+
+modalClose?.addEventListener("click", () => {
+  modalOverlay?.classList.remove("visible");
+});
+
+modalConfirm?.addEventListener("click", () => {
+  modalOverlay?.classList.remove("visible");
+});
+
+let deferredPrompt = null;
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const installBtn = document.getElementById("installBtn");
+  if (installBtn) installBtn.style.display = "block";
+});
+
+function similarity(a, b) {
+  if (!a || !b) return 0;
+  if (a === b) return 1;
+  if (a.includes(b) || b.includes(a)) return 0.8;
+  return 0;
+}
+
+function evaluatePronunciation(correct, spoken) {
+  if (!correct || !spoken) return;
+  const score = similarity(correct.toLowerCase(), spoken.toLowerCase());
+  if (score === 1) {
+    toast("Aussprache gut! 🎤", "success");
+  } else if (score >= 0.8) {
+    toast("Fast richtig, gute Aussprache!", "info");
+  } else {
+    toast("Versuche noch einmal mit mehr Betonung.", "warning");
+  }
+}
+
+function updateWordMemory(word, correct) {
+  if (!word) return;
+  state.wordMemory = state.wordMemory || {};
+  const entry = state.wordMemory[word] || { correct: 0, wrong: 0, strength: 0, last: null };
+  if (correct) {
+    entry.correct++;
+    entry.strength = Math.min(5, entry.strength + 1);
+    state.difficultWords = state.difficultWords.filter(w => w.de !== word);
+  } else {
+    entry.wrong++;
+    entry.strength = Math.max(-3, entry.strength - 1);
+    if (!state.difficultWords.some(w => w.de === word)) {
+      const found = [...(WORDS[state.level] || [])].find(w => w.de === word);
+      if (found) state.difficultWords.push(found);
+    }
+  }
+  entry.last = new Date().toISOString();
+  state.wordMemory[word] = entry;
+  saveState();
+}
+
+function getSmartWordsAdvanced(level) {
+  const allWords = WORDS[level] || [];
+  return [...allWords].sort((a, b) => {
+    const memoryA = state.wordMemory[a.de] || { strength: 0, correct: 0, wrong: 0 };
+    const memoryB = state.wordMemory[b.de] || { strength: 0, correct: 0, wrong: 0 };
+
+    const needA = Math.max(0, 2 - memoryA.strength) + (state.difficultWords.some(w => w.de === a.de) ? 2 : 0) - (state.favorites.includes(a.de) ? 1 : 0);
+    const needB = Math.max(0, 2 - memoryB.strength) + (state.difficultWords.some(w => w.de === b.de) ? 2 : 0) - (state.favorites.includes(b.de) ? 1 : 0);
+
+    if (needA !== needB) return needB - needA;
+    return (memoryA.correct - memoryA.wrong) - (memoryB.correct - memoryB.wrong);
+  });
+}
+
+function getSmartWords() {
+  return getSmartWordsAdvanced(state.level);
+}
+
+function checkAchievements() {
+  if (state.wordsLearned >= 100) unlock("100_words");
+  if (state.xp >= 1000) unlock("1000_xp");
+  if (state.streak >= 10) unlock("streak_10");
+}
+
+function unlock(id) {
+  state.achievements = state.achievements || [];
+  if (!state.achievements.includes(id)) {
+    state.achievements.push(id);
+    toast(`🏆 Achievement freigeschaltet: ${id}`, "success");
+    saveState();
+  }
+}
+
+function startSpeedMode() {
+  state.mode = GAME_MODES.SPEED;
+  let timer = 10;
+  toast("Speed Mode gestartet!", "info");
+  speedInterval && clearInterval(speedInterval);
+  speedInterval = setInterval(() => {
+    timer--;
+    if (timer <= 0) {
+      clearInterval(speedInterval);
+      toast("Zeit vorbei ⏱️", "error");
+      state.mode = GAME_MODES.QUIZ;
+    }
+  }, 1000);
+}
+
+function checkSentence(input, correct) {
+  if (input.trim() === correct) {
+    toast("Richtig ✅", "success");
+    state.xp += 15;
+    saveXPHistory();
+    saveState();
+  } else {
+    toast("Falsch ❌", "error");
+  }
+}
+
+function trackTime(seconds) {
+  state.studyTime += seconds;
+  saveState();
+}
+
+function backup() {
+  fetch("/api/save", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(state)
+  });
+}
+
+function promptInstall() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then((choiceResult) => {
+      if (choiceResult.outcome === "accepted") {
+        toast("App installiert! 🎉", "success");
+      }
+      deferredPrompt = null;
+    });
+  }
+}
+
+function startStudyTimer() {
+  studyInterval && clearInterval(studyInterval);
+  studyInterval = setInterval(() => trackTime(1), 1000);
+}
+
+function stopStudyTimer() {
+  studyInterval && clearInterval(studyInterval);
+}
+
+function autoTheme() {
+  const themeSaved = localStorage.getItem("theme");
+  if (themeSaved !== null) return;
+  if (window.matchMedia("(prefers-color-scheme: light)").matches) {
+    document.body.classList.add("light");
+  }
+}
+
+autoTheme();
+
+function checkSentenceTraining() {
+  const sentence = SENTENCES[0];
+  if (sentence) {
+    checkSentence(sentence.correct, sentence.correct);
+  }
+}
+
+function showGrammar() {
+  const lesson = GRAMMAR[state.level]?.[0];
+  if (lesson) {
+    toast(`${lesson.title}: ${lesson.content}`, "info");
+  }
+}
+
+function handleInstallClick() {
+  promptInstall();
+}
+
+function handleCloudBackup() {
+  backup();
+}
+
+function addUser(name) {
+  state.users = state.users || [];
+  const newUser = { id: Date.now(), name, xp: 0, stats: {} };
+  state.users.push(newUser);
+  state.currentUser = newUser.id;
+  saveState();
+}
+
+function saveXPHistory() {
+  if (!state.xpHistory) state.xpHistory = [];
+
+  state.xpHistory.push(state.xp);
+
+  if (state.xpHistory.length > 7) {
+    state.xpHistory.shift(); // nur letzte 7 Tage
+  }
+
+  saveState();
+}
+
+function exportData() {
+  const data = JSON.stringify(state);
+  navigator.clipboard.writeText(data);
+  alert("Daten kopiert!");
+}
+
+function importData() {
+  const input = prompt("Füge deine Daten ein:");
+  if (input) {
+    Object.assign(state, JSON.parse(input));
+    saveState();
+    location.reload();
+  }
+}
+
+function animateXP() {
+  const el = document.getElementById("xpDisplay");
+  el.style.transform = "scale(1.3)";
+  el.style.color = "#22c55e";
+
+  setTimeout(() => {
+    el.style.transform = "scale(1)";
+    el.style.color = "";
+  }, 300);
+}
+
+function resetDailyData() {
+  const today = new Date().toISOString().split("T")[0];
+
+  if (state.lastReset !== today) {
+    state.learnedToday = [];
+    state.lastReset = today;
+    saveState();
+  }
+}
 
 /* ------------------------------------------------------------
    4) UI ELEMENTE
@@ -2107,6 +2690,8 @@ function showScreen(name) {
   Object.values(screens).forEach(s => s.classList.add("hidden"));
   screens[name].classList.remove("hidden");
 
+  window.scrollTo({ top: 0, behavior: "smooth" }); // 🔥 neu
+
   navTabs.forEach(t => t.classList.remove("active"));
   document.querySelector(`.nav-tab[data-screen="${name}"]`).classList.add("active");
 
@@ -2117,10 +2702,12 @@ function showScreen(name) {
 function checkLevelUp() {
   if (state.level === "A1" && state.xp >= 1000) {
     state.level = "A2";
+    state.xp = 0;
     levelUpEffect("A2");
   } 
   else if (state.level === "A2" && state.xp >= 2000) {
     state.level = "B1";
+    state.xp = 0;
     levelUpEffect("B1");
   }
 }
@@ -2191,35 +2778,56 @@ function toast(msg, type = "info") {
 /* ------------------------------------------------------------
    7) SOUND EFFEKTE
 ------------------------------------------------------------ */
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+document.addEventListener("click", () => {
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+}, { once: true });
+
+/**
+ * Spielt verschiedene UI-Sounds ab
+ * @param {"correct" | "wrong" | "click" | "success"} type
+ */
 function playSound(type) {
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
+  const now = audioCtx.currentTime;
 
-  osc.type = "sine";
-  osc.frequency.value = type === "correct" ? 600 : 200;
-  gain.gain.value = 0.1;
+  function beep(freq, start, duration) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
 
-  osc.connect(gain);
-  gain.connect(ctx.destination);
+    osc.type = "triangle";
 
-  osc.start();
-  osc.stop(ctx.currentTime + 0.15);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.frequency.setValueAtTime(freq, now + start);
+
+    gain.gain.setValueAtTime(0.001, now + start);
+    gain.gain.exponentialRampToValueAtTime(0.15, now + start + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + start + duration);
+
+    osc.start(now + start);
+    osc.stop(now + start + duration);
+  }
+
+  if (type === "correct") {
+    beep(600, 0, 0.12);
+    beep(900, 0.1, 0.18);
+  } else if (type === "wrong") {
+    beep(300, 0, 0.2);
+    beep(150, 0.15, 0.25);
+  } else if (type === "click") {
+    beep(400, 0, 0.08);
+  } else if (type === "success") {
+    beep(500, 0, 0.1);
+    beep(700, 0.08, 0.1);
+    beep(900, 0.16, 0.15);
+  }
 }
 function clickSound() {
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-
-  osc.type = "square";
-  osc.frequency.value = 300;
-  gain.gain.value = 0.05;
-
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-
-  osc.start();
-  osc.stop(ctx.currentTime + 0.08);
+  playSound("click");
 }
 /* ------------------------------------------------------------
    8) DASHBOARD RENDERING
@@ -2238,9 +2846,11 @@ function updateDashboard() {
   let maxXP = state.level === "A1" ? 1000 :
             state.level === "A2" ? 2000 : 3000;
 
-xpFill.style.width = `${(state.xp / maxXP) * 100}%`;
-document.getElementById("xpText").textContent =
-  `${state.xp} / ${maxXP} XP`;
+  xpFill.style.width = `${(state.xp / maxXP) * 100}%`;
+  document.getElementById("xpText").textContent =
+    `${state.xp} / ${maxXP} XP`;
+
+  updateDailyProgress();
 
   // Badges
   if (state.wordsLearned >= 10)
@@ -2251,6 +2861,19 @@ document.getElementById("xpText").textContent =
 
   if (state.quizCorrectInRow >= 10)
     document.getElementById("badgePerfectQuiz").classList.add("badge-earned");
+
+  // More achievements
+  if (state.wordsLearned >= 50) {
+    toast("🏆 50 Wörter gelernt!", "success");
+  }
+
+  if (state.xp >= 1000) {
+    toast("⚡ 1000 XP erreicht!", "success");
+  }
+
+  if (state.streak >= 3) {
+    toast("🔥 3 Tage Streak!", "success");
+  }
 }
 
 /* ------------------------------------------------------------
@@ -2262,9 +2885,14 @@ function renderWordList() {
 
   const level = document.getElementById("levelSelect").value;
   state.level = level;
+  resetDailyData();
 
-  const words = getDailyWords();
+  const words = state.favoritesView
+    ? getSmartWords().filter(w => state.favorites.includes(w.de))
+    : getDailyWords();
   document.getElementById("wordCountLabel").textContent = `${words.length} Wörter`;
+  const dailyLimitSelect = document.getElementById("dailyLimitSelect");
+  if (dailyLimitSelect) dailyLimitSelect.value = state.dailyLimit;
 
   words.forEach((w, i) => {
     const card = document.createElement("div");
@@ -2273,14 +2901,28 @@ function renderWordList() {
   <div class="word-row">
     <span class="word-de">${w.de}</span>
     <span class="word-ar">${w.ar}</span>
-    <button onclick="speak('${w.de}')" style="cursor:pointer;">🔊 Hören</button>
+    <div class="word-actions">
+      <button onclick="event.stopPropagation(); speak('${w.de}')" style="cursor:pointer;">🔊 Hören</button>
+      <button onclick="event.stopPropagation(); toggleFavorite('${w.de}')" style="cursor:pointer;">⭐</button>
+      <button onclick="event.stopPropagation(); explainWord('${w.de}')" style="cursor:pointer;">🤖 Erklären</button>
+    </div>
   </div>
   <div class="word-example">${w.ex}</div>
 `;
+    card.addEventListener("click", () => {
+      if (!state.learnedToday.includes(w.de)) {
+        state.learnedToday.push(w.de);
+        state.xp += 2;
+        toast("+2 XP fürs Lernen 📘", "success");
+        updateDashboard();
+        saveState();
+      }
+    });
     list.appendChild(card);
   });
 
   saveState();
+  updateDailyProgress();
 }
 
 /* ------------------------------------------------------------
@@ -2288,10 +2930,9 @@ function renderWordList() {
 ------------------------------------------------------------ */
 function startQuiz(repeatMode = false) {
 
-  // 🔥 HIER EINFÜGEN
   if (!WORDS[state.level]) state.level = "A1";
 
-  const levelWords = getDailyWords();
+  const levelWords = getSmartWordsAdvanced(state.level);
 
   state.quizList = repeatMode
     ? state.difficultWords.length > 0
@@ -2299,11 +2940,13 @@ function startQuiz(repeatMode = false) {
       : levelWords
     : levelWords;
 
+  state.mode = GAME_MODES.QUIZ;
   state.quizIndex = 0;
   state.quizCorrectInRow = 0;
 
   showScreen("quiz");
   loadQuizQuestion();
+  startStudyTimer();
 }
 
 document.getElementById("repeatModeBtn").onclick = () => {
@@ -2322,6 +2965,8 @@ function loadQuizQuestion() {
     showScreen("dashboard");
     return;
   }
+
+  state.currentWord = q;
 
   // 👇 أضف هذا هنا
   const questionText = document.getElementById("quizQuestionText");
@@ -2352,7 +2997,7 @@ function renderMultipleChoice(q) {
   const options = document.getElementById("quizOptions");
   options.innerHTML = "";
 
-  const wrong = WORDS[state.level]
+  const wrong = getSmartWords()
     .filter(w => w.de !== q.de)
     .sort(() => Math.random() - 0.5)
     .slice(0, 3);
@@ -2403,7 +3048,7 @@ function renderInputMode(q) {
   input.focus();
 
   document.getElementById("submitInputAnswer").onclick = () => {
-    if (input.value.trim().toLowerCase().includes(q.de.toLowerCase())) {
+    if (input.value.trim().toLowerCase() === q.de.toLowerCase()) {
       handleCorrect(q);
     } else {
       handleWrong(q);
@@ -2417,24 +3062,44 @@ function renderInputMode(q) {
 ------------------------------------------------------------ */
 function handleCorrect(q) {
   playSound("correct");
+  navigator.vibrate?.(20);
 
   document.body.style.transform = "scale(1.01)";
   setTimeout(() => {
     document.body.style.transform = "scale(1)";
   }, 150);
 
+  document.body.style.background = "#022c22";
+  setTimeout(() => {
+    document.body.style.background = "";
+  }, 200);
+
   toast("Richtig!", "success");
 
   state.correct++;
   state.quizCorrectInRow++;
   state.xp += 10;
-  checkLevelUp();
-  // ❤️ إذا خلص كلمات اليوم
-if (state.quizCorrectInRow === state.dailyWords.length) {
-  showLoveMessage();
-}
 
-  if (!state.difficultWords.includes(q))
+  updateWordMemory(q.de, true);
+  checkAchievements();
+
+  if (state.quizCorrectInRow % 5 === 0) {
+    state.xp += 20;
+    toast("🔥 Combo Bonus +20 XP", "success");
+  }
+
+  animateXP();
+  saveXPHistory();
+
+  checkLevelUp();
+  updateDailyProgress();
+
+  // ❤️ إذا خلص كلمات اليوم
+  if (state.quizCorrectInRow === state.dailyWords.length) {
+    showLoveMessage();
+  }
+
+  if (!state.difficultWords.some(w => w.de === q.de))
     state.wordsLearned++;
 
   saveState();
@@ -2442,12 +3107,15 @@ if (state.quizCorrectInRow === state.dailyWords.length) {
 
 function handleWrong(q) {
   playSound("wrong");
-  toast("Falsch!", "error");
+  navigator.vibrate?.(20);
+  toast(`❌ Falsch! Richtige Antwort: ${q.de}`, "error");
 
   state.wrong++;
   state.quizCorrectInRow = 0;
+  updateWordMemory(q.de, false);
+  updateDailyProgress();
 
-  if (!state.difficultWords.includes(q))
+  if (!state.difficultWords.some(w => w.de === q.de))
     state.difficultWords.push(q);
 
   saveState();
@@ -2456,11 +3124,11 @@ function getDailyWords() {
   const today = new Date().toISOString().split("T")[0];
 
   if (state.lastDailyDate !== today) {
-    const allWords = WORDS[state.level];
+      const allWords = getSmartWords();
 
     const shuffled = [...allWords].sort(() => Math.random() - 0.5);
 
-    state.dailyWords = shuffled.slice(0, 5);
+    state.dailyWords = shuffled.slice(0, state.dailyLimit);
     state.lastDailyDate = today;
 
     // 🔥 Reset streak daily logic
@@ -2483,12 +3151,19 @@ function getDailyWords() {
   return state.dailyWords;
 }
 
+function getSmartWords() {
+  return getSmartWordsAdvanced(state.level);
+}
+
 function loadNext() {
   state.quizIndex++;
 
   if (state.quizIndex >= state.quizList.length) {
     toast("Quiz fertig 🎉", "success");
     showScreen("dashboard");
+    stopStudyTimer();
+    clearInterval(speedInterval);
+    speedInterval = null;
     return;
   }
 
@@ -2511,6 +3186,9 @@ document.getElementById("switchQuizMode").onclick = () => {
 document.getElementById("quitQuiz").onclick = () => {
   toast("Quiz beendet", "info");
   showScreen("dashboard");
+  stopStudyTimer();
+  clearInterval(speedInterval);
+  speedInterval = null;
 };
 
 /* ------------------------------------------------------------
@@ -2542,10 +3220,45 @@ setTimeout(() => {
   toast("Hallo " + state.username + " 👋 Willkommen zurück!", "success");
 }, 400);
 showWelcome();
+
+const progressChart = new Chart(document.getElementById("progressChart"), {
+  type: "line",
+  data: {
+    labels: ["Tag 1","Tag 2","Tag 3","Tag 4","Tag 5","Tag 6","Tag 7"],
+    datasets: [{
+      label: "XP",
+      data: state.xpHistory || [],
+      borderColor: "#22c55e",
+      backgroundColor: "rgba(34,197,94,0.2)",
+      fill: true,
+      tension: 0.4
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: { color: "#e5e7eb" }
+      },
+      x: {
+        ticks: { color: "#e5e7eb" }
+      }
+    },
+    plugins: {
+      legend: {
+        labels: { color: "#e5e7eb" }
+      }
+    }
+  }
+});
+
 document.getElementById("levelSelect").addEventListener("change", function(e) {
   clickSound(); // 🔊 صوت
 
   state.level = e.target.value;
+  state.favoritesView = false;
 
   // reset daily words
   state.lastDailyDate = null;
@@ -2594,23 +3307,82 @@ document.getElementById("levelSelect").addEventListener("change", () => {
     pill.style.boxShadow = "";
   }, 300);
 });
+
+document.getElementById("searchInput")?.addEventListener("input", function(e) {
+  const value = e.target.value.toLowerCase();
+  const cards = document.querySelectorAll(".word-card");
+
+  cards.forEach(card => {
+    const text = card.innerText.toLowerCase();
+    card.style.display = text.includes(value) ? "block" : "none";
+  });
+});
+
 function speak(text) {
   const utterance = new SpeechSynthesisUtterance(text);
 
-  let voices = speechSynthesis.getVoices();
+  function setVoice() {
+    const voices = speechSynthesis.getVoices();
+    const germanVoice = voices.find(v => v.lang.startsWith("de"));
 
-if (!voices.length) {
-  speechSynthesis.onvoiceschanged = () => {
-    voices = speechSynthesis.getVoices();
-  };
+    if (germanVoice) {
+      utterance.voice = germanVoice;
+    }
+
+    utterance.rate = 0.85;
+    utterance.pitch = 1;
+
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utterance);
+  }
+
+  if (speechSynthesis.getVoices().length === 0) {
+    speechSynthesis.onvoiceschanged = setVoice;
+  } else {
+    setVoice();
+  }
 }
 
-  utterance.rate = 0.85;   // سرعة مناسبة
-  utterance.pitch = 1;
-
-  speechSynthesis.cancel();
-  speechSynthesis.speak(utterance);
+function toggleFavorite(word) {
+  if (state.favorites.includes(word)) {
+    state.favorites = state.favorites.filter(w => w !== word);
+    toast("Removed from favorites");
+  } else {
+    state.favorites.push(word);
+    toast("Added to favorites ⭐");
+  }
+  saveState();
 }
+
+function updateDailyProgress() {
+  const progress = state.dailyWords.length
+    ? Math.min(100, Math.max(0, (state.quizCorrectInRow / state.dailyWords.length) * 100))
+    : 0;
+  document.getElementById("dailyBar").style.width = progress + "%";
+}
+
+function changeDailyLimit(val) {
+  state.dailyLimit = parseInt(val, 10);
+  state.lastDailyDate = null;
+  state.favoritesView = false;
+  renderWordList();
+}
+
+function showFavorites() {
+  const favWords = getSmartWords().filter(w =>
+    state.favorites.includes(w.de)
+  );
+
+  if (favWords.length === 0) {
+    toast("Keine Favoriten für dieses Level.", "info");
+    return;
+  }
+
+  state.favoritesView = true;
+  state.dailyWords = favWords;
+  renderWordList();
+}
+
 function showLoveMessage() {
   const screen = document.getElementById("welcomeScreen");
   const box = document.getElementById("welcomeBox");
@@ -2633,18 +3405,17 @@ function showLoveMessage() {
   }, 2500);
 }
   function playWelcomeSound() {
-  const ctx = new AudioContext();
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
 
   osc.frequency.value = 500;
   gain.gain.value = 0.1;
 
   osc.connect(gain);
-  gain.connect(ctx.destination);
+  gain.connect(audioCtx.destination);
 
   osc.start();
-  osc.stop(ctx.currentTime + 0.3);
+  osc.stop(audioCtx.currentTime + 0.3);
 }
 
 </script>
@@ -2652,6 +3423,12 @@ function showLoveMessage() {
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js");
 }
+setInterval(() => {
+  const hour = new Date().getHours();
+  if (hour === 18) {
+    toast("📢 Zeit zum Lernen!", "info");
+  }
+}, 60000);
 function createHearts() {
   for (let i = 0; i < 12; i++) {
     const heart = document.createElement("div");
