@@ -75,15 +75,14 @@
     * {
       max-width: 100%;
       box-sizing: border-box;
+      -webkit-overflow-scrolling: touch;
     }
 
     body {
       margin: 0;
       font-family: system-ui, -apple-system, "SF Pro Text", sans-serif;
-
-      background:
-        radial-gradient(circle at 10% 10%, rgba(59,130,246,0.25), transparent 40%),
-        radial-gradient(circle at 90% 90%, rgba(34,197,94,0.18), transparent 40%),
+      overscroll-behavior-y: contain;
+      background: radial-gradient(circle at 90% 90%, rgba(34,197,94,0.18), transparent 40%),
         linear-gradient(180deg, #020617 0%, #020617 100%);
 
       color: var(--text);
@@ -298,6 +297,7 @@
       grid-template-columns: 1fr 1fr; /* 🔥 stabil */
       gap: 16px;
       width: 100%;
+      will-change: transform, opacity, filter;
     }
 
     @media (max-width: 960px) {
@@ -1563,6 +1563,12 @@ function getLocation() {
         state.selectedDay = toDateOnlyString(now());
       }
 
+      function haptic() {
+        if (navigator.vibrate) {
+          navigator.vibrate(10);
+        }
+      }
+
       function parseDateTime(dateStr, timeStr) {
         if (!dateStr || !timeStr) return null;
         const [y, m, d] = dateStr.split("-").map(Number);
@@ -2772,8 +2778,8 @@ if (dateStr === state.selectedDay) {
 
       function renderAll() {
         renderDateLabel();
-        renderMonth(); // 👈 DAS HIER HINZUFÜGEN
         ensureBranchSelected();
+        renderMonth();
         renderBranches();
         renderTimer();
         renderSummary();
@@ -3122,7 +3128,10 @@ if (dateStr === state.selectedDay) {
 
         document
           .getElementById("btn-start")
-          .addEventListener("click", startWork);
+          .addEventListener("click", () => {
+            haptic();
+            startWork();
+          });
         document
           .getElementById("btn-pause-start")
           .addEventListener("click", startPause);
@@ -3191,7 +3200,8 @@ if (dateStr === state.selectedDay) {
 
         swipeArea.addEventListener("touchend", e => {
           const diff = touchStartX - e.changedTouches[0].screenX;
-          const speed = Math.abs(diff) / (Date.now() - touchStartTime);
+          const time = Date.now() - touchStartTime;
+          const speed = Math.abs(diff) / Math.max(time, 1);
 
           if (speed > 0.6 && Math.abs(diff) > 30) {
             diff > 0
@@ -3223,6 +3233,7 @@ if (dateStr === state.selectedDay) {
 
           if (diff > 50) {
             indicator.style.opacity = "1";
+            indicator.textContent = diff > 80 ? "🔄 Loslassen..." : "⬇️ Ziehen...";
           }
         });
 
