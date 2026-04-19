@@ -22,6 +22,8 @@
 
   <!-- ✅ Chart.js für Premium Charts -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0"></script>
 
   <style>
     :root {
@@ -419,12 +421,14 @@
     .branch-toggle {
       position: relative;
       display: flex;
-      background: rgba(255,255,255,0.05);
+      gap: 6px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 6px;
       border-radius: 999px;
-      padding: 4px;
-      gap: 4px;
-      overflow: hidden;
-      backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.05);
+      -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x proximity;
     }
 
     .branch-slider {
@@ -443,18 +447,17 @@
     }
 
     .branch-btn {
-      flex: 1;
+      flex: 0 0 auto;
+      min-width: 90px;
       border: none;
       background: transparent;
       color: #94a3b8;
-      padding: 10px;
-      border-radius: 999px;
-      font-size: 13px;
+      padding: 10px 14px;
       cursor: pointer;
-      overflow: visible;
       position: relative;
       z-index: 1;
-      transition: 0.25s;
+      font-size: 13px;
+      scroll-snap-align: center;
     }
 
     .branch-btn.active {
@@ -1432,6 +1435,9 @@ body.light {
         <button id="btn-json-export" class="btn btn-sm">
           <span class="icon">📤</span> Export
         </button>
+        <button id="btn-pdf-export" class="btn btn-sm">
+          <span class="icon">📄</span> PDF
+        </button>
         <button id="btn-json-import" class="btn btn-sm">
           <span class="icon">📥</span> Import
         </button>
@@ -1559,6 +1565,10 @@ body.light {
             <div class="summary-label">Alle Filialen (Monat)</div>
             <div class="summary-value" id="summary-total-all">0:00 h</div>
           </div>
+          <div class="summary-item">
+            <div class="summary-label">Prognose</div>
+            <div class="summary-value" id="prediction-week">–</div>
+          </div>
         </div>
         <div id="week-range" style="font-size:13px; margin-bottom:6px; font-weight:500;"></div>
 <div class="flex-row" style="margin-bottom:6px;">
@@ -1566,6 +1576,7 @@ body.light {
   <button id="go-today" class="btn btn-sm btn-primary">📍 Heute</button>
   <button id="week-next" class="btn btn-sm">➡️ Woche vor</button>
 </div>
+<input id="goal-input" type="number" placeholder="Wochenziel (h)">
 <div id="month-label" style="font-size:13px; margin-bottom:6px; font-weight:500;"></div>
 <div class="flex-row" style="margin-bottom:6px;">
   <button id="month-prev" class="btn btn-sm">⬅️ Monat zurück</button>
@@ -1573,6 +1584,9 @@ body.light {
 </div>
 
 <div class="week-bar" id="week-bar"></div>
+<div class="chart-wrapper">
+  <canvas id="monthChart"></canvas>
+</div>
 
         <div class="progress-wrapper">
           <div class="progress-label">
@@ -1648,6 +1662,7 @@ body.light {
             </div>
             <span class="pill" id="logs-branch-label">Keine Filiale</span>
           </div>
+          <input id="log-search" placeholder="Suche...">
           <div class="logs-list" id="logs-list"></div>
         </div>
         </div>
@@ -1816,10 +1831,15 @@ body.light {
   selectedDay: null,
   selectedWeekStart: null, // ⬅️ أضف هذا السطر
   selectedMonth: null,
+  weekGoal: 40,
+  goalReached: false,
+  celebrated: false,
   timerInterval: null,
   summaryInterval: null,
   forgotCheckInterval: null
 };
+      let lastStreakCelebrationWeek = null;
+      let monthChart;
 function getLocation() {
   return new Promise((resolve) => {
     if (!navigator.geolocation) {
@@ -1885,9 +1905,12 @@ function getLocation() {
       }
 
       function haptic() {
-        if (navigator.vibrate) {
-          navigator.vibrate(10);
-        }
+        navigator.vibrate?.([20, 10, 20]);
+      }
+
+      function playSound() {
+        const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
+        audio.play().catch(() => {});
       }
 
       function parseDateTime(dateStr, timeStr) {
@@ -1974,7 +1997,10 @@ function getLocation() {
           viewMode: localStorage.getItem(VIEW_MODE_KEY) || "branch",
           selectedDay: toDateOnlyString(now()),
           selectedWeekStart: getMonday(now()).getTime(),
-          selectedMonth: new Date(now().getFullYear(), now().getMonth(), 1).getTime()
+          selectedMonth: new Date(now().getFullYear(), now().getMonth(), 1).getTime(),
+          weekGoal: 40,
+          goalReached: false,
+          celebrated: false
         };
       }
 
@@ -1986,6 +2012,9 @@ function getLocation() {
         state.selectedDay = parsed?.selectedDay || defaults.selectedDay;
         state.selectedWeekStart = parsed?.selectedWeekStart || defaults.selectedWeekStart;
         state.selectedMonth = parsed?.selectedMonth || defaults.selectedMonth;
+        state.weekGoal = Number.isFinite(parsed?.weekGoal) ? parsed.weekGoal : defaults.weekGoal;
+        state.goalReached = Boolean(parsed?.goalReached);
+        state.celebrated = Boolean(parsed?.celebrated);
       }
 
       function showToast(type, title, message) {
@@ -2030,7 +2059,10 @@ function getLocation() {
           viewMode: state.viewMode,
           selectedDay: state.selectedDay,
           selectedWeekStart: state.selectedWeekStart,
-          selectedMonth: state.selectedMonth
+          selectedMonth: state.selectedMonth,
+          weekGoal: state.weekGoal,
+          goalReached: state.goalReached,
+          celebrated: state.celebrated
         });
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         localStorage.setItem(VIEW_MODE_KEY, state.viewMode);
@@ -2099,6 +2131,7 @@ function getLocation() {
         renderLogs();
         renderStats();
         renderChart();
+        renderMonthChart();
         renderGlobalChart();
         renderInsight();
         renderInsights();
@@ -2286,43 +2319,52 @@ function getLocation() {
           addBranch("Standard");
         }
 
-        const branch = getSelectedBranch();
+        let branch = getSelectedBranch();
         if (!branch) {
           showToast("error", "Start", "Bitte zuerst eine Filiale anlegen.");
           return;
         }
 
-  if (!validateStart(branch)) return;
+        if (!validateStart(branch)) return;
 
-  const location = await getLocation(); // 📍 هنا نجيب الموقع
+        const location = await getLocation();
 
-  const log = {
-    id: uuid(),
-    date: toDateOnlyString(now()),
-    start: now().getTime(),
-    end: null,
-    pauses: [],
-    status: "running",
+        if (location) {
+          autoSelectBranchByLocation(location.lat, location.lng);
+          branch = getSelectedBranch();
+        }
 
-    // 👇 جديد
-    location: location
-  };
+        if (!branch || !validateStart(branch)) return;
 
-  branch.logs.push(log);
-  saveState();
-  updateTimer();
-  refreshTimelineViews(true);
+        playSound();
+        haptic();
 
-  if (location) {
-    enrichLocationName(log, location.lat, location.lng);
-  }
+        const log = {
+          id: uuid(),
+          date: toDateOnlyString(now()),
+          start: now().getTime(),
+          end: null,
+          pauses: [],
+          status: "running",
+          location: location
+        };
 
-  if (location) {
-    showToast("success", "Start", "Arbeitszeit gestartet + Standort gespeichert 📍");
-  } else {
-    showToast("info", "Start", "Gestartet ohne Standort.");
-  }
-}
+        if (location) {
+          branch.location = location;
+        }
+
+        branch.logs.push(log);
+        saveState();
+        updateTimer();
+        refreshTimelineViews(true);
+
+        if (location) {
+          enrichLocationName(log, location.lat, location.lng);
+          showToast("success", "Start", "Arbeitszeit gestartet + Standort gespeichert 📍");
+        } else {
+          showToast("info", "Start", "Gestartet ohne Standort.");
+        }
+      }
 
       function enrichLocationName(log, lat, lng) {
         fetch(
@@ -2470,6 +2512,212 @@ function getLocation() {
   return total;
 }
 
+      function predictWeekEnd() {
+        const total = getActiveWeekTotal();
+        const durations = getActiveWeekDurations();
+        const daysWorked = durations.filter(d => d > 0).length;
+
+        if (daysWorked === 0) return 0;
+
+        const avg = total / daysWorked;
+        return avg * 5;
+      }
+
+      function renderPrediction() {
+        const el = document.getElementById("prediction-week");
+        if (!el) return;
+
+        el.textContent = formatDuration(predictWeekEnd());
+      }
+
+      function getDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371e3;
+        const phi1 = lat1 * Math.PI / 180;
+        const phi2 = lat2 * Math.PI / 180;
+        const deltaPhi = (lat2 - lat1) * Math.PI / 180;
+        const deltaLambda = (lon2 - lon1) * Math.PI / 180;
+
+        const a = Math.sin(deltaPhi / 2) ** 2 +
+          Math.cos(phi1) * Math.cos(phi2) *
+          Math.sin(deltaLambda / 2) ** 2;
+
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      }
+
+      function autoSelectBranchByLocation(lat, lng) {
+        state.branches.forEach(branch => {
+          if (!branch.location) return;
+
+          const dist = getDistance(lat, lng, branch.location.lat, branch.location.lng);
+
+          if (dist < 100 && state.selectedBranchId !== branch.id) {
+            selectBranch(branch.id);
+          }
+        });
+      }
+
+      function guardAutoStop(log) {
+        if (log && !log.end) {
+          const diff = Date.now() - log.start;
+
+          if (diff > 12 * 3600000 && !log.autoStopped) {
+            log.end = Date.now();
+            log.status = "ended";
+            log.autoStopped = true;
+
+            showToast("info", "Auto Stop", "Timer wurde automatisch beendet ⏹");
+            saveState();
+          }
+        }
+      }
+
+      function celebrate() {
+        if (typeof confetti === "function") {
+          confetti();
+        }
+      }
+
+      function exportPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        doc.text("Arbeitszeit Report", 10, 10);
+
+        let y = 20;
+
+        doc.text("Woche: " + formatDuration(getActiveWeekTotal()), 10, y);
+        y += 10;
+
+        state.branches.forEach(b => {
+          doc.text("Filiale: " + b.name, 10, y);
+          y += 6;
+        });
+
+        doc.save("report.pdf");
+      }
+
+      function filterLogs(logs) {
+        const q = (document.getElementById("log-search")?.value || "").toLowerCase();
+
+        return logs.filter(l =>
+          (l.date || "").includes(q) ||
+          (l.branchName || "").toLowerCase().includes(q)
+        );
+      }
+
+      function addSmartInsightsV2(insights, durations, branch) {
+        if (durations[1] > durations[0] && durations[1] > durations[2]) {
+          insights.push({
+            type: "neutral",
+            icon: "📅",
+            text: "Dienstag ist dein stärkster Tag"
+          });
+        }
+
+        if (!branch) return;
+
+        const totalPauses = branch.logs.reduce(
+          (a, l) => a + (l.pauses?.length || 0),
+          0
+        );
+
+        if (totalPauses < 2) {
+          insights.push({
+            type: "warning",
+            icon: "⏸",
+            text: "Du machst wenig Pausen"
+          });
+        }
+      }
+
+      function getStreak() {
+        let streak = 0;
+        const days = getActiveWeekDurations();
+
+        for (let i = 0; i < days.length; i++) {
+          if (days[i] > 0) streak++;
+          else break;
+        }
+
+        return streak;
+      }
+
+      function checkStreak() {
+        if (getStreak() >= 5 && lastStreakCelebrationWeek !== state.selectedWeekStart) {
+          lastStreakCelebrationWeek = state.selectedWeekStart;
+          showToast("success", "🔥 Streak!", "5 Tage gearbeitet!");
+        }
+      }
+
+      function updateGoal() {
+        const input = document.getElementById("goal-input");
+        if (!input) return;
+
+        const val = Number(input.value);
+        if (!Number.isNaN(val) && val > 0) {
+          state.weekGoal = val;
+          state.goalReached = false;
+          state.celebrated = false;
+          saveState();
+          renderStats();
+        }
+      }
+
+      function renderMonthChart() {
+        const canvas = document.getElementById("monthChart");
+        if (!canvas) return;
+
+        const ctx = canvas.getContext("2d");
+        const monthDate = new Date(state.selectedMonth);
+        const year = monthDate.getFullYear();
+        const month = monthDate.getMonth();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+        const data = days.map(day => {
+          const d = new Date(year, month, day);
+          const dateStr = toDateOnlyString(d);
+          return computeDayDurationAllBranches(dateStr) / 3600000;
+        });
+
+        if (!monthChart) {
+          monthChart = new Chart(ctx, {
+            type: "line",
+            data: {
+              labels: days,
+              datasets: [{
+                data,
+                borderColor: "#22c55e",
+                backgroundColor: "rgba(34,197,94,0.12)",
+                tension: 0.35,
+                fill: true
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false }
+              },
+              scales: {
+                x: {
+                  ticks: { color: "#94a3b8" },
+                  grid: { display: false }
+                },
+                y: {
+                  ticks: { color: "#94a3b8" },
+                  grid: { color: "rgba(255,255,255,0.05)" }
+                }
+              }
+            }
+          });
+        } else {
+          monthChart.data.labels = days;
+          monthChart.data.datasets[0].data = data;
+          monthChart.update();
+        }
+      }
+
       function renderBranchToggle() {
         const container = document.getElementById("branch-toggle");
         if (!container) return;
@@ -2499,6 +2747,7 @@ function getLocation() {
         });
 
         updateSlider();
+        scrollActiveBranchIntoView();
       }
 
       function updateSlider() {
@@ -2513,6 +2762,16 @@ function getLocation() {
         slider.style.width = rect.width + "px";
         slider.style.transform =
           "translateX(" + (rect.left - parentRect.left) + "px)";
+      }
+
+      function scrollActiveBranchIntoView() {
+        const active = document.querySelector(".branch-btn.active");
+        if (!active) return;
+
+        active.scrollIntoView({
+          behavior: "smooth",
+          inline: "center"
+        });
       }
 
       function updateModeToggle() {
@@ -2601,14 +2860,35 @@ function getLocation() {
         document.getElementById("summary-total-all").textContent =
           formatDuration(totalAll);
 
-        const goalMs = WEEK_GOAL_HOURS * 3600 * 1000;
+        renderPrediction();
+
+        const goalInput = document.getElementById("goal-input");
+        if (goalInput && document.activeElement !== goalInput) {
+          goalInput.value = String(state.weekGoal);
+        }
+
+        const goalMs = state.weekGoal * 3600 * 1000;
         const pct = goalMs > 0 ? Math.min(100, (weekMs / goalMs) * 100) : 0;
         document.getElementById("week-goal-label").textContent =
-          WEEK_GOAL_HOURS + ":00 h";
+          state.weekGoal + ":00 h";
         document.getElementById("week-progress-label").textContent =
           Math.round(pct) + "%";
         document.getElementById("week-progress-inner").style.width =
           pct.toFixed(1) + "%";
+
+        if (weekMs > goalMs && !state.goalReached) {
+          state.goalReached = true;
+          showToast("success", "🔥 Überstunden!", "Du bist über deinem Ziel");
+          saveState();
+        }
+
+        if (weekMs >= goalMs && !state.celebrated) {
+          celebrate();
+          state.celebrated = true;
+          saveState();
+        }
+
+        checkStreak();
       }
 
       function renderSummary() {
@@ -2696,7 +2976,7 @@ function getLocation() {
           return;
         }
         label.textContent = isAllMode() ? "Alle Filialen" : branch.name;
-        const logs = (isAllMode()
+        let logs = (isAllMode()
           ? state.branches.flatMap((item) =>
               item.logs
                 .filter((log) => log.date === state.selectedDay)
@@ -2706,6 +2986,7 @@ function getLocation() {
               .filter((log) => log.date === state.selectedDay)
               .map((log) => ({ ...log, branchName: branch.name, branchId: branch.id })))
           .sort((a, b) => (a.start || 0) - (b.start || 0));
+        logs = filterLogs(logs);
         if (logs.length === 0) {
           const empty = document.createElement("div");
           empty.className = "small-text";
@@ -2813,9 +3094,19 @@ function getLocation() {
 
       function generateInsights() {
         const insights = [];
-        const monday = new Date(state.selectedWeekStart);
         const branch = getSelectedBranch();
         const durations = getActiveWeekDurations();
+        const totalWeek = getActiveWeekTotal();
+
+        if (totalWeek === 0) {
+          return [
+            {
+              type: "neutral",
+              icon: "📭",
+              text: "Noch keine Arbeitszeiten erfasst"
+            }
+          ];
+        }
 
         if (!isAllMode() && !branch) return [];
 
@@ -2854,7 +3145,7 @@ function getLocation() {
             icon: "📊",
             text: "Dein Arbeitsrhythmus ist unregelmäßig"
           });
-        } else {
+        } else if (avg > 0) {
           insights.push({
             type: "good",
             icon: "🎯",
@@ -2863,8 +3154,6 @@ function getLocation() {
         }
 
         // 🧠 3. Overwork Detection
-        const totalWeek = getActiveWeekTotal();
-
         if (totalWeek > 50 * 3600 * 1000) {
           insights.push({
             type: "warning",
@@ -2911,6 +3200,8 @@ function getLocation() {
             text: "Du arbeitest spät – achte auf Erholung"
           });
         }
+
+        addSmartInsightsV2(insights, durations, branch);
 
         if (insights.length === 0) {
           insights.push({
@@ -3091,7 +3382,10 @@ function getLocation() {
           viewMode: state.viewMode,
           selectedDay: state.selectedDay,
           selectedWeekStart: state.selectedWeekStart,
-          selectedMonth: state.selectedMonth
+          selectedMonth: state.selectedMonth,
+          weekGoal: state.weekGoal,
+          goalReached: state.goalReached,
+          celebrated: state.celebrated
         };
         const json = JSON.stringify(data, null, 2);
         const area = document.getElementById("json-area");
@@ -3119,6 +3413,9 @@ function getLocation() {
           state.selectedWeekStart = data.selectedWeekStart || getMonday(now()).getTime();
           state.selectedMonth =
             data.selectedMonth || new Date(now().getFullYear(), now().getMonth(), 1).getTime();
+          state.weekGoal = Number.isFinite(data.weekGoal) ? data.weekGoal : state.weekGoal;
+          state.goalReached = Boolean(data.goalReached);
+          state.celebrated = Boolean(data.celebrated);
           saveState();
           updateUI();
           showToast("success", "Import", "JSON erfolgreich importiert.");
@@ -3341,6 +3638,13 @@ function getLocation() {
 
           if (!log) {
             updateTimer(0);
+            return;
+          }
+
+          guardAutoStop(log);
+          if (log.end) {
+            updateTimer(0);
+            refreshTimelineViews(true);
             return;
           }
 
@@ -3690,11 +3994,13 @@ function getLocation() {
             renderWeekBar();
             renderMonth();
             renderChart();
+            renderMonthChart();
             renderGlobalChart();
             renderInsight();
             renderInsights();
             scrollToActiveDay();
             if (chart) chart.resize();
+            if (monthChart) monthChart.resize();
             if (globalChart) globalChart.resize();
           });
         }
@@ -3806,9 +4112,16 @@ function getLocation() {
         });
 
         document
+          .getElementById("goal-input")
+          .addEventListener("change", updateGoal);
+
+        document
+          .getElementById("log-search")
+          .addEventListener("input", renderLogs);
+
+        document
           .getElementById("btn-start")
           .addEventListener("click", () => {
-            haptic();
             startWork();
           });
         document
@@ -3825,6 +4138,9 @@ function getLocation() {
         document
           .getElementById("btn-json-export")
           .addEventListener("click", exportJSON);
+        document
+          .getElementById("btn-pdf-export")
+          .addEventListener("click", exportPDF);
         document
           .getElementById("btn-json-import")
           .addEventListener("click", importJSON);
@@ -3993,8 +4309,13 @@ function getLocation() {
         window.addEventListener("resize", () => {
           updateSlider();
           updateModeToggle();
+          if (monthChart) monthChart.resize();
         });
       }
+
+      window.addEventListener("offline", () => {
+        showToast("error", "Offline", "Keine Internetverbindung");
+      });
 
       // 📲 Install Flow (Android + iOS FIX)
       let deferredPrompt;
@@ -4069,6 +4390,7 @@ function getLocation() {
         safe(renderWeekBar, "renderWeekBar");
         safe(renderMonth, "renderMonth");
         safe(renderChart, "renderChart");
+        safe(renderMonthChart, "renderMonthChart");
         safe(renderGlobalChart, "renderGlobalChart");
         safe(renderInsight, "renderInsight");
         safe(updateUI, "updateUI");
