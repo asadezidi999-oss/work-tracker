@@ -373,38 +373,114 @@
       gap: 6px;
     }
 
-    .branch-list {
+    .mode-toggle {
+      position: relative;
       display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
       margin-bottom: 10px;
-    }
-
-    .branch-pill {
-      padding: 4px 10px;
+      padding: 4px;
       border-radius: 999px;
-      border: 1px solid var(--border);
-      font-size: 11px;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
+      background: rgba(255,255,255,0.05);
+      overflow: hidden;
+    }
+
+    .mode-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      padding: 8px;
       cursor: pointer;
-      background: var(--bg-card-alt);
-      color: var(--text-soft);
-      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease,
-        transform 0.15s ease;
+      z-index: 1;
+      border-radius: 999px;
+      transition: 0.25s;
     }
 
-    .branch-pill span.remove {
+    .mode-btn.active {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .mode-slider {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      width: calc(50% - 4px);
+      height: calc(100% - 8px);
+      border-radius: 999px;
+      background: linear-gradient(135deg,#22c55e,#16a34a);
+      transition: transform 0.3s;
+    }
+
+    /* 🔥 Branch Toggle */
+    .branch-toggle-wrapper {
+      width: 100%;
+    }
+
+    .branch-toggle {
+      position: relative;
+      display: flex;
+      background: rgba(255,255,255,0.05);
+      border-radius: 999px;
+      padding: 4px;
+      gap: 4px;
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+    }
+
+    .branch-slider {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      height: calc(100% - 8px);
+      width: 0;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      box-shadow:
+        0 6px 18px rgba(59,130,246,0.6),
+        0 0 12px rgba(96,165,250,0.6);
+      transition: all 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+      z-index: 0;
+    }
+
+    .branch-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      padding: 10px;
+      border-radius: 999px;
       font-size: 13px;
-      opacity: 0.7;
+      cursor: pointer;
+      overflow: visible;
+      position: relative;
+      z-index: 1;
+      transition: 0.25s;
     }
 
-    .branch-pill.active {
-      background: var(--accent-soft);
-      color: var(--accent);
-      border-color: rgba(37, 99, 235, 0.7);
-      transform: translateY(-1px);
+    .branch-btn.active {
+      color: white;
+      font-weight: 600;
+    }
+
+    .branch-btn .delete {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: #ef4444;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      font-size: 10px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      color: white;
+    }
+
+    .branch-btn:hover .delete,
+    .branch-btn:focus-visible .delete {
+      display: flex;
     }
 
     .branch-input-row {
@@ -1391,7 +1467,16 @@ body.light {
             <span class="icon">➕</span> Filiale
           </button>
         </div>
-        <div class="branch-list" id="branch-list"></div>
+        <div class="mode-toggle">
+          <div class="mode-slider" id="mode-slider"></div>
+          <button class="mode-btn" data-mode="branch">🏢 Branch</button>
+          <button class="mode-btn" data-mode="all">🌍 All</button>
+        </div>
+        <div class="branch-toggle-wrapper">
+          <div class="branch-toggle" id="branch-toggle">
+            <div class="branch-slider" id="branch-slider"></div>
+          </div>
+        </div>
 
         <div class="timer-display">
           <div class="timer-main">
@@ -1677,6 +1762,7 @@ body.light {
       const LEGACY_STORAGE_KEY = "worktime-tracker-v1";
       const TAB_KEY = "active_tab";
       const THEME_KEY = "worktime-tracker-theme";
+      const VIEW_MODE_KEY = "worktime-tracker-view-mode";
       const WEEK_GOAL_HOURS = 40;
 
       // 🎬 Animation Engine
@@ -1726,6 +1812,7 @@ body.light {
       const state = {
   branches: [],
   selectedBranchId: null,
+        viewMode: "branch",
   selectedDay: null,
   selectedWeekStart: null, // ⬅️ أضف هذا السطر
   selectedMonth: null,
@@ -1773,8 +1860,28 @@ function getLocation() {
 
       // 🔥 Zurück zu heute
       function resetToToday() {
-        state.selectedWeekStart = getMonday(now()).getTime();
-        state.selectedDay = toDateOnlyString(now());
+        const nowDate = new Date();
+
+        state.selectedDay = toDateOnlyString(nowDate);
+        state.selectedWeekStart = getMonday(nowDate).getTime();
+        state.selectedMonth = new Date(
+          nowDate.getFullYear(),
+          nowDate.getMonth(),
+          1
+        ).getTime();
+      }
+
+      // 🔥 ALWAYS RESET TO TODAY ON APP OPEN
+      function forceToday() {
+        const nowDate = new Date();
+
+        state.selectedDay = toDateOnlyString(nowDate);
+        state.selectedWeekStart = getMonday(nowDate).getTime();
+        state.selectedMonth = new Date(
+          nowDate.getFullYear(),
+          nowDate.getMonth(),
+          1
+        ).getTime();
       }
 
       function haptic() {
@@ -1864,6 +1971,7 @@ function getLocation() {
         return {
           branches: [],
           selectedBranchId: null,
+          viewMode: localStorage.getItem(VIEW_MODE_KEY) || "branch",
           selectedDay: toDateOnlyString(now()),
           selectedWeekStart: getMonday(now()).getTime(),
           selectedMonth: new Date(now().getFullYear(), now().getMonth(), 1).getTime()
@@ -1874,6 +1982,7 @@ function getLocation() {
         const defaults = getDefaultPersistedState();
         state.branches = Array.isArray(parsed?.branches) ? parsed.branches : defaults.branches;
         state.selectedBranchId = parsed?.selectedBranchId || defaults.selectedBranchId;
+        state.viewMode = parsed?.viewMode || localStorage.getItem(VIEW_MODE_KEY) || defaults.viewMode;
         state.selectedDay = parsed?.selectedDay || defaults.selectedDay;
         state.selectedWeekStart = parsed?.selectedWeekStart || defaults.selectedWeekStart;
         state.selectedMonth = parsed?.selectedMonth || defaults.selectedMonth;
@@ -1918,11 +2027,13 @@ function getLocation() {
         const data = clone({
           branches: state.branches,
           selectedBranchId: state.selectedBranchId,
+          viewMode: state.viewMode,
           selectedDay: state.selectedDay,
           selectedWeekStart: state.selectedWeekStart,
           selectedMonth: state.selectedMonth
         });
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        localStorage.setItem(VIEW_MODE_KEY, state.viewMode);
       }
 
       function loadState() {
@@ -1952,6 +2063,34 @@ function getLocation() {
         return computeWeekDurations(getSelectedBranch(), new Date(state.selectedWeekStart));
       }
 
+      function isAllMode() {
+        return state.viewMode === "all";
+      }
+
+      function computeDayDurationAllBranches(dateStr) {
+        return state.branches.reduce(
+          (sum, branch) => sum + computeDayDuration(branch, dateStr),
+          0
+        );
+      }
+
+      function getActiveWeekDurations() {
+        const monday = new Date(state.selectedWeekStart);
+        if (!isAllMode()) {
+          return getWeekDurationsForSelectedBranch();
+        }
+
+        return Array.from({ length: 7 }, (_, index) => {
+          const d = new Date(monday);
+          d.setDate(d.getDate() + index);
+          return computeDayDurationAllBranches(toDateOnlyString(d));
+        });
+      }
+
+      function getActiveWeekTotal() {
+        return getActiveWeekDurations().reduce((sum, value) => sum + value, 0);
+      }
+
       function getWeekTotalForSelectedBranch() {
         return computeWeekTotal(getSelectedBranch(), new Date(state.selectedWeekStart));
       }
@@ -1973,7 +2112,8 @@ function getLocation() {
         renderDateLabel();
         ensureBranchSelected();
         refreshDaySelection();
-        renderBranches();
+        updateModeToggle();
+        renderBranchToggle();
         updateTimer();
         refreshTimelineViews(true);
       }
@@ -2034,6 +2174,12 @@ function getLocation() {
         saveState();
         updateUI();
         showToast("info", "Filiale", `Filiale "${branch.name}" gelöscht.`);
+      }
+
+      function setViewMode(mode) {
+        state.viewMode = mode === "all" ? "all" : "branch";
+        saveState();
+        updateUI();
       }
 
       function selectBranch(id) {
@@ -2324,24 +2470,62 @@ function getLocation() {
   return total;
 }
 
-      function renderBranches() {
-        const list = document.getElementById("branch-list");
-        list.innerHTML = "";
-        state.branches.forEach((branch) => {
-          const pill = document.createElement("button");
-          pill.className =
-            "branch-pill" +
-            (branch.id === state.selectedBranchId ? " active" : "");
-          pill.innerHTML = `<span>${branch.name}</span><span class="remove" title="Filiale löschen">✕</span>`;
-          pill.onclick = (e) => {
-            if (e.target.classList.contains("remove")) {
+      function renderBranchToggle() {
+        const container = document.getElementById("branch-toggle");
+        if (!container) return;
+
+        container.innerHTML = '<div class="branch-slider" id="branch-slider"></div>';
+
+        state.branches.forEach(branch => {
+          const btn = document.createElement("button");
+          btn.className = "branch-btn";
+
+          if (branch.id === state.selectedBranchId) {
+            btn.classList.add("active");
+          }
+
+          btn.innerHTML = `${branch.name}<span class="delete">×</span>`;
+
+          btn.onclick = (e) => {
+            if (e.target.classList.contains("delete")) {
               deleteBranch(branch.id);
-            } else {
-              selectBranch(branch.id);
+              return;
             }
+
+            selectBranch(branch.id);
           };
-          list.appendChild(pill);
+
+          container.appendChild(btn);
         });
+
+        updateSlider();
+      }
+
+      function updateSlider() {
+        const slider = document.getElementById("branch-slider");
+        const active = document.querySelector(".branch-btn.active");
+
+        if (!slider || !active) return;
+
+        const rect = active.getBoundingClientRect();
+        const parentRect = active.parentElement.getBoundingClientRect();
+
+        slider.style.width = rect.width + "px";
+        slider.style.transform =
+          "translateX(" + (rect.left - parentRect.left) + "px)";
+      }
+
+      function updateModeToggle() {
+        const buttons = document.querySelectorAll(".mode-btn");
+        const slider = document.getElementById("mode-slider");
+        if (!slider || buttons.length === 0) return;
+
+        buttons.forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.mode === state.viewMode);
+        });
+
+        slider.style.transform =
+          state.viewMode === "all" ? "translateX(100%)" : "translateX(0)";
       }
 
       function getTimerSnapshot() {
@@ -2404,9 +2588,10 @@ function getLocation() {
       function renderStats() {
         const branch = getSelectedBranch();
         const todayStr = state.selectedDay;
-        const monday = new Date(state.selectedWeekStart);
-        const todayMs = computeDayDuration(branch, todayStr);
-        const weekMs = computeWeekTotal(branch, monday);
+        const todayMs = isAllMode()
+          ? computeDayDurationAllBranches(todayStr)
+          : computeDayDuration(branch, todayStr);
+        const weekMs = getActiveWeekTotal();
         document.getElementById("summary-today").textContent =
           formatDuration(todayMs);
         document.getElementById("summary-week").textContent =
@@ -2438,7 +2623,7 @@ function getLocation() {
         const end = new Date(monday);
         const today = toDateOnlyString(now());
         const targetMs = 8 * 3600 * 1000;
-        const durations = getWeekDurationsForSelectedBranch();
+        const durations = getActiveWeekDurations();
         const dayLabels = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
         end.setDate(end.getDate() + 6);
@@ -2506,14 +2691,21 @@ function getLocation() {
         const label = document.getElementById("logs-branch-label");
         list.innerHTML = "";
         const branch = getSelectedBranch();
-        if (!branch) {
+        if (!branch && !isAllMode()) {
           label.textContent = "Keine Filiale";
           return;
         }
-        label.textContent = branch.name;
-        const logs = branch.logs
-  .filter(log => log.date === state.selectedDay) // ⬅️ المهم
-  .sort((a, b) => (a.start || 0) - (b.start || 0));
+        label.textContent = isAllMode() ? "Alle Filialen" : branch.name;
+        const logs = (isAllMode()
+          ? state.branches.flatMap((item) =>
+              item.logs
+                .filter((log) => log.date === state.selectedDay)
+                .map((log) => ({ ...log, branchName: item.name, branchId: item.id }))
+            )
+          : branch.logs
+              .filter((log) => log.date === state.selectedDay)
+              .map((log) => ({ ...log, branchName: branch.name, branchId: branch.id })))
+          .sort((a, b) => (a.start || 0) - (b.start || 0));
         if (logs.length === 0) {
           const empty = document.createElement("div");
           empty.className = "small-text";
@@ -2527,7 +2719,7 @@ function getLocation() {
           const main = document.createElement("div");
           main.className = "log-main";
           const title = document.createElement("div");
-          title.textContent = log.date;
+          title.textContent = isAllMode() ? `${log.branchName} • ${log.date}` : log.date;
           title.style.fontWeight = "600";
           title.style.fontSize = "11px";
           const times = document.createElement("div");
@@ -2604,11 +2796,11 @@ function getLocation() {
           const editBtn = document.createElement("button");
           editBtn.className = "btn btn-sm btn-ghost";
           editBtn.textContent = "Bearbeiten";
-          editBtn.onclick = () => editLog(branch.id, log.id);
+          editBtn.onclick = () => editLog(log.branchId, log.id);
           const delBtn = document.createElement("button");
           delBtn.className = "btn btn-sm btn-ghost";
           delBtn.textContent = "Löschen";
-          delBtn.onclick = () => deleteLog(branch.id, log.id);
+          delBtn.onclick = () => deleteLog(log.branchId, log.id);
           actions.appendChild(editBtn);
           actions.appendChild(delBtn);
 
@@ -2620,12 +2812,12 @@ function getLocation() {
       }
 
       function generateInsights() {
-        const branch = getSelectedBranch();
-        if (!branch) return [];
-
         const insights = [];
         const monday = new Date(state.selectedWeekStart);
-        const durations = computeWeekDurations(branch, monday);
+        const branch = getSelectedBranch();
+        const durations = getActiveWeekDurations();
+
+        if (!isAllMode() && !branch) return [];
 
         const days = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
 
@@ -2671,7 +2863,7 @@ function getLocation() {
         }
 
         // 🧠 3. Overwork Detection
-        const totalWeek = computeWeekTotal(branch, monday);
+        const totalWeek = getActiveWeekTotal();
 
         if (totalWeek > 50 * 3600 * 1000) {
           insights.push({
@@ -2682,9 +2874,8 @@ function getLocation() {
         }
 
         // 🧠 4. Stop vergessen Pattern
-        const forgotten = branch.logs.filter(log =>
-          !log.end && (Date.now() - log.start > 8 * 3600 * 1000)
-        ).length;
+        const forgotten = (isAllMode() ? state.branches.flatMap((item) => item.logs) : branch.logs)
+          .filter(log => !log.end && (Date.now() - log.start > 8 * 3600 * 1000)).length;
 
         if (forgotten > 0) {
           insights.push({
@@ -2897,6 +3088,7 @@ function getLocation() {
         const data = {
           branches: state.branches,
           selectedBranchId: state.selectedBranchId,
+          viewMode: state.viewMode,
           selectedDay: state.selectedDay,
           selectedWeekStart: state.selectedWeekStart,
           selectedMonth: state.selectedMonth
@@ -2922,6 +3114,7 @@ function getLocation() {
           }
           state.branches = data.branches;
           state.selectedBranchId = data.selectedBranchId || null;
+          state.viewMode = data.viewMode || state.viewMode || "branch";
           state.selectedDay = data.selectedDay || toDateOnlyString(now());
           state.selectedWeekStart = data.selectedWeekStart || getMonday(now()).getTime();
           state.selectedMonth =
@@ -3188,7 +3381,7 @@ function getLocation() {
         if (!canvas) return;
 
         const ctx = canvas.getContext("2d");
-        const durations = getWeekDurationsForSelectedBranch();
+        const durations = getActiveWeekDurations();
 
         const dataHours = durations.map(d => +(d / 3600000).toFixed(2));
         const labels = ["Mo","Di","Mi","Do","Fr","Sa","So"];
@@ -3428,7 +3621,7 @@ function getLocation() {
         const insightBox = document.getElementById("insight-box");
         if (!insightBox) return;
 
-        insightBox.textContent = getWeekInsight(getWeekTotalForSelectedBranch());
+        insightBox.textContent = getWeekInsight(getActiveWeekTotal());
       }
 
       function renderInsights() {
@@ -3511,8 +3704,9 @@ function getLocation() {
         }
 
         if (tab === "home") {
+          updateModeToggle();
           updateTimer();
-          renderBranches();
+          renderBranchToggle();
         }
       }
 
@@ -3604,6 +3798,12 @@ function getLocation() {
             addBranch(input.value);
             input.value = "";
           });
+
+        document.querySelectorAll(".mode-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            setViewMode(btn.dataset.mode);
+          });
+        });
 
         document
           .getElementById("btn-start")
@@ -3699,6 +3899,31 @@ function getLocation() {
         }, { passive: true });
 
         if (swipeArea) {
+          const branchToggle = document.getElementById("branch-toggle");
+
+          if (branchToggle) {
+            let branchStartX = 0;
+
+            branchToggle.addEventListener("touchstart", (e) => {
+              branchStartX = e.touches[0].clientX;
+            }, { passive: true });
+
+            branchToggle.addEventListener("touchend", (e) => {
+              const dx = branchStartX - e.changedTouches[0].clientX;
+              const index = state.branches.findIndex((b) => b.id === state.selectedBranchId);
+
+              if (index === -1) return;
+
+              if (dx > 50 && index < state.branches.length - 1) {
+                selectBranch(state.branches[index + 1].id);
+              }
+
+              if (dx < -50 && index > 0) {
+                selectBranch(state.branches[index - 1].id);
+              }
+            }, { passive: true });
+          }
+
           swipeArea.addEventListener("touchstart", (e) => {
             const target = e.target.closest("input, textarea, button, a, canvas, .week-bar, .logs-list");
             if (target || e.touches.length > 1 || document.getElementById("manual-modal")?.classList.contains("active")) {
@@ -3764,6 +3989,11 @@ function getLocation() {
           const diff = e.changedTouches[0].clientY - startY;
           indicator.style.opacity = diff > 30 ? "1" : "0";
         });
+
+        window.addEventListener("resize", () => {
+          updateSlider();
+          updateModeToggle();
+        });
       }
 
       // 📲 Install Flow (Android + iOS FIX)
@@ -3801,26 +4031,33 @@ function getLocation() {
         }, 3000);
       }
 
+      function scheduleMidnightUpdate() {
+        const nowDate = new Date();
+
+        const nextMidnight = new Date(
+          nowDate.getFullYear(),
+          nowDate.getMonth(),
+          nowDate.getDate() + 1,
+          0, 0, 1
+        );
+
+        const msUntilMidnight = nextMidnight - nowDate;
+
+        setTimeout(() => {
+          forceToday();
+          saveState();
+          updateUI();
+
+          showToast("info", "Neuer Tag 🌙", "Automatisch auf heute gewechselt");
+
+          scheduleMidnightUpdate();
+        }, msUntilMidnight);
+      }
+
       function init() {
         applyThemeFromStorage();
         loadState();
-
-        if (!state.selectedDay) {
-          state.selectedDay = toDateOnlyString(now());
-        }
-
-        if (!state.selectedWeekStart) {
-          state.selectedWeekStart = getMonday(now()).getTime();
-        }
-
-        if (!state.selectedMonth) {
-          const nowDate = new Date();
-          state.selectedMonth = new Date(
-            nowDate.getFullYear(),
-            nowDate.getMonth(),
-            1
-          ).getTime();
-        }
+        forceToday();
 
         // ⚡ Service Worker
         if ("serviceWorker" in navigator) {
@@ -3840,6 +4077,7 @@ function getLocation() {
           persist: false
         });
         safe(() => syncTabView(savedTab), "syncTabView");
+        scheduleMidnightUpdate();
         requestAnimationFrame(scrollToToday);
         startTimerLoop();
         initEvents();
