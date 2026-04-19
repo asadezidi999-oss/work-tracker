@@ -1094,6 +1094,8 @@
 
 .tab-page.active {
   display: block;
+  opacity: 1;
+  transform: translateX(0);
   animation: slidePage 0.18s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
@@ -1848,6 +1850,14 @@ function getLocation() {
 
       function clone(obj) {
         return JSON.parse(JSON.stringify(obj));
+      }
+
+      function safe(fn, label) {
+        try {
+          fn();
+        } catch (e) {
+          console.error("ERROR:", label || fn?.name || "anonymous", e);
+        }
       }
 
       function getDefaultPersistedState() {
@@ -3814,22 +3824,22 @@ function getLocation() {
 
         // ⚡ Service Worker
         if ("serviceWorker" in navigator) {
-          navigator.serviceWorker.register("sw.js");
+          navigator.serviceWorker.register("sw.js").catch(() => {});
         }
 
-        renderLogs();
-        renderStats();
-        renderWeekBar();
-        renderMonth();
-        renderChart();
-        renderGlobalChart();
-        renderInsight();
-        updateUI();
+        safe(renderLogs, "renderLogs");
+        safe(renderStats, "renderStats");
+        safe(renderWeekBar, "renderWeekBar");
+        safe(renderMonth, "renderMonth");
+        safe(renderChart, "renderChart");
+        safe(renderGlobalChart, "renderGlobalChart");
+        safe(renderInsight, "renderInsight");
+        safe(updateUI, "updateUI");
         const savedTab = activateTab(localStorage.getItem(TAB_KEY) || "home", "left", {
           withHaptics: false,
           persist: false
         });
-        syncTabView(savedTab);
+        safe(() => syncTabView(savedTab), "syncTabView");
         requestAnimationFrame(scrollToToday);
         startTimerLoop();
         initEvents();
@@ -3894,6 +3904,9 @@ function computeMonthAllBranches(monthDate) {
   return total;
 }
 function renderMonth() {
+  const el = document.getElementById("month-label");
+  if (!el) return;
+
   const d = new Date(state.selectedMonth);
 
   const months = [
@@ -3901,7 +3914,7 @@ function renderMonth() {
     "Juli","August","September","Oktober","November","Dezember"
   ];
 
-  document.getElementById("month-label").textContent =
+  el.textContent =
     "📅 " + months[d.getMonth()] + " " + d.getFullYear();
 
   const branch = getSelectedBranch();
