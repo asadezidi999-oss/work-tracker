@@ -564,9 +564,12 @@
         gap: 10px;
         margin-bottom: 6px;
         margin-top: 4px;
-        overflow-x: auto;
+        scroll-snap-type: x proximity;
+        scroll-behavior: smooth;
+        scroll-padding-inline: 20px;
         -webkit-overflow-scrolling: touch;
-        scroll-snap-type: x mandatory;
+        overscroll-behavior-x: contain;
+        overflow-x: auto;
         padding-bottom: 4px;
       }
 
@@ -1009,10 +1012,12 @@
 
     .week-bar {
       overflow-x: auto;
+      overscroll-behavior-x: contain;
     }
 
     .week-day {
       flex: 0 0 90px;
+      scroll-snap-align: center;
     }
 
     .app-shell {
@@ -1469,7 +1474,23 @@ body.light {
         el.classList.add(direction === "left" ? "slide-left" : "slide-right");
       }
 
+      function scrollToActiveDay() {
+        const bar = document.getElementById("week-bar");
+        if (!bar) return;
 
+        const active = bar.querySelector(".week-day.active");
+        if (!active) return;
+
+        const offset =
+          active.offsetLeft -
+          bar.clientWidth / 2 +
+          active.clientWidth / 2;
+
+        bar.scrollTo({
+          left: Math.max(0, offset),
+          behavior: "smooth"
+        });
+      }
 
       const state = {
   branches: [],
@@ -3061,6 +3082,9 @@ if (dateStr === state.selectedDay) {
 
           saveState();
           renderAll();
+
+          requestAnimationFrame(scrollToActiveDay);
+
           triggerSlide("right");
           triggerFade();
         });
@@ -3073,8 +3097,10 @@ if (dateStr === state.selectedDay) {
           state.selectedMonth = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
 
           saveState();
-          triggerBlur();
           renderAll();
+
+          requestAnimationFrame(scrollToActiveDay);
+
           triggerSlide("left");
           triggerFade();
         });
