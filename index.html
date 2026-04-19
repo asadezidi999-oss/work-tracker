@@ -901,6 +901,11 @@
       border-left: 3px solid var(--accent);
     }
 
+      .insight-item.insight-info {
+        background: rgba(14, 165, 233, 0.1);
+        border-left: 3px solid #0ea5e9;
+      }
+
     .insight-item.insight-warning:hover {
       box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
     }
@@ -911,6 +916,10 @@
 
     .insight-item.insight-neutral:hover {
       box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+    }
+
+    .insight-item.insight-info:hover {
+      box-shadow: 0 0 12px rgba(14, 165, 233, 0.4);
     }
 
     .card-glass,
@@ -1569,6 +1578,14 @@ body.light {
             <div class="summary-label">Prognose</div>
             <div class="summary-value" id="prediction-week">–</div>
           </div>
+          <div class="summary-item" id="earnings-today-box" style="display:none;">
+            <div class="summary-label">Heute (Einnahmen)</div>
+            <div class="summary-value" id="earnings-today">–</div>
+          </div>
+          <div class="summary-item" id="earnings-month-box" style="display:none;">
+            <div class="summary-label">Monat (Einnahmen)</div>
+            <div class="summary-value" id="earnings-month">–</div>
+          </div>
         </div>
         <div id="week-range" style="font-size:13px; margin-bottom:6px; font-weight:500;"></div>
 <div class="flex-row" style="margin-bottom:6px;">
@@ -1682,9 +1699,16 @@ body.light {
             <div class="field-label">JSON Daten (Export / Import)</div>
             <textarea id="json-area" placeholder="Hier erscheinen deine Daten beim Export. Zum Import JSON einfügen und auf Import klicken."></textarea>
           </div>
+          <div class="field-group">
+            <div class="field-label">Stundenlohn in € (optional)</div>
+            <input id="hourly-rate-input" type="number" min="0" step="0.01" placeholder="z. B. 14.50" />
+          </div>
           <div class="card-footer-actions">
             <button id="btn-clear-json" class="btn btn-sm btn-ghost">
               <span class="icon">🧹</span> Feld leeren
+            </button>
+            <button id="btn-csv-export" class="btn btn-sm">
+              <span class="icon">📊</span> CSV
             </button>
             <button id="btn-json-export-2" class="btn btn-sm">
               <span class="icon">📤</span> Export
@@ -1832,12 +1856,14 @@ body.light {
   selectedWeekStart: null, // ⬅️ أضف هذا السطر
   selectedMonth: null,
   weekGoal: 40,
+      hourlyRate: null,
   goalReached: false,
   celebrated: false,
   timerInterval: null,
   summaryInterval: null,
   forgotCheckInterval: null
 };
+      state.hourlyRate = state.hourlyRate ?? null;
       let lastStreakCelebrationWeek = null;
       let monthChart;
 function getLocation() {
@@ -1999,6 +2025,7 @@ function getLocation() {
           selectedWeekStart: getMonday(now()).getTime(),
           selectedMonth: new Date(now().getFullYear(), now().getMonth(), 1).getTime(),
           weekGoal: 40,
+          hourlyRate: null,
           goalReached: false,
           celebrated: false
         };
@@ -2013,6 +2040,7 @@ function getLocation() {
         state.selectedWeekStart = parsed?.selectedWeekStart || defaults.selectedWeekStart;
         state.selectedMonth = parsed?.selectedMonth || defaults.selectedMonth;
         state.weekGoal = Number.isFinite(parsed?.weekGoal) ? parsed.weekGoal : defaults.weekGoal;
+        state.hourlyRate = Number.isFinite(parsed?.hourlyRate) ? parsed.hourlyRate : defaults.hourlyRate;
         state.goalReached = Boolean(parsed?.goalReached);
         state.celebrated = Boolean(parsed?.celebrated);
       }
@@ -2061,6 +2089,7 @@ function getLocation() {
           selectedWeekStart: state.selectedWeekStart,
           selectedMonth: state.selectedMonth,
           weekGoal: state.weekGoal,
+          hourlyRate: state.hourlyRate,
           goalReached: state.goalReached,
           celebrated: state.celebrated
         });
@@ -2148,6 +2177,10 @@ function getLocation() {
         updateModeToggle();
         renderBranchToggle();
         updateTimer();
+        const hourlyRateInput = document.getElementById("hourly-rate-input");
+        if (hourlyRateInput && document.activeElement !== hourlyRateInput) {
+          hourlyRateInput.value = state.hourlyRate != null ? String(state.hourlyRate) : "";
+        }
         refreshTimelineViews(true);
       }
 
@@ -2489,6 +2522,11 @@ function getLocation() {
         return arr.reduce((a, b) => a + b, 0);
       }
 
+      function computeMoney(ms) {
+        if (state.hourlyRate == null) return null;
+        return (ms / 3600000) * state.hourlyRate;
+      }
+
       function computeTotalAllBranches() {
   let total = 0;
 
@@ -2607,7 +2645,7 @@ function getLocation() {
 
       function addSmartInsightsV2(insights, durations, branch) {
         if (durations[1] > durations[0] && durations[1] > durations[2]) {
-          insights.push({
+          pushInsight(insights, {
             type: "neutral",
             icon: "📅",
             text: "Dienstag ist dein stärkster Tag"
@@ -2622,12 +2660,176 @@ function getLocation() {
         );
 
         if (totalPauses < 2) {
-          insights.push({
+          pushInsight(insights, {
             type: "warning",
             icon: "⏸",
             text: "Du machst wenig Pausen"
           });
         }
+      }
+
+      function pushInsight(insights, item) {
+        if (!insights.some((entry) => entry.text === item.text)) {
+          insights.push(item);
+        }
+      }
+
+      function addWorkIntensityInsights(insights, durations) {
+        const worked = durations.filter((d) => d > 0);
+        if (worked.length === 0) return;
+
+        const avg = worked.reduce((a, b) => a + b, 0) / worked.length;
+
+        if (avg < 4 * 3600000) {
+          pushInsight(insights, {
+            type: "warning",
+            icon: "⚠️",
+            text: "Du arbeitest aktuell sehr wenig diese Woche"
+          });
+        }
+
+        if (avg > 8 * 3600000) {
+          pushInsight(insights, {
+            type: "good",
+            icon: "💪",
+            text: "Du arbeitest konstant über 8h pro Tag"
+          });
+        }
+      }
+
+      function addWeekendInsights(insights, durations) {
+        const weekendWork = (durations[5] || 0) + (durations[6] || 0);
+
+        if (weekendWork > 0) {
+          pushInsight(insights, {
+            type: "info",
+            icon: "🧠",
+            text: "Du arbeitest auch am Wochenende"
+          });
+        }
+
+        const weekdayWork = durations.slice(0, 5).reduce((a, b) => a + b, 0);
+
+        if (weekendWork > weekdayWork && weekdayWork > 0) {
+          pushInsight(insights, {
+            type: "warning",
+            icon: "🔥",
+            text: "Du arbeitest mehr am Wochenende als unter der Woche"
+          });
+        }
+      }
+
+      function addProductivityPatternInsights(insights, durations) {
+        const weekdays = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+        const worked = durations.filter((d) => d > 0);
+        if (worked.length === 0) return;
+
+        const max = Math.max(...durations);
+        const min = Math.min(...worked);
+
+        if (max > 0) {
+          const strongest = durations.indexOf(max);
+          pushInsight(insights, {
+            type: "neutral",
+            icon: "📈",
+            text: `${weekdays[strongest]} ist dein stärkster Tag`
+          });
+        }
+
+        if (min > 0) {
+          const weakest = durations.indexOf(min);
+          pushInsight(insights, {
+            type: "neutral",
+            icon: "📉",
+            text: `${weekdays[weakest]} ist dein schwächster Tag`
+          });
+        }
+      }
+
+      function addWorkBalanceInsights(insights, durations) {
+        const workedDays = durations.filter((d) => d > 0).length;
+
+        if (workedDays <= 2) {
+          pushInsight(insights, {
+            type: "warning",
+            icon: "⚡",
+            text: "Du arbeitest nur an wenigen Tagen – deine Woche ist unausgeglichen"
+          });
+        }
+      }
+
+      function renderEarnings() {
+        if (state.hourlyRate == null) return;
+
+        const today = state.selectedDay || toDateOnlyString(now());
+        const monthSource = state.selectedMonth
+          ? toDateOnlyString(new Date(state.selectedMonth))
+          : today;
+        const month = monthSource.slice(0, 7);
+
+        let todayMs = 0;
+        let monthMs = 0;
+
+        state.branches.forEach((branch) => {
+          branch.logs.forEach((log) => {
+            const duration = computeLogDuration(log, true);
+            if (log.date === today) todayMs += duration;
+            if (typeof log.date === "string" && log.date.startsWith(month)) {
+              monthMs += duration;
+            }
+          });
+        });
+
+        const todayMoney = computeMoney(todayMs);
+        const monthMoney = computeMoney(monthMs);
+
+        const elToday = document.getElementById("earnings-today");
+        const elMonth = document.getElementById("earnings-month");
+
+        if (elToday && todayMoney != null) {
+          elToday.textContent = todayMoney.toFixed(2) + " €";
+        }
+
+        if (elMonth && monthMoney != null) {
+          elMonth.textContent = monthMoney.toFixed(2) + " €";
+        }
+      }
+
+      function updateEarningsVisibility() {
+        const show = state.hourlyRate != null;
+
+        const todayBox = document.getElementById("earnings-today-box");
+        const monthBox = document.getElementById("earnings-month-box");
+
+        if (todayBox) todayBox.style.display = show ? "flex" : "none";
+        if (monthBox) monthBox.style.display = show ? "flex" : "none";
+      }
+
+      function updateHourlyRate() {
+        const input = document.getElementById("hourly-rate-input");
+        if (!input) return;
+
+        const raw = input.value.trim();
+
+        if (!raw) {
+          state.hourlyRate = null;
+          saveState();
+          updateEarningsVisibility();
+          renderEarnings();
+          return;
+        }
+
+        const value = Number(raw.replace(",", "."));
+        if (!Number.isFinite(value) || value < 0) {
+          showToast("error", "Stundenlohn", "Bitte einen gueltigen Betrag eingeben.");
+          input.value = state.hourlyRate != null ? String(state.hourlyRate) : "";
+          return;
+        }
+
+        state.hourlyRate = value;
+        saveState();
+        updateEarningsVisibility();
+        renderEarnings();
       }
 
       function getStreak() {
@@ -2888,6 +3090,8 @@ function getLocation() {
           saveState();
         }
 
+        updateEarningsVisibility();
+        renderEarnings();
         checkStreak();
       }
 
@@ -3110,17 +3314,15 @@ function getLocation() {
 
         if (!isAllMode() && !branch) return [];
 
-        const days = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
-
-        // 🧠 1. Workload Analyse
-        let max = Math.max(...durations);
-        let min = Math.min(...durations);
+        const days = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"];
+        const max = Math.max(...durations);
+        const min = Math.min(...durations);
 
         const maxIndex = durations.indexOf(max);
         const minIndex = durations.indexOf(min);
 
         if (max > 9 * 3600 * 1000) {
-          insights.push({
+          pushInsight(insights, {
             type: "warning",
             icon: "⚠️",
             text: `Sehr hoher Workload am ${days[maxIndex]} (${formatDuration(max)})`
@@ -3128,55 +3330,51 @@ function getLocation() {
         }
 
         if (min === 0) {
-          insights.push({
+          pushInsight(insights, {
             type: "neutral",
             icon: "🛌",
             text: `Kein Eintrag am ${days[minIndex]}`
           });
         }
 
-        // 🧠 2. Konsistenz Analyse (besser als vorher)
-        const avg = durations.reduce((a,b)=>a+b,0) / 7;
-        const deviation = durations.reduce((a,b)=>a + Math.abs(b - avg),0) / 7;
+        const avg = durations.reduce((a, b) => a + b, 0) / 7;
+        const deviation = durations.reduce((a, b) => a + Math.abs(b - avg), 0) / 7;
 
         if (deviation > 3 * 3600 * 1000) {
-          insights.push({
+          pushInsight(insights, {
             type: "neutral",
             icon: "📊",
             text: "Dein Arbeitsrhythmus ist unregelmäßig"
           });
         } else if (avg > 0) {
-          insights.push({
+          pushInsight(insights, {
             type: "good",
             icon: "🎯",
             text: "Sehr konstante Arbeitszeiten – stark!"
           });
         }
 
-        // 🧠 3. Overwork Detection
         if (totalWeek > 50 * 3600 * 1000) {
-          insights.push({
+          pushInsight(insights, {
             type: "warning",
             icon: "🔥",
             text: "Sehr hohe Wochenbelastung – achte auf Erholung"
           });
         }
 
-        // 🧠 4. Stop vergessen Pattern
         const forgotten = (isAllMode() ? state.branches.flatMap((item) => item.logs) : branch.logs)
-          .filter(log => !log.end && (Date.now() - log.start > 8 * 3600 * 1000)).length;
+          .filter((log) => !log.end && Date.now() - log.start > 8 * 3600 * 1000).length;
 
         if (forgotten > 0) {
-          insights.push({
+          pushInsight(insights, {
             type: "warning",
             icon: "⏱",
             text: `Du hast ${forgotten} offene Sitzung(en)`
           });
         }
 
-        // 🧠 5. Trend Analyse (NEU 💎)
         if (durations[4] > durations[0]) {
-          insights.push({
+          pushInsight(insights, {
             type: "neutral",
             icon: "📈",
             text: "Du arbeitest gegen Ende der Woche mehr"
@@ -3184,27 +3382,30 @@ function getLocation() {
         }
 
         if (durations[0] > durations[4]) {
-          insights.push({
+          pushInsight(insights, {
             type: "neutral",
             icon: "📉",
             text: "Deine Woche startet sehr intensiv"
           });
         }
 
-        // 🧠 BONUS: Zeitabhängige Messages
         const hour = new Date().getHours();
         if (hour > 20) {
-          insights.push({
+          pushInsight(insights, {
             type: "neutral",
             icon: "🌙",
             text: "Du arbeitest spät – achte auf Erholung"
           });
         }
 
+        addWorkIntensityInsights(insights, durations);
+        addWeekendInsights(insights, durations);
+        addProductivityPatternInsights(insights, durations);
+        addWorkBalanceInsights(insights, durations);
         addSmartInsightsV2(insights, durations, branch);
 
         if (insights.length === 0) {
-          insights.push({
+          pushInsight(insights, {
             type: "neutral",
             icon: "🤖",
             text: "Noch nicht genug Daten für Analyse"
@@ -3375,6 +3576,38 @@ function getLocation() {
         );
       }
 
+      function exportCSV() {
+        const rows = ["Date,Branch,Start,End,Duration(h)"];
+
+        state.branches.forEach((branch) => {
+          branch.logs.forEach((log) => {
+            const start = new Date(log.start);
+            const end = log.end ? new Date(log.end) : null;
+            const durationHours = (computeLogDuration(log, true) / 3600000).toFixed(2);
+
+            rows.push([
+              log.date || "",
+              `"${branch.name}"`,
+              formatTime(start),
+              formatTime(end),
+              durationHours
+            ].join(","));
+          });
+        });
+
+        const blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+
+        document.body.appendChild(link);
+        link.href = url;
+        link.download = "arbeitszeit.csv";
+        link.click();
+
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }
+
       function exportJSON() {
         const data = {
           branches: state.branches,
@@ -3384,6 +3617,7 @@ function getLocation() {
           selectedWeekStart: state.selectedWeekStart,
           selectedMonth: state.selectedMonth,
           weekGoal: state.weekGoal,
+          hourlyRate: state.hourlyRate,
           goalReached: state.goalReached,
           celebrated: state.celebrated
         };
@@ -3414,6 +3648,7 @@ function getLocation() {
           state.selectedMonth =
             data.selectedMonth || new Date(now().getFullYear(), now().getMonth(), 1).getTime();
           state.weekGoal = Number.isFinite(data.weekGoal) ? data.weekGoal : state.weekGoal;
+          state.hourlyRate = Number.isFinite(data.hourlyRate) ? data.hourlyRate : null;
           state.goalReached = Boolean(data.goalReached);
           state.celebrated = Boolean(data.celebrated);
           saveState();
@@ -4139,6 +4374,9 @@ function getLocation() {
           .getElementById("btn-json-export")
           .addEventListener("click", exportJSON);
         document
+          .getElementById("btn-csv-export")
+          .addEventListener("click", exportCSV);
+        document
           .getElementById("btn-pdf-export")
           .addEventListener("click", exportPDF);
         document
@@ -4155,6 +4393,9 @@ function getLocation() {
           .addEventListener("click", () => {
             document.getElementById("json-area").value = "";
           });
+        document
+          .getElementById("hourly-rate-input")
+          .addEventListener("change", updateHourlyRate);
 
         document
           .getElementById("btn-smart-fix")
@@ -4378,7 +4619,6 @@ function getLocation() {
       function init() {
         applyThemeFromStorage();
         loadState();
-        forceToday();
 
         // ⚡ Service Worker
         if ("serviceWorker" in navigator) {
@@ -4393,6 +4633,8 @@ function getLocation() {
         safe(renderMonthChart, "renderMonthChart");
         safe(renderGlobalChart, "renderGlobalChart");
         safe(renderInsight, "renderInsight");
+        safe(updateEarningsVisibility, "updateEarningsVisibility");
+        safe(renderEarnings, "renderEarnings");
         safe(updateUI, "updateUI");
         const savedTab = activateTab(localStorage.getItem(TAB_KEY) || "home", "left", {
           withHaptics: false,
@@ -4403,6 +4645,11 @@ function getLocation() {
         requestAnimationFrame(scrollToToday);
         startTimerLoop();
         initEvents();
+
+        const hourlyRateInput = document.getElementById("hourly-rate-input");
+        if (hourlyRateInput) {
+          hourlyRateInput.value = state.hourlyRate != null ? String(state.hourlyRate) : "";
+        }
 
         // 🔥 Smooth App Start
         document.body.classList.add("loaded");
