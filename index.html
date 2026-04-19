@@ -1594,6 +1594,20 @@ function getLocation() {
         )}:${String(seconds).padStart(2, "0")}`;
       }
 
+      function getWeekInsight(weekMs) {
+        const h = weekMs / 3600000;
+
+        if (h < 20) {
+          return "Diese Woche war eher ruhig – vielleicht war das genau richtig für dich.";
+        }
+
+        if (h > 45) {
+          return "Sehr intensive Woche – achte auf Erholung.";
+        }
+
+        return "Gute Balance diese Woche – solide Arbeit.";
+      }
+
       function getMonday(d) {
         const date = new Date(d);
         const day = date.getDay();
@@ -2321,6 +2335,13 @@ if (dateStr === state.selectedDay) {
             text: "Sehr hohe Wochenbelastung – achte auf Erholung"
           });
         }
+
+        // 🧠 Performance Insight
+        insights.push({
+          type: "neutral",
+          icon: "📊",
+          text: getWeekInsight(totalWeek)
+        });
 
         // 🧠 4. Stop vergessen Pattern
         const forgotten = branch.logs.filter(log =>
