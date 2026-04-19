@@ -3214,55 +3214,44 @@ if (dateStr === state.selectedDay) {
             }
           });
 
-        // 👆 Swipe + Momentum
-        let touchStartX = 0;
-        let touchStartTime = 0;
+        // 👆 Swipe FIX (NEU)
+let touchStartX = 0;
+let touchStartY = 0;
+let touchStartTime = 0;
 
-        const swipeArea = document.querySelector(".layout");
+const swipeArea = document.querySelector(".layout");
 
-        swipeArea.addEventListener("touchstart", e => {
-          touchStartX = e.changedTouches[0].screenX;
-          touchStartTime = Date.now();
-        });
+swipeArea.addEventListener("touchstart", e => {
+  touchStartX = e.changedTouches[0].screenX;
+  touchStartY = e.changedTouches[0].screenY;
+  touchStartTime = Date.now();
+});
 
-        swipeArea.addEventListener("touchend", e => {
-          const diff = touchStartX - e.changedTouches[0].screenX;
-          const time = Date.now() - touchStartTime;
-          const speed = Math.abs(diff) / Math.max(time, 1);
+swipeArea.addEventListener("touchend", e => {
+  const dx = touchStartX - e.changedTouches[0].screenX;
+  const dy = touchStartY - e.changedTouches[0].screenY;
 
-          if (speed > 0.6 && Math.abs(diff) > 30) {
-            diff > 0
-              ? document.getElementById("week-next").click()
-              : document.getElementById("week-prev").click();
-            return;
-          }
+  const time = Date.now() - touchStartTime;
 
-          if (diff > 70) document.getElementById("week-next").click();
-          if (diff < -70) document.getElementById("week-prev").click();
-        });
+  // 🔥 verhindert Scroll → Swipe Bug
+  if (Math.abs(dy) > 50) return;
 
-        // 🔄 Pull-to-Refresh
-        let startY = 0;
-        let pulling = false;
-        const indicator = document.getElementById("pull-indicator");
+  // nur horizontal
+  if (Math.abs(dx) < Math.abs(dy)) return;
 
-        window.addEventListener("touchstart", e => {
-          if (window.scrollY === 0) {
-            startY = e.touches[0].clientY;
-            pulling = true;
-          }
-        });
+  // Mindestbewegung
+  if (Math.abs(dx) < 80) return;
 
-        window.addEventListener("touchmove", e => {
-          if (!pulling) return;
+  const speed = Math.abs(dx) / Math.max(time, 1);
 
-          const diff = e.touches[0].clientY - startY;
-
-          if (diff > 50) {
-            indicator.style.opacity = "1";
-            indicator.textContent = diff > 80 ? "🔄 Loslassen..." : "⬇️ Ziehen...";
-          }
-        });
+  if (speed > 0.5) {
+    if (dx > 0) {
+      document.getElementById("week-next").click();
+    } else {
+      document.getElementById("week-prev").click();
+    }
+  }
+});
 
         window.addEventListener("touchend", e => {
           if (!pulling) return;
