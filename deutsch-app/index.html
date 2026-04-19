@@ -8,6 +8,10 @@
   <meta name="theme-color" content="#22c55e">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DeutschLernen">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="./app-icon.svg">
+  <link rel="apple-touch-icon" href="./app-icon.svg">
 
   <style>
     :root {
@@ -682,6 +686,22 @@
         display: block;
       }
 
+      html,
+      body {
+        height: auto;
+        min-height: 100%;
+      }
+
+      body {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .app-shell {
+        min-height: auto;
+        overflow: visible;
+      }
+
       .header-right {
         width: 100%;
         justify-content: space-between;
@@ -693,6 +713,20 @@
 
       .app-main {
         padding-bottom: 8px;
+        overflow: visible;
+      }
+
+      .layout-grid {
+        height: auto;
+      }
+
+      .card,
+      .card-body,
+      .word-list-container,
+      .quiz-container,
+      .stats-chart {
+        min-height: auto;
+        overflow: visible;
       }
 
       .app-footer {
@@ -950,7 +984,9 @@
     .secondary-actions,
     .mode-grid,
     .mini-grid,
-    .coach-actions {
+    .coach-actions,
+    .profile-actions,
+    .composer-row {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 6px;
@@ -958,7 +994,9 @@
 
     .secondary-actions button,
     .mode-grid button,
-    .coach-actions button {
+    .coach-actions button,
+    .profile-actions button,
+    .composer-row button {
       border-radius: 14px;
       border: 1px solid rgba(148, 163, 184, 0.4);
       background: rgba(15, 23, 42, 0.98);
@@ -971,7 +1009,9 @@
 
     .secondary-actions button:hover,
     .mode-grid button:hover,
-    .coach-actions button:hover {
+    .coach-actions button:hover,
+    .profile-actions button:hover,
+    .composer-row button:hover {
       transform: translateY(-1px);
       border-color: rgba(56, 189, 248, 0.8);
       box-shadow: 0 14px 30px rgba(0, 0, 0, 0.75);
@@ -981,9 +1021,59 @@
       .secondary-actions,
       .mode-grid,
       .mini-grid,
-      .coach-actions {
+      .coach-actions,
+      .profile-actions,
+      .composer-row {
         grid-template-columns: minmax(0, 1fr);
       }
+    }
+
+    .coach-composer {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .coach-input {
+      width: 100%;
+      min-height: 84px;
+      resize: vertical;
+      border-radius: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      background: rgba(2, 6, 23, 0.74);
+      color: var(--text);
+      padding: 12px;
+      outline: none;
+      font: inherit;
+    }
+
+    .coach-quick-prompts,
+    .profile-chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .coach-chip,
+    .profile-chip {
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      background: rgba(2, 6, 23, 0.74);
+      color: var(--text-soft);
+      padding: 7px 10px;
+      font-size: 0.72rem;
+      cursor: pointer;
+    }
+
+    .profile-chip.active {
+      color: #dcfce7;
+      border-color: rgba(34, 197, 94, 0.65);
+      background: rgba(22, 163, 74, 0.16);
+    }
+
+    .hidden-file-input {
+      display: none;
     }
 
     .section-label {
@@ -2278,6 +2368,7 @@
             <button class="hero-action-btn" id="continueLearningBtn">Weiterlernen</button>
             <button class="hero-action-btn" id="homeChallengeBtn">Daily Challenge</button>
             <button class="hero-action-btn" id="openSettingsBtn">Settings</button>
+            <button class="hero-action-btn hidden" id="installBtn">Install App</button>
           </div>
         </div>
 
@@ -2488,6 +2579,18 @@
                 <span class="small-badge"><span class="icon">🤖</span> Chat</span>
               </div>
               <div class="coach-chat" id="coachChat"></div>
+              <div class="coach-composer">
+                <textarea id="coachInput" class="coach-input" placeholder="Schreib einen Satz auf Deutsch oder Arabisch..."></textarea>
+                <div class="composer-row">
+                  <button id="coachSendBtn">✍️ Senden</button>
+                  <button id="coachSuggestionBtn">🧠 Satzvorschlag</button>
+                </div>
+                <div class="coach-quick-prompts">
+                  <button class="coach-chip" data-prompt="Ich moechte im Restaurant bestellen.">Restaurant</button>
+                  <button class="coach-chip" data-prompt="Korrigiere meinen deutschen Satz.">Korrigieren</button>
+                  <button class="coach-chip" data-prompt="Gib mir eine einfache A1 Antwort auf Deutsch.">A1 Hilfe</button>
+                </div>
+              </div>
               <div class="coach-actions">
                 <button id="openCoachBtn">💬 Chat öffnen</button>
                 <button id="voiceCoachBtn">🎙️ Voice Coach</button>
@@ -2780,6 +2883,38 @@
           <div class="settings-panel">
             <div class="card-header">
               <div class="card-title-block">
+                <div class="card-title">Profile</div>
+                <div class="card-subtitle">Mehrere Nutzer lokal auf einem Geraet</div>
+              </div>
+            </div>
+
+            <div class="settings-row">
+              <div class="settings-row-copy">
+                <strong>Aktives Profil</strong>
+                <span>Zwischen Lernprofilen wechseln ohne Datenverlust.</span>
+              </div>
+              <select class="settings-select" id="profileSelect"></select>
+            </div>
+
+            <div class="settings-row">
+              <div class="settings-row-copy">
+                <strong>Neues Profil</strong>
+                <span>Erstellt einen neuen lokalen Benutzer.</span>
+              </div>
+              <input class="settings-input" id="newProfileInput" type="text" placeholder="Name" />
+            </div>
+
+            <div class="profile-actions">
+              <button id="createProfileBtn">➕ Profil erstellen</button>
+              <button id="switchProfileBtn">👤 Profil wechseln</button>
+            </div>
+
+            <div class="profile-chip-list" id="profileChipList"></div>
+          </div>
+
+          <div class="settings-panel">
+            <div class="card-header">
+              <div class="card-title-block">
                 <div class="card-title">Profil & App</div>
                 <div class="card-subtitle">iPhone Setup, Name und Sync</div>
               </div>
@@ -2921,6 +3056,14 @@
               </div>
               <input class="settings-input" id="settingsSpeechRateValue" type="number" min="0.5" max="1.2" step="0.1" />
             </div>
+
+            <div class="settings-row">
+              <div class="settings-row-copy">
+                <strong>Notifications</strong>
+                <span>Browser-Erlaubnis fuer Lern-Erinnerungen und Tests.</span>
+              </div>
+              <button class="small-btn primary" id="requestNotificationBtn">Erlauben</button>
+            </div>
           </div>
 
           <div class="settings-panel">
@@ -2936,6 +3079,8 @@
               <button id="settingsOpenStatsBtn">📊 Statistik</button>
               <button id="settingsExportBtn">📤 Export</button>
               <button id="settingsChallengeBtn">🎯 Challenge</button>
+              <button id="settingsImportBtn">📥 Import</button>
+              <button id="testNotificationBtn">🔔 Test Notification</button>
             </div>
 
             <div class="mission-panel">
@@ -2992,6 +3137,8 @@
   </nav>
 
 </div>
+
+<input type="file" id="importFileInput" class="hidden-file-input" accept="application/json,.json">
 
 <!-- TOASTS -->
 <div class="toast-container" id="toastContainer"></div>
@@ -3508,6 +3655,18 @@ const GRAMMAR = {
 
 /* ------------------------------------------------------------
    3) SMART LEARNING + SPACED REPETITION (FINAL)
+    A2: [
+      {
+        title: "Perfekt",
+        content: "haben/sein + Partizip II: Ich habe gelernt. Ich bin gekommen."
+      }
+    ],
+    B1: [
+      {
+        title: "Nebensätze",
+        content: "Im Nebensatz steht das Verb am Ende: weil ich heute arbeiten muss."
+      }
+    ]
 ------------------------------------------------------------ */
 function updateWordMemory(word, correct) {
   const user = getCurrentUser();
@@ -3518,12 +3677,30 @@ function updateWordMemory(word, correct) {
       nextReview: Date.now()
     };
   }
+    try {
+      localStorage.setItem("appStateBackup", JSON.stringify(state));
+      toast("Lokales Backup gespeichert.", "success");
+      return Promise.resolve();
+    } catch {
+      toast("Backup konnte nicht gespeichert werden.", "error");
+      return Promise.reject(new Error("backup failed"));
+    }
 
   const entry = user.wordMemory[word];
 
   if (correct) {
     entry.score = Math.min(entry.score + 1, 10);
   } else {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `deutschlernen-backup-${todayKey()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    toast("Backup-Datei exportiert.", "success");
     entry.score = Math.max(entry.score - 2, -5);
   }
 
@@ -3533,6 +3710,7 @@ function updateWordMemory(word, correct) {
   else if (entry.score <= 4) days = 3;
   else if (entry.score <= 7) days = 7;
   else days = 30;
+    document.getElementById("importFileInput")?.click();
 
   entry.nextReview = Date.now() + days * 86400000;
 
@@ -3642,7 +3820,7 @@ function pronunciationScore(expected, spoken) {
   spoken = spoken.toLowerCase().trim();
 
   let correct = 0;
-  let total = Math.max(expected.length, spoken.length);
+  const total = Math.max(expected.length, spoken.length);
 
   for (let i = 0; i < Math.min(expected.length, spoken.length); i++) {
     if (expected[i] === spoken[i]) correct++;
@@ -3673,13 +3851,12 @@ function showPronunciationFeedback(score) {
 }
 
 function autoRepeat(word, times = 3) {
-  let i = 0;
+  let index = 0;
 
   function repeat() {
-    if (i >= times) return;
+    if (index >= times) return;
     speak(word);
-
-    i++;
+    index++;
     setTimeout(repeat, 1200);
   }
 
@@ -3688,7 +3865,6 @@ function autoRepeat(word, times = 3) {
 
 function startSpeech() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
   if (!SpeechRecognition) {
     toast("Spracherkennung wird in diesem Browser nicht unterstuetzt.", "warning");
     return;
@@ -3698,20 +3874,20 @@ function startSpeech() {
   const recognition = new SpeechRecognition();
   recognition.lang = "de-DE";
 
-  recognition.onresult = (e) => {
-    const text = e.results[0][0].transcript;
+  recognition.onresult = (event) => {
+    const text = event.results[0][0].transcript;
     document.getElementById("quizInput").value = text;
-    const score = pronunciationScore(user.currentWord?.de, text);
+    const expected = getExpectedAnswer(user.currentWord, getActiveExerciseMode(), getActiveDirection(), true);
+    const score = pronunciationScore(expected, text);
 
+    recordPronunciation(score);
+    updatePronunciationPanel(expected, text, score);
     showPronunciationFeedback(score);
 
-    if (score > 80) {
-      handleCorrect(user.currentWord);
-    } else {
-      handleWrong(user.currentWord);
-    }
+    if (score >= 80) handleCorrect(user.currentWord);
+    else handleWrong(user.currentWord);
 
-    setTimeout(() => loadNext(), 1000);
+    setTimeout(() => loadNext(), 900);
   };
 
   recognition.start();
@@ -3760,20 +3936,20 @@ function startSpeedMode() {
 const ACHIEVEMENT_DEFS = [
   {
     id: "100_words",
-    check: u => u.stats.learnedPerDay.reduce((a,c)=>a+c.count,0) >= 100
+    check: (user) => user.stats.learnedPerDay.reduce((sum, entry) => sum + entry.count, 0) >= 100
   },
   {
     id: "1000_xp",
-    check: u => u.progress.xp >= 1000
+    check: (user) => user.progress.xp >= 1000
   }
 ];
 
 function checkAchievements() {
   const user = getCurrentUser();
 
-  ACHIEVEMENT_DEFS.forEach(a => {
-    if (!user.achievements.includes(a.id) && a.check(user)) {
-      user.achievements.push(a.id);
+  ACHIEVEMENT_DEFS.forEach((achievement) => {
+    if (!user.achievements.includes(achievement.id) && achievement.check(user)) {
+      user.achievements.push(achievement.id);
     }
   });
 
@@ -3785,13 +3961,12 @@ function checkAchievements() {
 ------------------------------------------------------------ */
 function trackSession({ xp, accuracy, learned, duration }) {
   const user = getCurrentUser();
-  const today = new Date().toISOString().slice(0,10);
+  const today = new Date().toISOString().slice(0, 10);
 
   user.stats.dailyXP.push({ date: today, xp });
   user.stats.accuracyHistory.push({ date: today, accuracy });
   user.stats.learnedPerDay.push({ date: today, count: learned });
   user.stats.timePerDay.push({ date: today, ms: duration });
-
   user.progress.xp += xp;
 
   saveState();
@@ -3806,12 +3981,10 @@ function applyTheme(toggle = false) {
     user.settings.theme = user.settings.theme === "light" ? "dark" : "light";
     saveState();
   }
-  let mode = user.settings.theme;
 
+  let mode = user.settings.theme;
   if (mode === "auto") {
-    mode = window.matchMedia("(prefers-color-scheme: light)").matches
-      ? "light"
-      : "dark";
+    mode = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
   }
 
   document.body.classList.toggle("light", mode === "light");
@@ -3821,10 +3994,10 @@ function applyTheme(toggle = false) {
    10) PERFORMANCE (WICHTIG)
 ------------------------------------------------------------ */
 function debounce(fn, delay = 200) {
-  let t;
+  let timer;
   return (...args) => {
-    clearTimeout(t);
-    t = setTimeout(() => fn(...args), delay);
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
   };
 }
 
@@ -3956,13 +4129,53 @@ function trackTime(seconds) {
 }
 
 function backup() {
-  return fetch("/api/save", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(state)
-  }).catch(() => {
-    toast("Cloud-Backup ist lokal nicht verfuegbar.", "warning");
+  try {
+    localStorage.setItem("appStateBackup", JSON.stringify(state));
+    toast("Lokales Backup gespeichert.", "success");
+    return Promise.resolve();
+  } catch {
+    toast("Backup konnte nicht gespeichert werden.", "error");
+    return Promise.reject(new Error("backup failed"));
+  }
+}
+
+function requestNotificationPermission(showToast = true) {
+  if (!("Notification" in window)) {
+    toast("Notifications werden in diesem Browser nicht unterstuetzt.", "warning");
+    return Promise.resolve("unsupported");
+  }
+
+  return Notification.requestPermission().then((result) => {
+    if (showToast) {
+      toast(
+        result === "granted" ? "Notifications aktiviert." : "Notification-Erlaubnis nicht erteilt.",
+        result === "granted" ? "success" : "warning"
+      );
+    }
+    return result;
   });
+}
+
+function showTestNotification() {
+  if (!("Notification" in window)) {
+    toast("Notifications sind nicht verfügbar.", "warning");
+    return;
+  }
+
+  if (Notification.permission !== "granted") {
+    requestNotificationPermission().then((result) => {
+      if (result === "granted") showTestNotification();
+    });
+    return;
+  }
+
+  const notification = new Notification("DeutschLernen", {
+    body: "Zeit fuer 5 Minuten Deutsch heute.",
+    icon: "./app-icon.svg",
+    badge: "./app-icon.svg"
+  });
+
+  setTimeout(() => notification.close(), 5000);
 }
 
 function promptInstall() {
@@ -4026,6 +4239,41 @@ function addUser(name) {
   state.users[id].profile.name = name;
   state.currentUserId = id;
   saveState();
+  return id;
+}
+
+function switchUser(userId) {
+  if (!state.users[userId]) return;
+  state.currentUserId = userId;
+  saveState();
+  updateDashboard();
+  renderWordList();
+  renderStats();
+  renderSettings();
+  showWelcome();
+}
+
+function renderProfileOptions() {
+  const select = document.getElementById("profileSelect");
+  const chips = document.getElementById("profileChipList");
+  if (!select || !chips) return;
+
+  select.innerHTML = "";
+  chips.innerHTML = "";
+
+  Object.entries(state.users).forEach(([id, user]) => {
+    const option = document.createElement("option");
+    option.value = id;
+    option.textContent = user.profile?.name || "Gast";
+    option.selected = id === state.currentUserId;
+    select.appendChild(option);
+
+    const chip = document.createElement("button");
+    chip.className = `profile-chip${id === state.currentUserId ? " active" : ""}`;
+    chip.textContent = user.profile?.name || "Gast";
+    chip.onclick = () => switchUser(id);
+    chips.appendChild(chip);
+  });
 }
 
 function saveXPHistory() {
@@ -4042,18 +4290,39 @@ function saveXPHistory() {
 }
 
 function exportData() {
-  const data = JSON.stringify(state);
-  navigator.clipboard.writeText(data);
-  alert("Daten kopiert!");
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `deutschlernen-backup-${todayKey()}.json`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  toast("Backup-Datei exportiert.", "success");
 }
 
 function importData() {
-  const input = prompt("Füge deine Daten ein:");
-  if (input) {
-    Object.assign(state, JSON.parse(input));
-    saveState();
-    location.reload();
-  }
+  document.getElementById("importFileInput")?.click();
+}
+
+function handleImportFile(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(String(reader.result || "{}"));
+      Object.assign(state, parsed);
+      saveState();
+      toast("Backup importiert.", "success");
+      location.reload();
+    } catch {
+      toast("Import-Datei ist ungueltig.", "error");
+    }
+  };
+  reader.readAsText(file);
 }
 
 function animateXP() {
@@ -5196,16 +5465,43 @@ function generateCoachReply(input) {
 
   const corrected = clean.charAt(0).toUpperCase() + clean.slice(1).replace(/\s+/g, " ");
   const withPunctuation = /[.!?]$/.test(corrected) ? corrected : `${corrected}.`;
+  if (/\?$/.test(clean)) {
+    return `Antwort: ${withPunctuation} Tipp: Achte auf das Verb an Position 2.`;
+  }
   return `Korrektur: ${withPunctuation} Tipp: Nutze das Verb an Position 2.`;
 }
 
 function openCoachPrompt() {
-  const text = prompt("Schreib eine Nachricht an den Deutsch-Coach:");
-  if (!text) return;
-  addCoachMessage("user", text);
-  const reply = generateCoachReply(text);
+  document.getElementById("coachInput")?.focus();
+}
+
+function sendCoachMessage(text = "") {
+  const input = document.getElementById("coachInput");
+  const raw = text || input?.value || "";
+  const message = raw.trim();
+  if (!message) return;
+
+  addCoachMessage("user", message);
+  const reply = generateCoachReply(message);
   addCoachMessage("bot", reply);
-  speak(reply.replace(/^Korrektur:\s*/, ""));
+  speak(reply.replace(/^(Korrektur|Antwort):\s*/, ""));
+  if (input) input.value = "";
+}
+
+function insertCoachPrompt(value) {
+  const input = document.getElementById("coachInput");
+  if (!input) return;
+  input.value = value;
+  input.focus();
+}
+
+function suggestCoachSentence() {
+  const suggestions = [
+    "Ich moechte heute im Hotel ein Zimmer reservieren.",
+    "Kannst du meinen deutschen Satz korrigieren?",
+    "Wie sage ich das natuerlich auf Deutsch?"
+  ];
+  insertCoachPrompt(suggestions[Math.floor(Math.random() * suggestions.length)]);
 }
 
 function startVoiceCoach() {
@@ -5903,6 +6199,7 @@ function renderSettingsStatus() {
     <div class="stats-list-item"><span>Theme</span><strong>${user.settings.theme}</strong></div>
     <div class="stats-list-item"><span>Direction</span><strong>${user.settings.quizDirection}</strong></div>
     <div class="stats-list-item"><span>Sync</span><strong>${user.syncStatus}</strong></div>
+    <div class="stats-list-item"><span>Notifications</span><strong>${("Notification" in window) ? Notification.permission : "unsupported"}</strong></div>
   `;
 }
 
@@ -5931,6 +6228,7 @@ function renderSettings() {
   setChecked("settingsHapticsToggle", user.settings.haptics);
 
   renderSettingsStatus();
+  renderProfileOptions();
 }
 
 function bindSetting(id, handler, eventName = "change") {
@@ -6056,14 +6354,23 @@ function initEnhancedControls() {
   });
   document.getElementById("openCoachBtn")?.addEventListener("click", openCoachPrompt);
   document.getElementById("voiceCoachBtn")?.addEventListener("click", startVoiceCoach);
+  document.getElementById("coachSendBtn")?.addEventListener("click", () => sendCoachMessage());
+  document.getElementById("coachSuggestionBtn")?.addEventListener("click", suggestCoachSentence);
+  document.getElementById("coachInput")?.addEventListener("keydown", (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === "Enter") sendCoachMessage();
+  });
+  document.querySelectorAll(".coach-chip[data-prompt]").forEach((button) => {
+    button.addEventListener("click", () => insertCoachPrompt(button.dataset.prompt || ""));
+  });
   document.getElementById("syncProfileBtn")?.addEventListener("click", () => {
     const user = getCurrentUser();
-    const name = prompt("Dein Profilname:", user.profile.name) || user.profile.name;
-    user.profile.name = name;
+    const typedName = document.getElementById("settingsNameInput")?.value?.trim();
+    user.profile.name = typedName || user.profile.name;
     user.syncStatus = user.syncStatus === "local" ? "online" : "local";
     toast(user.syncStatus === "online" ? "Profil fuer Cloud Sync vorbereitet" : "Nur lokale Speicherung aktiv", "info");
     saveState();
     updateDashboard();
+    renderSettings();
     showWelcome();
   });
   document.getElementById("dailyChallengeBtn")?.addEventListener("click", () => {
@@ -6079,15 +6386,41 @@ function initEnhancedControls() {
   document.getElementById("settingsStartLearningBtn")?.addEventListener("click", () => showScreen("dashboard"));
   document.getElementById("settingsOpenStatsBtn")?.addEventListener("click", () => showScreen("stats"));
   document.getElementById("settingsExportBtn")?.addEventListener("click", exportData);
+  document.getElementById("settingsImportBtn")?.addEventListener("click", importData);
   document.getElementById("settingsChallengeBtn")?.addEventListener("click", () => {
     const user = getCurrentUser();
     toast(user.dailyChallenge || "Heute: 5 Wörter + Quiz", "info");
+  });
+  document.getElementById("requestNotificationBtn")?.addEventListener("click", () => requestNotificationPermission());
+  document.getElementById("testNotificationBtn")?.addEventListener("click", showTestNotification);
+  document.getElementById("installBtn")?.addEventListener("click", promptInstall);
+  document.getElementById("importFileInput")?.addEventListener("change", handleImportFile);
+  document.getElementById("createProfileBtn")?.addEventListener("click", () => {
+    const input = document.getElementById("newProfileInput");
+    const name = input?.value?.trim();
+    if (!name) {
+      toast("Gib zuerst einen Profilnamen ein.", "warning");
+      return;
+    }
+
+    const id = addUser(name);
+    if (input) input.value = "";
+    switchUser(id);
+    toast(`Profil ${name} erstellt.`, "success");
+  });
+  document.getElementById("switchProfileBtn")?.addEventListener("click", () => {
+    const selected = document.getElementById("profileSelect")?.value;
+    if (selected) switchUser(selected);
+  });
+  document.getElementById("profileSelect")?.addEventListener("change", (event) => {
+    if (event.target?.value) switchUser(event.target.value);
   });
 
   bindSetting("settingsNameInput", (event) => {
     getCurrentUser().profile.name = event.target.value.trim() || "Gast";
     saveState();
     updateDashboard();
+    renderProfileOptions();
   }, "input");
   bindSetting("settingsThemeSelect", (event) => {
     getCurrentUser().settings.theme = event.target.value;
@@ -6103,6 +6436,9 @@ function initEnhancedControls() {
   });
   bindSetting("settingsReminderToggle", (event) => {
     getCurrentUser().settings.reminders = event.target.checked;
+    if (event.target.checked && "Notification" in window && Notification.permission === "default") {
+      requestNotificationPermission(false);
+    }
     saveState();
   });
   bindSetting("settingsAutoDirectionToggle", (event) => {
@@ -6187,6 +6523,14 @@ function initEnhancedApp() {
   renderSettings();
   updateSystemChrome();
   setInterval(updateSystemChrome, 60000);
+  if (user.settings.reminders && "Notification" in window && Notification.permission === "granted") {
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") return;
+      setTimeout(() => {
+        if (document.visibilityState === "hidden") showTestNotification();
+      }, 15000);
+    });
+  }
   runOnboardingIfNeeded();
 }
 
