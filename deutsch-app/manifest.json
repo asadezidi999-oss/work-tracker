@@ -1,19 +1,19 @@
 {
   "name": "DeutschLernen",
   "short_name": "Deutsch",
-  "start_url": "./",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#020617",
   "theme_color": "#22c55e",
   "icons": [
     {
-      "src": "./assets/icon.png",
+      "src": "./assets/android-chrome-192x192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "./assets/icon.png",
+      "src": "./assets/android-chrome-512x512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
