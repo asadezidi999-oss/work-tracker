@@ -9,10 +9,10 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="DeutschLernen">
+  <meta name="apple-mobile-web-app-title" content="Deutsch">
   <link rel="manifest" href="./manifest.json">
-  <link rel="icon" type="image/png" href="./assets/icon.png">
-  <link rel="apple-touch-icon" href="./assets/icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="./assets/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="./assets/icon-180.png">
 
   <style>
     :root {
@@ -6457,14 +6457,8 @@ const UI_SOUND_FILES = {
   correct: "./assets/sounds/ui-correct.wav",
   wrong: "./assets/sounds/ui-wrong.wav"
 };
-const uiSoundPool = Object.fromEntries(
-  Object.entries(UI_SOUND_FILES).map(([type, src]) => {
-    const audio = new Audio(src);
-    audio.preload = "auto";
-    audio.volume = type === "click" ? 0.24 : 0.32;
-    return [type, audio];
-  })
-);
+// disabled sound
+const uiSoundPool = {};
 
 if (audioCtx && audioMaster && audioCompressor) {
   audioMaster.gain.value = 0.22;
