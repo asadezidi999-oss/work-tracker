@@ -1088,12 +1088,16 @@
       position: sticky;
       top: 0;
       z-index: 10;
-      background: var(--bg-card);
+      background: linear-gradient(180deg, rgba(11, 17, 32, 0.98), rgba(11, 17, 32, 0.9));
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 8px;
-      padding-bottom: 6px;
+      padding: 2px 0 10px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+      box-shadow: 0 10px 20px rgba(2, 6, 23, 0.18);
     }
 
     .modal-header h2 {
@@ -1106,6 +1110,7 @@
       flex-direction: column;
       gap: 8px;
       margin-bottom: 10px;
+      padding-top: 2px;
     }
 
     .field-group {
@@ -1123,13 +1128,16 @@
       position: sticky;
       bottom: calc(env(safe-area-inset-bottom) * -1);
       z-index: 10;
-      background: var(--bg-card);
+      background: linear-gradient(180deg, rgba(11, 17, 32, 0.88), rgba(11, 17, 32, 0.98));
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
       display: flex;
       justify-content: flex-end;
       gap: 6px;
       margin-top: 8px;
-      border-top: 1px solid rgba(148, 163, 184, 0.12);
+      border-top: 1px solid rgba(148, 163, 184, 0.16);
+      box-shadow: 0 -10px 20px rgba(2, 6, 23, 0.22);
     }
 
     body.modal-open .fab {
