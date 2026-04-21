@@ -493,7 +493,8 @@
     }
 
     input,
-    textarea {
+    textarea,
+    select {
       border-radius: 999px;
       border: 1px solid var(--border);
       padding: 6px 10px;
@@ -506,7 +507,8 @@
     }
 
     input:focus,
-    textarea:focus {
+    textarea:focus,
+    select:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.25);
       background: rgba(255, 255, 255, 0.08);
@@ -1122,6 +1124,414 @@
       color: var(--text-soft);
     }
 
+    .note-textarea {
+      border-radius: 14px;
+      min-height: 88px;
+      resize: vertical;
+      padding: 10px 12px;
+      line-height: 1.45;
+    }
+
+    .note-helper {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .note-preview {
+      margin-top: 8px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      background: rgba(15, 23, 42, 0.32);
+      min-height: 56px;
+    }
+
+    .note-preview-label {
+      margin-top: 8px;
+      font-size: 10px;
+      color: var(--text-soft);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .note-preview-empty {
+      color: var(--text-soft);
+      font-size: 11px;
+    }
+
+    .markdown-content {
+      font-size: 11px;
+      line-height: 1.55;
+      color: var(--text);
+      word-break: break-word;
+    }
+
+    .markdown-content > :first-child {
+      margin-top: 0;
+    }
+
+    .markdown-content > :last-child {
+      margin-bottom: 0;
+    }
+
+    .markdown-content p,
+    .markdown-content ul,
+    .markdown-content ol,
+    .markdown-content blockquote,
+    .markdown-content pre,
+    .markdown-content h1,
+    .markdown-content h2,
+    .markdown-content h3 {
+      margin: 0 0 8px 0;
+    }
+
+    .markdown-content ul,
+    .markdown-content ol {
+      padding-left: 18px;
+    }
+
+    .markdown-content blockquote {
+      padding-left: 10px;
+      border-left: 3px solid rgba(96, 165, 250, 0.45);
+      color: var(--text-soft);
+    }
+
+    .markdown-content code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      padding: 1px 5px;
+      border-radius: 6px;
+      background: rgba(15, 23, 42, 0.55);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      font-size: 10px;
+    }
+
+    .markdown-content pre {
+      padding: 10px;
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.55);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      overflow: auto;
+    }
+
+    .markdown-content a {
+      color: #93c5fd;
+    }
+
+    .attachment-picker {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .attachment-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .attachment-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+    }
+
+    .attachment-thumb {
+      width: 46px;
+      height: 46px;
+      border-radius: 10px;
+      object-fit: cover;
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      flex-shrink: 0;
+    }
+
+    .attachment-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(96, 165, 250, 0.2);
+      flex-shrink: 0;
+      font-size: 18px;
+    }
+
+    .attachment-meta {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex: 1;
+    }
+
+    .attachment-name {
+      font-size: 11px;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .attachment-size {
+      font-size: 10px;
+      color: var(--text-soft);
+    }
+
+    .attachment-link {
+      font-size: 10px;
+      color: #93c5fd;
+      text-decoration: none;
+    }
+
+    .attachment-link:hover {
+      text-decoration: underline;
+    }
+
+    .attachment-empty {
+      font-size: 10px;
+      color: var(--text-soft);
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px dashed rgba(148, 163, 184, 0.2);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .attachment-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .attachment-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(59, 130, 246, 0.08);
+      border: 1px solid rgba(96, 165, 250, 0.18);
+      font-size: 10px;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .attachment-badge:hover {
+      background: rgba(59, 130, 246, 0.14);
+    }
+
+    .upload-box {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 10px;
+      transition: 0.2s ease;
+    }
+
+    .upload-box.dragover {
+      border: 2px dashed #22c55e;
+      border-radius: 14px;
+      padding: 10px;
+      background: rgba(34, 197, 94, 0.06);
+    }
+
+    .file-upload {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 18px;
+      background: linear-gradient(135deg, #6366f1, #22c55e);
+      color: white;
+      border-radius: 14px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 600;
+      transition: 0.2s ease;
+      user-select: none;
+      align-self: flex-start;
+    }
+
+    .file-upload:hover {
+      opacity: 0.9;
+      transform: scale(1.03);
+    }
+
+    .file-list {
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      font-size: 14px;
+      color: #ddd;
+      min-height: 45px;
+    }
+
+    .file-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .file-row:last-child {
+      border-bottom: none;
+    }
+
+    .file-row-main {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .file-name {
+      font-weight: 600;
+      word-break: break-word;
+    }
+
+    .file-size {
+      opacity: 0.6;
+      margin-left: 6px;
+      font-size: 12px;
+    }
+
+    .remove-btn {
+      background: none;
+      border: none;
+      color: #ff4d4d;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.2s;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .remove-btn:hover {
+      transform: scale(1.2);
+    }
+
+    .file-list.empty {
+      opacity: 0.6;
+      font-style: italic;
+    }
+
+    .log-note {
+      margin-top: 8px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(59, 130, 246, 0.08);
+      border: 1px solid rgba(96, 165, 250, 0.18);
+      color: var(--text);
+      font-size: 11px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .delete-preview {
+      margin-top: 6px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .delete-preview-section {
+      padding: 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      background: rgba(15, 23, 42, 0.32);
+    }
+
+    .delete-preview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .delete-preview-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .delete-preview-count {
+      font-size: 10px;
+      color: var(--text-soft);
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(59, 130, 246, 0.08);
+      border: 1px solid rgba(96, 165, 250, 0.18);
+      white-space: nowrap;
+    }
+
+    .delete-preview-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 180px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .delete-preview-item {
+      padding: 9px 10px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+    }
+
+    .delete-preview-main {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+      font-size: 11px;
+    }
+
+    .delete-preview-date {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .delete-preview-meta {
+      color: var(--text-soft);
+      font-size: 10px;
+      line-height: 1.45;
+    }
+
+    .delete-preview-note {
+      margin-top: 6px;
+      font-size: 10px;
+      line-height: 1.45;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .delete-preview-empty {
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px dashed rgba(148, 163, 184, 0.2);
+      color: var(--text-soft);
+      font-size: 10px;
+    }
+
     .flex-row {
       display: flex;
       gap: 6px;
@@ -1679,6 +2089,11 @@ body.light {
             </div>
             <span class="pill" id="logs-branch-label">Keine Filiale</span>
           </div>
+              <div class="card-footer-actions" style="justify-content: flex-start; margin: 0 0 8px 0;">
+                <button id="btn-open-delete-modal" class="btn btn-sm btn-ghost">
+                  <span class="icon">🗑️</span> Gezielt löschen
+                </button>
+              </div>
           <input id="log-search" placeholder="Suche...">
           <div class="logs-list" id="logs-list"></div>
         </div>
@@ -1779,6 +2194,25 @@ body.light {
           <div class="field-label">Ende</div>
           <input type="time" id="manual-end" />
         </div>
+        <div class="field-group">
+          <div class="field-label">Notiz</div>
+          <textarea id="manual-note" class="note-textarea" placeholder="z. B. **Kasse**, *Inventur*, [Ticket](https://...) oder eine kurze Schichtnotiz"></textarea>
+          <div class="note-helper small-text">Markdown: **fett**, *kursiv*, `code`, Listen, Zitate und Links.</div>
+          <div class="note-preview-label">Vorschau</div>
+          <div id="manual-note-preview" class="note-preview"></div>
+          <div class="upload-box" id="manual-upload-box">
+            <label class="file-upload">
+              <span class="icon">📎</span>
+              <span>Datei auswählen</span>
+              <input type="file" id="manual-attachments" multiple accept="image/*,.pdf,.txt,.csv,.doc,.docx,.xls,.xlsx" hidden>
+            </label>
+
+            <div id="manual-file-list" class="file-list empty">
+              Keine Dateien ausgewählt
+            </div>
+          </div>
+          <div class="small-text">Anhänge werden lokal gespeichert. Für stabile Speicherung kleine Dateien verwenden.</div>
+        </div>
         <div class="small-text">
           Validierung: Start &lt; Ende, Pause innerhalb der Zeit, keine negativen Zeiten. Mehrere Pausen kannst du später im Log bearbeiten.
         </div>
@@ -1787,6 +2221,112 @@ body.light {
         <button id="manual-cancel" class="btn btn-sm btn-ghost">Abbrechen</button>
         <button id="manual-save" class="btn btn-sm btn-primary">
           <span class="icon">💾</span> Speichern
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="log-edit-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Log bearbeiten</h2>
+        <button id="log-edit-close" class="btn btn-icon btn-ghost">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="field-group">
+          <div class="field-label">Filiale</div>
+          <select id="log-edit-branch"></select>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Datum</div>
+          <input type="date" id="log-edit-date" />
+        </div>
+        <div class="field-group">
+          <div class="field-label">Start</div>
+          <input type="time" id="log-edit-start" />
+        </div>
+        <div class="field-group">
+          <div class="field-label">Pause(n)</div>
+          <input type="text" id="log-edit-pauses" placeholder="z. B. 12:00-12:30, 15:00-15:10" />
+        </div>
+        <div class="field-group">
+          <div class="field-label">Ende</div>
+          <input type="time" id="log-edit-end" />
+        </div>
+        <div class="field-group">
+          <div class="field-label">Notiz</div>
+          <textarea id="log-edit-note" class="note-textarea" placeholder="Optional: Markdown-Notiz, Aufgaben, Hinweise, Besonderheiten"></textarea>
+          <div class="note-helper small-text">Markdown-Vorschau wird direkt unten angezeigt.</div>
+          <div class="note-preview-label">Vorschau</div>
+          <div id="log-edit-note-preview" class="note-preview"></div>
+          <div class="upload-box" id="log-edit-upload-box">
+            <label class="file-upload">
+              <span class="icon">📎</span>
+              <span>Datei auswählen</span>
+              <input type="file" id="log-edit-attachments" multiple accept="image/*,.pdf,.txt,.csv,.doc,.docx,.xls,.xlsx" hidden>
+            </label>
+
+            <div id="file-list" class="file-list empty">
+              Keine Dateien ausgewählt
+            </div>
+          </div>
+          <div class="small-text">Anhänge bleiben am Log und werden mit Export/Import übernommen.</div>
+        </div>
+        <div class="small-text">
+          Pausen bitte als HH:MM-HH:MM eingeben, mehrere Pausen mit Komma trennen.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="log-edit-cancel" class="btn btn-sm btn-ghost">Abbrechen</button>
+        <button id="log-edit-save" class="btn btn-sm btn-primary">
+          <span class="icon">💾</span> Speichern
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="delete-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Arbeitszeit löschen</h2>
+        <button id="delete-modal-close" class="btn btn-icon btn-ghost">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="field-group">
+          <div class="field-label">Filiale</div>
+          <select id="delete-branch-select"></select>
+        </div>
+        <div class="field-group">
+          <div class="field-label">Datum</div>
+          <input type="date" id="delete-date-input" />
+        </div>
+        <div class="small-text">
+          Du kannst entweder alle Einträge eines bestimmten Tages in einer Filiale oder alle Einträge der ganzen Filiale löschen.
+        </div>
+        <div class="delete-preview" id="delete-preview">
+          <div class="delete-preview-section">
+            <div class="delete-preview-header">
+              <div class="delete-preview-title" id="delete-preview-day-title">Vorschau Tag löschen</div>
+              <div class="delete-preview-count" id="delete-preview-day-count">0 Einträge</div>
+            </div>
+            <div class="delete-preview-list" id="delete-preview-day-list"></div>
+          </div>
+          <div class="delete-preview-section">
+            <div class="delete-preview-header">
+              <div class="delete-preview-title" id="delete-preview-branch-title">Vorschau Filiale leeren</div>
+              <div class="delete-preview-count" id="delete-preview-branch-count">0 Einträge</div>
+            </div>
+            <div class="delete-preview-list" id="delete-preview-branch-list"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="delete-modal-cancel" class="btn btn-sm btn-ghost">Abbrechen</button>
+        <button id="delete-day-save" class="btn btn-sm btn-red">
+          <span class="icon">📅</span> Tag löschen
+        </button>
+        <button id="delete-branch-save" class="btn btn-sm btn-red">
+          <span class="icon">🏢</span> Filiale leeren
         </button>
       </div>
     </div>
@@ -1803,6 +2343,11 @@ body.light {
       const THEME_KEY = "worktime-tracker-theme";
       const VIEW_MODE_KEY = "worktime-tracker-view-mode";
       const WEEK_GOAL_HOURS = 40;
+      const MAX_ATTACHMENTS_PER_LOG = 6;
+      const MAX_ATTACHMENT_BYTES = 450 * 1024;
+
+      let manualDraftAttachments = [];
+      let editDraftAttachments = [];
 
       // 🎬 Animation Engine
       let isAnimating = false;
@@ -2008,6 +2553,425 @@ function getLocation() {
         return JSON.parse(JSON.stringify(obj));
       }
 
+      function formatBytes(bytes) {
+        if (!Number.isFinite(bytes) || bytes <= 0) return "0 B";
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+      }
+
+      function normalizeAttachment(attachment) {
+        if (!attachment || typeof attachment !== "object") return null;
+
+        const dataUrl = typeof attachment.dataUrl === "string" ? attachment.dataUrl : "";
+        if (!dataUrl) return null;
+
+        return {
+          id: typeof attachment.id === "string" ? attachment.id : uuid(),
+          name: typeof attachment.name === "string" && attachment.name.trim()
+            ? attachment.name.trim()
+            : "Anhang",
+          type: typeof attachment.type === "string" ? attachment.type : "application/octet-stream",
+          size: Number.isFinite(attachment.size) ? attachment.size : 0,
+          dataUrl
+        };
+      }
+
+      function normalizeLog(log) {
+        if (!log || typeof log !== "object") return;
+        log.note = typeof log.note === "string" ? log.note : "";
+        log.attachments = Array.isArray(log.attachments)
+          ? log.attachments.map(normalizeAttachment).filter(Boolean)
+          : [];
+      }
+
+      function normalizeAllLogs() {
+        state.branches.forEach((branch) => {
+          if (!Array.isArray(branch.logs)) {
+            branch.logs = [];
+            return;
+          }
+          branch.logs.forEach(normalizeLog);
+        });
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function sanitizeLinkUrl(url) {
+        const trimmed = String(url || "").trim();
+        if (!trimmed) return "";
+        if (/^https?:\/\//i.test(trimmed)) return trimmed;
+        if (/^mailto:/i.test(trimmed)) return trimmed;
+        return "";
+      }
+
+      function renderMarkdownInline(text) {
+        let html = escapeHtml(text);
+
+        html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+        html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+        html = html.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+        html = html.replace(/~~([^~]+)~~/g, "<del>$1</del>");
+        html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, href) => {
+          const safeHref = sanitizeLinkUrl(href);
+          if (!safeHref) return label;
+          return `<a href="${escapeHtml(safeHref)}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+        });
+
+        return html;
+      }
+
+      function renderMarkdownContent(container, markdown) {
+        if (!container) return;
+
+        const text = String(markdown || "").trim();
+        if (!text) {
+          container.innerHTML = "<div class=\"note-preview-empty\">Noch keine Notiz vorhanden.</div>";
+          return;
+        }
+
+        const lines = text.replace(/\r\n/g, "\n").split("\n");
+        const blocks = [];
+        let currentList = null;
+
+        const closeList = () => {
+          currentList = null;
+        };
+
+        lines.forEach((line) => {
+          const trimmed = line.trim();
+          if (!trimmed) {
+            closeList();
+            return;
+          }
+
+          const headingMatch = trimmed.match(/^(#{1,3})\s+(.*)$/);
+          if (headingMatch) {
+            closeList();
+            const level = headingMatch[1].length;
+            blocks.push(`<h${level}>${renderMarkdownInline(headingMatch[2])}</h${level}>`);
+            return;
+          }
+
+          const quoteMatch = trimmed.match(/^>\s?(.*)$/);
+          if (quoteMatch) {
+            closeList();
+            blocks.push(`<blockquote>${renderMarkdownInline(quoteMatch[1])}</blockquote>`);
+            return;
+          }
+
+          const orderedMatch = trimmed.match(/^(\d+)\.\s+(.*)$/);
+          if (orderedMatch) {
+            if (currentList?.type !== "ol") {
+              closeList();
+              currentList = { type: "ol", items: [] };
+              blocks.push(currentList);
+            }
+            currentList.items.push(`<li>${renderMarkdownInline(orderedMatch[2])}</li>`);
+            return;
+          }
+
+          const unorderedMatch = trimmed.match(/^[-*]\s+(.*)$/);
+          if (unorderedMatch) {
+            if (currentList?.type !== "ul") {
+              closeList();
+              currentList = { type: "ul", items: [] };
+              blocks.push(currentList);
+            }
+            currentList.items.push(`<li>${renderMarkdownInline(unorderedMatch[1])}</li>`);
+            return;
+          }
+
+          closeList();
+          blocks.push(`<p>${renderMarkdownInline(trimmed)}</p>`);
+        });
+
+        container.innerHTML = blocks.map((block) => {
+          if (typeof block === "string") return block;
+          return `<${block.type}>${block.items.join("")}</${block.type}>`;
+        }).join("");
+      }
+
+      function isImageAttachment(attachment) {
+        return String(attachment?.type || "").startsWith("image/");
+      }
+
+      function getAttachmentIcon(attachment) {
+        if (isImageAttachment(attachment)) return "🖼️";
+        if (String(attachment?.type || "").includes("pdf")) return "📄";
+        if (String(attachment?.type || "").includes("sheet") || /csv/i.test(attachment?.name || "")) return "📊";
+        return "📎";
+      }
+
+      function createAttachmentLink(attachment, className) {
+        const link = document.createElement("a");
+        link.href = attachment.dataUrl;
+        link.download = attachment.name;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.className = className;
+        link.textContent = isImageAttachment(attachment) ? "Ansehen" : "Öffnen";
+        return link;
+      }
+
+      function renderAttachmentList(container, attachments, options = {}) {
+        if (!container) return;
+
+        const items = Array.isArray(attachments) ? attachments : [];
+        container.innerHTML = "";
+
+        if (!items.length) {
+          if (options.emptyText) {
+            const empty = document.createElement("div");
+            empty.className = "attachment-empty";
+            empty.textContent = options.emptyText;
+            container.appendChild(empty);
+          }
+          return;
+        }
+
+        if (options.compact) {
+          container.className = "attachment-badges";
+          items.forEach((attachment) => {
+            const badge = document.createElement("a");
+            badge.href = attachment.dataUrl;
+            badge.download = attachment.name;
+            badge.target = "_blank";
+            badge.rel = "noopener noreferrer";
+            badge.className = "attachment-badge";
+            badge.textContent = `${getAttachmentIcon(attachment)} ${attachment.name}`;
+            container.appendChild(badge);
+          });
+          return;
+        }
+
+        container.className = "attachment-list";
+        items.forEach((attachment) => {
+          const item = document.createElement("div");
+          item.className = "attachment-item";
+
+          if (isImageAttachment(attachment)) {
+            const img = document.createElement("img");
+            img.className = "attachment-thumb";
+            img.src = attachment.dataUrl;
+            img.alt = attachment.name;
+            item.appendChild(img);
+          } else {
+            const icon = document.createElement("div");
+            icon.className = "attachment-icon";
+            icon.textContent = getAttachmentIcon(attachment);
+            item.appendChild(icon);
+          }
+
+          const meta = document.createElement("div");
+          meta.className = "attachment-meta";
+          const name = document.createElement("div");
+          name.className = "attachment-name";
+          name.textContent = attachment.name;
+          const size = document.createElement("div");
+          size.className = "attachment-size";
+          size.textContent = `${formatBytes(attachment.size)} · ${attachment.type || "Datei"}`;
+          meta.appendChild(name);
+          meta.appendChild(size);
+          meta.appendChild(createAttachmentLink(attachment, "attachment-link"));
+          item.appendChild(meta);
+
+          if (typeof options.onRemove === "function") {
+            const removeBtn = document.createElement("button");
+            removeBtn.className = "btn btn-sm btn-ghost";
+            removeBtn.type = "button";
+            removeBtn.textContent = "Entfernen";
+            removeBtn.onclick = () => options.onRemove(attachment.id);
+            item.appendChild(removeBtn);
+          }
+
+          container.appendChild(item);
+        });
+      }
+
+      function readFileAsDataUrl(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result || ""));
+          reader.onerror = () => reject(new Error(`Datei konnte nicht gelesen werden: ${file.name}`));
+          reader.readAsDataURL(file);
+        });
+      }
+
+      async function appendDraftAttachments(files, existingAttachments) {
+        const nextAttachments = clone(existingAttachments);
+        if (nextAttachments.length + files.length > MAX_ATTACHMENTS_PER_LOG) {
+          throw new Error(`Maximal ${MAX_ATTACHMENTS_PER_LOG} Anhänge pro Log möglich.`);
+        }
+
+        for (const file of files) {
+          if (file.size > MAX_ATTACHMENT_BYTES) {
+            throw new Error(`${file.name} ist zu groß. Bitte unter ${formatBytes(MAX_ATTACHMENT_BYTES)} bleiben.`);
+          }
+          const dataUrl = await readFileAsDataUrl(file);
+          nextAttachments.push(normalizeAttachment({
+            id: uuid(),
+            name: file.name,
+            type: file.type || "application/octet-stream",
+            size: file.size,
+            dataUrl
+          }));
+        }
+
+        return nextAttachments.filter(Boolean);
+      }
+
+      function updateNotePreview(textareaId, previewId) {
+        const textarea = document.getElementById(textareaId);
+        const preview = document.getElementById(previewId);
+        renderMarkdownContent(preview, textarea?.value || "");
+      }
+
+      function renderManualAttachments() {
+        const list = document.getElementById("manual-file-list");
+        if (!list) return;
+
+        list.innerHTML = "";
+        list.classList.remove("empty");
+
+        if (!manualDraftAttachments.length) {
+          list.textContent = "Keine Dateien ausgewählt";
+          list.classList.add("empty");
+          return;
+        }
+
+        manualDraftAttachments.forEach((attachment) => {
+          const row = document.createElement("div");
+          row.className = "file-row";
+
+          const main = document.createElement("div");
+          main.className = "file-row-main";
+
+          const icon = document.createElement("span");
+          icon.textContent = getAttachmentIcon(attachment);
+
+          const name = document.createElement("span");
+          name.className = "file-name";
+          name.textContent = attachment.name;
+
+          const size = document.createElement("span");
+          size.className = "file-size";
+          size.textContent = `(${Math.round((attachment.size || 0) / 1024)} KB)`;
+
+          const openLink = document.createElement("a");
+          openLink.href = attachment.dataUrl;
+          openLink.download = attachment.name;
+          openLink.target = "_blank";
+          openLink.rel = "noopener noreferrer";
+          openLink.className = "attachment-link";
+          openLink.textContent = "Öffnen";
+
+          main.appendChild(icon);
+          main.appendChild(name);
+          main.appendChild(size);
+          main.appendChild(openLink);
+
+          const removeBtn = document.createElement("button");
+          removeBtn.className = "remove-btn";
+          removeBtn.type = "button";
+          removeBtn.textContent = "✕";
+          removeBtn.onclick = () => {
+            manualDraftAttachments = manualDraftAttachments.filter((item) => item.id !== attachment.id);
+            renderManualAttachments();
+          };
+
+          row.appendChild(main);
+          row.appendChild(removeBtn);
+          list.appendChild(row);
+        });
+      }
+
+      function renderEditAttachments() {
+        const list = document.getElementById("file-list");
+        if (!list) return;
+
+        list.innerHTML = "";
+        list.classList.remove("empty");
+
+        if (!editDraftAttachments.length) {
+          list.textContent = "Keine Dateien ausgewählt";
+          list.classList.add("empty");
+          return;
+        }
+
+        editDraftAttachments.forEach((attachment) => {
+          const row = document.createElement("div");
+          row.className = "file-row";
+
+          const main = document.createElement("div");
+          main.className = "file-row-main";
+
+          const icon = document.createElement("span");
+          icon.textContent = getAttachmentIcon(attachment);
+
+          const name = document.createElement("span");
+          name.className = "file-name";
+          name.textContent = attachment.name;
+
+          const size = document.createElement("span");
+          size.className = "file-size";
+          size.textContent = `(${Math.round((attachment.size || 0) / 1024)} KB)`;
+
+          const openLink = document.createElement("a");
+          openLink.href = attachment.dataUrl;
+          openLink.download = attachment.name;
+          openLink.target = "_blank";
+          openLink.rel = "noopener noreferrer";
+          openLink.className = "attachment-link";
+          openLink.textContent = "Öffnen";
+
+          main.appendChild(icon);
+          main.appendChild(name);
+          main.appendChild(size);
+          main.appendChild(openLink);
+
+          const removeBtn = document.createElement("button");
+          removeBtn.className = "remove-btn";
+          removeBtn.type = "button";
+          removeBtn.textContent = "✕";
+          removeBtn.onclick = () => {
+            editDraftAttachments = editDraftAttachments.filter((item) => item.id !== attachment.id);
+            renderEditAttachments();
+          };
+
+          row.appendChild(main);
+          row.appendChild(removeBtn);
+          list.appendChild(row);
+        });
+      }
+
+      async function handleAttachmentSelection(inputId, mode, providedFiles) {
+        const input = document.getElementById(inputId);
+        const files = Array.isArray(providedFiles) ? providedFiles : Array.from(input?.files || []);
+        if (!files.length) return;
+
+        try {
+          if (mode === "manual") {
+            manualDraftAttachments = await appendDraftAttachments(files, manualDraftAttachments);
+            renderManualAttachments();
+          } else {
+            editDraftAttachments = await appendDraftAttachments(files, editDraftAttachments);
+            renderEditAttachments();
+          }
+        } catch (error) {
+          showToast("error", "Anhang", error.message);
+        } finally {
+          if (input) input.value = "";
+        }
+      }
+
       function safe(fn, label) {
         try {
           fn();
@@ -2043,6 +3007,7 @@ function getLocation() {
         state.hourlyRate = Number.isFinite(parsed?.hourlyRate) ? parsed.hourlyRate : defaults.hourlyRate;
         state.goalReached = Boolean(parsed?.goalReached);
         state.celebrated = Boolean(parsed?.celebrated);
+        normalizeAllLogs();
       }
 
       function showToast(type, title, message) {
@@ -2379,6 +3344,8 @@ function getLocation() {
           end: null,
           pauses: [],
           status: "running",
+          note: "",
+          attachments: [],
           location: location
         };
 
@@ -2639,7 +3606,9 @@ function getLocation() {
 
         return logs.filter(l =>
           (l.date || "").includes(q) ||
-          (l.branchName || "").toLowerCase().includes(q)
+          (l.branchName || "").toLowerCase().includes(q) ||
+          (l.note || "").toLowerCase().includes(q) ||
+          (Array.isArray(l.attachments) ? l.attachments.some((attachment) => (attachment.name || "").toLowerCase().includes(q)) : false)
         );
       }
 
@@ -3239,6 +4208,25 @@ function getLocation() {
           times.appendChild(durTag);
           main.appendChild(title);
           main.appendChild(times);
+          if (log.note || (Array.isArray(log.attachments) && log.attachments.length)) {
+            const noteEl = document.createElement("div");
+            noteEl.className = "log-note";
+
+            if (log.note) {
+              const markdown = document.createElement("div");
+              markdown.className = "markdown-content";
+              renderMarkdownContent(markdown, log.note);
+              noteEl.appendChild(markdown);
+            }
+
+            if (Array.isArray(log.attachments) && log.attachments.length) {
+              const attachmentsWrap = document.createElement("div");
+              renderAttachmentList(attachmentsWrap, log.attachments, { compact: false });
+              noteEl.appendChild(attachmentsWrap);
+            }
+
+            main.appendChild(noteEl);
+          }
           if (
             log.location &&
             typeof log.location.lat === "number" &&
@@ -3415,92 +4403,373 @@ function getLocation() {
         return insights;
       }
 
-      function editLog(branchId, logId) {
-        const branch = state.branches.find((b) => b.id === branchId);
-        if (!branch) return;
-        const log = branch.logs.find((l) => l.id === logId);
-        if (!log) return;
-        const dateStr = log.date;
-        const startStr = formatTime(new Date(log.start));
-        const endStr = log.end ? formatTime(new Date(log.end)) : "";
-        const pauseStr = (log.pauses || [])
-          .map((p) => {
-            const s = p.start ? formatTime(new Date(p.start)) : "";
-            const e = p.end ? formatTime(new Date(p.end)) : "";
-            return s + "-" + e;
-          })
-          .join(", ");
-        const input = prompt(
-          "Log bearbeiten (Datum|Start|Ende|Pausen als HH:MM-HH:MM, getrennt durch Komma)\nBeispiel: " +
-            `${dateStr}|${startStr}|${endStr}|${pauseStr}`,
-          `${dateStr}|${startStr}|${endStr}|${pauseStr}`
-        );
-        if (!input) return;
-        const parts = input.split("|");
-        if (parts.length < 3) {
-          showToast("error", "Bearbeiten", "Format ungültig.");
+      function populateBranchSelect(selectId, selectedBranchId) {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+
+        select.innerHTML = "";
+
+        state.branches.forEach((branch) => {
+          const option = document.createElement("option");
+          option.value = branch.id;
+          option.textContent = branch.name;
+          option.selected = branch.id === selectedBranchId;
+          select.appendChild(option);
+        });
+      }
+
+      function parsePausesInput(dateStr, startDate, endDate, pauseInput) {
+        const pauses = [];
+        const newPauseStr = (pauseInput || "").trim();
+
+        if (!newPauseStr) return pauses;
+
+        const segments = newPauseStr.split(",");
+        for (const seg of segments) {
+          const [ps, pe] = seg.split("-").map((value) => value.trim());
+          if (!ps && !pe) continue;
+
+          const psDate = ps ? parseDateTime(dateStr, ps) : null;
+          const peDate = pe ? parseDateTime(dateStr, pe) : null;
+
+          if (!psDate || !peDate || peDate <= psDate) {
+            throw new Error("Pause-Zeiten ungültig oder nicht in richtiger Reihenfolge.");
+          }
+
+          if (psDate < startDate || (endDate && peDate > endDate)) {
+            throw new Error("Pause muss innerhalb der Arbeitszeit liegen.");
+          }
+
+          pauses.push({ start: psDate.getTime(), end: peDate.getTime() });
+        }
+
+        return pauses;
+      }
+
+      function createDeletePreviewItem(log, showDate) {
+        const item = document.createElement("div");
+        item.className = "delete-preview-item";
+
+        const main = document.createElement("div");
+        main.className = "delete-preview-main";
+
+        if (showDate) {
+          const dateEl = document.createElement("span");
+          dateEl.className = "delete-preview-date";
+          dateEl.textContent = log.date || "Ohne Datum";
+          main.appendChild(dateEl);
+        }
+
+        const timeEl = document.createElement("span");
+        timeEl.textContent = `${formatTime(new Date(log.start))} - ${log.end ? formatTime(new Date(log.end)) : "offen"}`;
+        main.appendChild(timeEl);
+
+        const durationEl = document.createElement("span");
+        durationEl.className = "delete-preview-count";
+        durationEl.textContent = formatDuration(computeLogDuration(log, true));
+        main.appendChild(durationEl);
+
+        const meta = document.createElement("div");
+        meta.className = "delete-preview-meta";
+        meta.textContent = `Pausen: ${Array.isArray(log.pauses) ? log.pauses.length : 0} · Status: ${log.status || "unvollständig"}`;
+
+        item.appendChild(main);
+        item.appendChild(meta);
+
+        if (log.note) {
+          const note = document.createElement("div");
+          note.className = "delete-preview-note markdown-content";
+          renderMarkdownContent(note, log.note);
+          item.appendChild(note);
+        }
+
+        if (Array.isArray(log.attachments) && log.attachments.length) {
+          const attachments = document.createElement("div");
+          renderAttachmentList(attachments, log.attachments, { compact: true });
+          item.appendChild(attachments);
+        }
+
+        return item;
+      }
+
+      function renderDeletePreviewList(containerId, logs, emptyText, showDate) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        container.innerHTML = "";
+
+        if (!logs.length) {
+          const empty = document.createElement("div");
+          empty.className = "delete-preview-empty";
+          empty.textContent = emptyText;
+          container.appendChild(empty);
           return;
         }
-        const newDate = parts[0].trim();
-        const newStart = parts[1].trim();
-        const newEnd = parts[2].trim();
-        const newPauseStr = (parts[3] || "").trim();
 
-        const startDate = parseDateTime(newDate, newStart);
-        const endDate = newEnd ? parseDateTime(newDate, newEnd) : null;
+        logs.forEach((log) => {
+          container.appendChild(createDeletePreviewItem(log, showDate));
+        });
+      }
+
+      function formatDeletePreviewCount(count) {
+        return `${count} ${count === 1 ? "Eintrag" : "Einträge"}`;
+      }
+
+      function renderDeletePreview() {
+        const branchId = document.getElementById("delete-branch-select")?.value;
+        const dateStr = document.getElementById("delete-date-input")?.value;
+        const branch = state.branches.find((entry) => entry.id === branchId);
+
+        const dayLogs = branch && dateStr
+          ? branch.logs
+              .filter((log) => log.date === dateStr)
+              .slice()
+              .sort((a, b) => (a.start || 0) - (b.start || 0))
+          : [];
+
+        const branchLogs = branch
+          ? branch.logs
+              .slice()
+              .sort((a, b) => {
+                if ((a.date || "") === (b.date || "")) {
+                  return (a.start || 0) - (b.start || 0);
+                }
+                return (a.date || "").localeCompare(b.date || "");
+              })
+          : [];
+
+        const dayTitle = document.getElementById("delete-preview-day-title");
+        const dayCount = document.getElementById("delete-preview-day-count");
+        const branchTitle = document.getElementById("delete-preview-branch-title");
+        const branchCount = document.getElementById("delete-preview-branch-count");
+        const deleteDayButton = document.getElementById("delete-day-save");
+        const deleteBranchButton = document.getElementById("delete-branch-save");
+
+        if (dayTitle) {
+          dayTitle.textContent = dateStr
+            ? `Vorschau Tag löschen · ${dateStr}`
+            : "Vorschau Tag löschen";
+        }
+
+        if (branchTitle) {
+          branchTitle.textContent = branch
+            ? `Vorschau Filiale leeren · ${branch.name}`
+            : "Vorschau Filiale leeren";
+        }
+
+        if (dayCount) dayCount.textContent = formatDeletePreviewCount(dayLogs.length);
+        if (branchCount) branchCount.textContent = formatDeletePreviewCount(branchLogs.length);
+        if (deleteDayButton) deleteDayButton.disabled = dayLogs.length === 0;
+        if (deleteBranchButton) deleteBranchButton.disabled = branchLogs.length === 0;
+
+        renderDeletePreviewList(
+          "delete-preview-day-list",
+          dayLogs,
+          "Für den ausgewählten Tag gibt es aktuell keine Einträge zum Löschen.",
+          false
+        );
+        renderDeletePreviewList(
+          "delete-preview-branch-list",
+          branchLogs,
+          "Diese Filiale enthält aktuell keine Arbeitszeiten.",
+          true
+        );
+      }
+
+      function openEditLogModal(branchId, logId) {
+        const branch = state.branches.find((b) => b.id === branchId);
+        if (!branch) return;
+
+        const log = branch.logs.find((l) => l.id === logId);
+        if (!log) return;
+
+        const modal = document.getElementById("log-edit-modal");
+        modal.dataset.branchId = branchId;
+        modal.dataset.logId = logId;
+
+        populateBranchSelect("log-edit-branch", branchId);
+        document.getElementById("log-edit-date").value = log.date || "";
+        document.getElementById("log-edit-start").value = log.start ? formatTime(new Date(log.start)) : "";
+        document.getElementById("log-edit-end").value = log.end ? formatTime(new Date(log.end)) : "";
+        document.getElementById("log-edit-pauses").value = (log.pauses || [])
+          .map((pause) => {
+            const start = pause.start ? formatTime(new Date(pause.start)) : "";
+            const end = pause.end ? formatTime(new Date(pause.end)) : "";
+            return `${start}-${end}`;
+          })
+          .filter(Boolean)
+          .join(", ");
+        document.getElementById("log-edit-note").value = log.note || "";
+        editDraftAttachments = clone(log.attachments || []);
+        renderEditAttachments();
+        updateNotePreview("log-edit-note", "log-edit-note-preview");
+        document.getElementById("log-edit-attachments").value = "";
+
+        modal.classList.add("active");
+      }
+
+      function closeEditLogModal() {
+        const modal = document.getElementById("log-edit-modal");
+        if (!modal) return;
+
+        delete modal.dataset.branchId;
+        delete modal.dataset.logId;
+        editDraftAttachments = [];
+        modal.classList.remove("active");
+      }
+
+      function saveEditedLog() {
+        const modal = document.getElementById("log-edit-modal");
+        const originalBranchId = modal.dataset.branchId;
+        const logId = modal.dataset.logId;
+
+        if (!originalBranchId || !logId) return;
+
+        const originalBranch = state.branches.find((b) => b.id === originalBranchId);
+        const log = originalBranch?.logs.find((entry) => entry.id === logId);
+
+        if (!originalBranch || !log) return;
+
+        const targetBranchId = document.getElementById("log-edit-branch").value;
+        const dateStr = document.getElementById("log-edit-date").value;
+        const startStr = document.getElementById("log-edit-start").value;
+        const endStr = document.getElementById("log-edit-end").value;
+        const pausesInput = document.getElementById("log-edit-pauses").value;
+        const noteInput = document.getElementById("log-edit-note").value;
+
+        if (!targetBranchId || !dateStr || !startStr) {
+          showToast("error", "Bearbeiten", "Filiale, Datum und Start sind Pflichtfelder.");
+          return;
+        }
+
+        const startDate = parseDateTime(dateStr, startStr);
+        const endDate = endStr ? parseDateTime(dateStr, endStr) : null;
+
         if (!startDate) {
           showToast("error", "Bearbeiten", "Startzeit ungültig.");
           return;
         }
+
         if (endDate && endDate <= startDate) {
-          showToast(
-            "error",
-            "Bearbeiten",
-            "Ende muss nach Start liegen."
-          );
+          showToast("error", "Bearbeiten", "Ende muss nach Start liegen.");
           return;
         }
-        const pauses = [];
-        if (newPauseStr) {
-          const segments = newPauseStr.split(",");
-          for (const seg of segments) {
-            const [ps, pe] = seg.split("-").map((s) => s.trim());
-            if (!ps && !pe) continue;
-            const psDate = ps ? parseDateTime(newDate, ps) : null;
-            const peDate = pe ? parseDateTime(newDate, pe) : null;
-            if (!psDate || !peDate || peDate <= psDate) {
-              showToast(
-                "error",
-                "Bearbeiten",
-                "Pause-Zeiten ungültig oder nicht in richtiger Reihenfolge."
-              );
-              return;
-            }
-            if (psDate < startDate || (endDate && peDate > endDate)) {
-              showToast(
-                "error",
-                "Bearbeiten",
-                "Pause muss innerhalb der Arbeitszeit liegen."
-              );
-              return;
-            }
-            pauses.push({ start: psDate.getTime(), end: peDate.getTime() });
-          }
+
+        let pauses = [];
+        try {
+          pauses = parsePausesInput(dateStr, startDate, endDate, pausesInput);
+        } catch (error) {
+          showToast("error", "Bearbeiten", error.message);
+          return;
         }
-        log.date = newDate;
+
+        const targetBranch = state.branches.find((branch) => branch.id === targetBranchId);
+        if (!targetBranch) {
+          showToast("error", "Bearbeiten", "Gewählte Filiale nicht gefunden.");
+          return;
+        }
+
+        log.date = dateStr;
         log.start = startDate.getTime();
         log.end = endDate ? endDate.getTime() : null;
         log.pauses = pauses;
-        if (!log.end) {
-          const pause = getCurrentPause(log);
-          log.status = pause ? "paused" : "running";
-        } else {
-          log.status = "ended";
+        log.note = noteInput.trim();
+        log.attachments = clone(editDraftAttachments);
+        log.status = log.end ? "ended" : pauses.some((pause) => !pause.end) ? "paused" : "running";
+
+        if (targetBranch.id !== originalBranch.id) {
+          originalBranch.logs = originalBranch.logs.filter((entry) => entry.id !== logId);
+          targetBranch.logs.push(log);
         }
+
+        state.selectedBranchId = targetBranch.id;
         saveState();
         updateTimer();
         refreshTimelineViews(true);
+        closeEditLogModal();
         showToast("success", "Bearbeiten", "Log aktualisiert.");
+      }
+
+      function openDeleteModal() {
+        if (state.branches.length === 0) {
+          showToast("info", "Löschen", "Bitte zuerst eine Filiale anlegen.");
+          return;
+        }
+
+        populateBranchSelect("delete-branch-select", state.selectedBranchId);
+        document.getElementById("delete-date-input").value = state.selectedDay || toDateOnlyString(now());
+        renderDeletePreview();
+        document.getElementById("delete-modal").classList.add("active");
+      }
+
+      function closeDeleteModal() {
+        document.getElementById("delete-modal").classList.remove("active");
+      }
+
+      function deleteLogsForSelectedDayAndBranch() {
+        const branchId = document.getElementById("delete-branch-select").value;
+        const dateStr = document.getElementById("delete-date-input").value;
+        const branch = state.branches.find((entry) => entry.id === branchId);
+
+        if (!branch) {
+          showToast("error", "Löschen", "Bitte eine Filiale auswählen.");
+          return;
+        }
+
+        if (!dateStr) {
+          showToast("error", "Löschen", "Bitte ein Datum auswählen.");
+          return;
+        }
+
+        const dayCount = branch.logs.filter((log) => log.date === dateStr).length;
+        if (dayCount === 0) {
+          showToast("info", "Löschen", "Für diese Filiale gibt es an diesem Tag keine Arbeitszeiten.");
+          return;
+        }
+
+        if (!confirm(`Alle ${dayCount} Einträge vom ${dateStr} in "${branch.name}" löschen?`)) {
+          return;
+        }
+
+        branch.logs = branch.logs.filter((log) => log.date !== dateStr);
+        state.selectedBranchId = branch.id;
+        state.selectedDay = dateStr;
+        saveState();
+        updateTimer();
+        refreshTimelineViews(true);
+        closeDeleteModal();
+        showToast("info", "Löschen", `Arbeitszeiten vom ${dateStr} in "${branch.name}" wurden gelöscht.`);
+      }
+
+      function deleteAllLogsForSelectedBranch() {
+        const branchId = document.getElementById("delete-branch-select").value;
+        const branch = state.branches.find((entry) => entry.id === branchId);
+
+        if (!branch) {
+          showToast("error", "Löschen", "Bitte eine Filiale auswählen.");
+          return;
+        }
+
+        if (branch.logs.length === 0) {
+          showToast("info", "Löschen", "Diese Filiale hat keine Arbeitszeiten.");
+          return;
+        }
+
+        if (!confirm(`Alle ${branch.logs.length} Arbeitszeiten der Filiale "${branch.name}" löschen?`)) {
+          return;
+        }
+
+        branch.logs = [];
+        state.selectedBranchId = branch.id;
+        saveState();
+        updateTimer();
+        refreshTimelineViews(true);
+        closeDeleteModal();
+        showToast("info", "Löschen", `Alle Arbeitszeiten von "${branch.name}" wurden gelöscht.`);
+      }
+
+      function editLog(branchId, logId) {
+        openEditLogModal(branchId, logId);
       }
 
       function deleteLog(branchId, logId) {
@@ -3577,7 +4846,12 @@ function getLocation() {
       }
 
       function exportCSV() {
-        const rows = ["Date,Branch,Start,End,Duration(h)"];
+        const escapeCSV = (value) => {
+          const normalized = String(value ?? "").replace(/\r?\n/g, " ");
+          return '"' + normalized.replace(/"/g, '""') + '"';
+        };
+
+        const rows = ["Date,Branch,Start,End,Duration(h),Note,Attachments"];
 
         state.branches.forEach((branch) => {
           branch.logs.forEach((log) => {
@@ -3587,10 +4861,12 @@ function getLocation() {
 
             rows.push([
               log.date || "",
-              `"${branch.name}"`,
+              escapeCSV(branch.name),
               formatTime(start),
               formatTime(end),
-              durationHours
+              durationHours,
+              escapeCSV(log.note || ""),
+              escapeCSV(Array.isArray(log.attachments) ? log.attachments.map((attachment) => attachment.name).join(" | ") : "")
             ].join(","));
           });
         });
@@ -3651,6 +4927,7 @@ function getLocation() {
           state.hourlyRate = Number.isFinite(data.hourlyRate) ? data.hourlyRate : null;
           state.goalReached = Boolean(data.goalReached);
           state.celebrated = Boolean(data.celebrated);
+          normalizeAllLogs();
           saveState();
           updateUI();
           showToast("success", "Import", "JSON erfolgreich importiert.");
@@ -3668,12 +4945,18 @@ function getLocation() {
         document.getElementById("manual-pause-start").value = "";
         document.getElementById("manual-pause-end").value = "";
         document.getElementById("manual-end").value = "";
+        document.getElementById("manual-note").value = "";
+        document.getElementById("manual-attachments").value = "";
+        manualDraftAttachments = [];
+        renderManualAttachments();
+        updateNotePreview("manual-note", "manual-note-preview");
         const branch = getSelectedBranch();
         document.getElementById("manual-branch").value = branch ? branch.name : "";
       }
 
       function closeManualModal() {
         const modal = document.getElementById("manual-modal");
+        manualDraftAttachments = [];
         modal.classList.remove("active");
       }
 
@@ -3684,6 +4967,7 @@ function getLocation() {
         const pauseStartStr = document.getElementById("manual-pause-start").value;
         const pauseEndStr = document.getElementById("manual-pause-end").value;
         const endStr = document.getElementById("manual-end").value;
+        const noteText = document.getElementById("manual-note").value.trim();
 
         if (!dateStr || !startStr || !endStr) {
           showToast(
@@ -3767,7 +5051,9 @@ function getLocation() {
           start: startDate.getTime(),
           end: endDate.getTime(),
           pauses: pause ? [pause] : [],
-          status: "ended"
+          status: "ended",
+          note: noteText,
+          attachments: clone(manualDraftAttachments)
         };
         branch.logs.push(log);
         state.selectedBranchId = branch.id;
@@ -4353,6 +5639,58 @@ function getLocation() {
         document
           .getElementById("log-search")
           .addEventListener("input", renderLogs);
+        document
+          .getElementById("manual-note")
+          .addEventListener("input", () => updateNotePreview("manual-note", "manual-note-preview"));
+        document
+          .getElementById("log-edit-note")
+          .addEventListener("input", () => updateNotePreview("log-edit-note", "log-edit-note-preview"));
+        document
+          .getElementById("manual-attachments")
+          .addEventListener("change", () => handleAttachmentSelection("manual-attachments", "manual"));
+        document
+          .getElementById("log-edit-attachments")
+          .addEventListener("change", () => handleAttachmentSelection("log-edit-attachments", "edit"));
+
+        const logEditUploadBox = document.getElementById("log-edit-upload-box");
+        const manualUploadBox = document.getElementById("manual-upload-box");
+        if (manualUploadBox) {
+          manualUploadBox.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            manualUploadBox.classList.add("dragover");
+          });
+          manualUploadBox.addEventListener("dragleave", () => {
+            manualUploadBox.classList.remove("dragover");
+          });
+          manualUploadBox.addEventListener("drop", (e) => {
+            e.preventDefault();
+            manualUploadBox.classList.remove("dragover");
+            handleAttachmentSelection(
+              "manual-attachments",
+              "manual",
+              Array.from(e.dataTransfer?.files || [])
+            );
+          });
+        }
+
+        if (logEditUploadBox) {
+          logEditUploadBox.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            logEditUploadBox.classList.add("dragover");
+          });
+          logEditUploadBox.addEventListener("dragleave", () => {
+            logEditUploadBox.classList.remove("dragover");
+          });
+          logEditUploadBox.addEventListener("drop", (e) => {
+            e.preventDefault();
+            logEditUploadBox.classList.remove("dragover");
+            handleAttachmentSelection(
+              "log-edit-attachments",
+              "edit",
+              Array.from(e.dataTransfer?.files || [])
+            );
+          });
+        }
 
         document
           .getElementById("btn-start")
@@ -4405,6 +5743,9 @@ function getLocation() {
           .getElementById("btn-open-manual")
           .addEventListener("click", openManualModal);
         document
+          .getElementById("btn-open-delete-modal")
+          .addEventListener("click", openDeleteModal);
+        document
           .getElementById("manual-close")
           .addEventListener("click", closeManualModal);
         document
@@ -4413,6 +5754,38 @@ function getLocation() {
         document
           .getElementById("manual-save")
           .addEventListener("click", saveManualEntry);
+        document
+          .getElementById("log-edit-close")
+          .addEventListener("click", closeEditLogModal);
+        document
+          .getElementById("log-edit-cancel")
+          .addEventListener("click", closeEditLogModal);
+        document
+          .getElementById("log-edit-save")
+          .addEventListener("click", saveEditedLog);
+        document
+          .getElementById("delete-modal-close")
+          .addEventListener("click", closeDeleteModal);
+        document
+          .getElementById("delete-modal-cancel")
+          .addEventListener("click", closeDeleteModal);
+        document
+          .getElementById("delete-day-save")
+          .addEventListener("click", deleteLogsForSelectedDayAndBranch);
+        document
+          .getElementById("delete-branch-save")
+          .addEventListener("click", deleteAllLogsForSelectedBranch);
+        document
+          .getElementById("delete-branch-select")
+          .addEventListener("change", renderDeletePreview);
+        document
+          .getElementById("delete-date-input")
+          .addEventListener("input", renderDeletePreview);
+
+        updateNotePreview("manual-note", "manual-note-preview");
+        updateNotePreview("log-edit-note", "log-edit-note-preview");
+        renderManualAttachments();
+        renderEditAttachments();
 
         document
           .getElementById("toggle-theme")
@@ -4423,6 +5796,20 @@ function getLocation() {
           .addEventListener("click", (e) => {
             if (e.target.id === "manual-modal") {
               closeManualModal();
+            }
+          });
+        document
+          .getElementById("log-edit-modal")
+          .addEventListener("click", (e) => {
+            if (e.target.id === "log-edit-modal") {
+              closeEditLogModal();
+            }
+          });
+        document
+          .getElementById("delete-modal")
+          .addEventListener("click", (e) => {
+            if (e.target.id === "delete-modal") {
+              closeDeleteModal();
             }
           });
 
@@ -4482,8 +5869,8 @@ function getLocation() {
           }
 
           swipeArea.addEventListener("touchstart", (e) => {
-            const target = e.target.closest("input, textarea, button, a, canvas, .week-bar, .logs-list");
-            if (target || e.touches.length > 1 || document.getElementById("manual-modal")?.classList.contains("active")) {
+            const target = e.target.closest("input, textarea, select, button, a, canvas, .week-bar, .logs-list");
+            if (target || e.touches.length > 1 || document.querySelector(".modal-backdrop.active")) {
               swipeLocked = true;
               return;
             }
@@ -4730,6 +6117,222 @@ function renderMonth() {
   const allTotal = computeMonthAllBranches(state.selectedMonth);
 
 }
+
+      const undoDeleteModule = (() => {
+        let toastHideTimer = null;
+
+        function cloneDeletedLog(log, branchId, index) {
+          return {
+            ...log,
+            branchId,
+            restoreIndex: index
+          };
+        }
+
+        function setLastDeletedLogs(logs) {
+          window.lastDeletedLogs = Array.isArray(logs) ? logs : [];
+        }
+
+        function getLastDeletedLogs() {
+          return Array.isArray(window.lastDeletedLogs) ? window.lastDeletedLogs : [];
+        }
+
+        function ensureUndoToast() {
+          let toast = document.getElementById("undo-toast");
+          if (toast) return toast;
+
+          toast = document.createElement("div");
+          toast.id = "undo-toast";
+          toast.className = "toast toast-info";
+          toast.style.display = "none";
+          toast.style.position = "fixed";
+          toast.style.left = "18px";
+          toast.style.bottom = "18px";
+          toast.style.right = "auto";
+          toast.style.zIndex = "10000";
+          toast.style.alignItems = "center";
+          toast.style.gap = "10px";
+
+          const icon = document.createElement("span");
+          icon.className = "toast-icon";
+          icon.textContent = "↩";
+
+          const content = document.createElement("div");
+          content.className = "toast-content";
+          content.textContent = "Löschung rückgängig machen?";
+
+          const button = document.createElement("button");
+          button.id = "undo-btn";
+          button.className = "btn btn-ghost";
+          button.type = "button";
+          button.textContent = "Rückgängig";
+          button.style.marginLeft = "8px";
+          button.addEventListener("click", undoDeleteLogs);
+
+          toast.appendChild(icon);
+          toast.appendChild(content);
+          toast.appendChild(button);
+          document.body.appendChild(toast);
+          return toast;
+        }
+
+        function showUndoToast() {
+          const toast = ensureUndoToast();
+          toast.style.display = "flex";
+
+          if (toastHideTimer) {
+            clearTimeout(toastHideTimer);
+          }
+
+          toastHideTimer = setTimeout(() => {
+            hideUndoToast();
+          }, 9000);
+        }
+
+        function hideUndoToast() {
+          const toast = document.getElementById("undo-toast");
+          if (toast) {
+            toast.style.display = "none";
+          }
+
+          if (toastHideTimer) {
+            clearTimeout(toastHideTimer);
+            toastHideTimer = null;
+          }
+        }
+
+        function restoreDeletedLogs(logs) {
+          logs.forEach((entry) => {
+            const branch = state.branches.find((item) => item.id === entry.branchId);
+            if (!branch) return;
+
+            const alreadyExists = branch.logs.some((log) => log.id === entry.id);
+            if (alreadyExists) return;
+
+            const restoredLog = { ...entry };
+            delete restoredLog.branchId;
+            const restoreIndex = Number.isInteger(entry.restoreIndex) ? entry.restoreIndex : branch.logs.length;
+            delete restoredLog.restoreIndex;
+
+            const targetIndex = Math.max(0, Math.min(restoreIndex, branch.logs.length));
+            branch.logs.splice(targetIndex, 0, restoredLog);
+          });
+        }
+
+        function undoDeleteLogs() {
+          const deletedLogs = getLastDeletedLogs();
+          if (!deletedLogs.length) return;
+
+          restoreDeletedLogs(deletedLogs);
+          setLastDeletedLogs([]);
+          hideUndoToast();
+          saveState();
+
+          if (typeof updateTimer === "function") updateTimer();
+          if (typeof refreshTimelineViews === "function") refreshTimelineViews(true);
+          if (typeof updateUI === "function") updateUI();
+
+          showToast("success", "Undo", "Löschung rückgängig gemacht.");
+        }
+
+        function wrapDeleteLog() {
+          if (typeof deleteLog !== "function" || deleteLog.__undoWrapped) return;
+
+          const originalDeleteLog = deleteLog;
+          const wrappedDeleteLog = function(branchId, logId) {
+            const branch = state.branches.find((item) => item.id === branchId);
+            const logIndex = branch ? branch.logs.findIndex((item) => item.id === logId) : -1;
+            const log = logIndex >= 0 ? branch.logs[logIndex] : null;
+
+            originalDeleteLog.apply(this, arguments);
+
+            const wasDeleted = branch && log && !branch.logs.some((item) => item.id === logId);
+            if (!wasDeleted) return;
+
+            setLastDeletedLogs([cloneDeletedLog(log, branchId, logIndex)]);
+            showUndoToast();
+          };
+
+          wrappedDeleteLog.__undoWrapped = true;
+          deleteLog = wrappedDeleteLog;
+        }
+
+        function wrapDeleteLogsForSelectedDayAndBranch() {
+          if (
+            typeof deleteLogsForSelectedDayAndBranch !== "function" ||
+            deleteLogsForSelectedDayAndBranch.__undoWrapped
+          ) return;
+
+          const originalDeleteLogsForSelectedDayAndBranch = deleteLogsForSelectedDayAndBranch;
+          const wrappedDeleteLogsForSelectedDayAndBranch = function() {
+            const branchId = document.getElementById("delete-branch-select")?.value;
+            const dateStr = document.getElementById("delete-date-input")?.value;
+            const branch = state.branches.find((item) => item.id === branchId);
+            const deletedLogs = branch && dateStr
+              ? branch.logs
+                  .map((log, index) => ({ log, index }))
+                  .filter((entry) => entry.log.date === dateStr)
+                  .map((entry) => cloneDeletedLog(entry.log, branch.id, entry.index))
+              : [];
+
+            originalDeleteLogsForSelectedDayAndBranch.apply(this, arguments);
+
+            const wasDeleted = branch && deletedLogs.length && deletedLogs.every((entry) => {
+              return !branch.logs.some((log) => log.id === entry.id);
+            });
+
+            if (!wasDeleted) return;
+
+            setLastDeletedLogs(deletedLogs);
+            showUndoToast();
+          };
+
+          wrappedDeleteLogsForSelectedDayAndBranch.__undoWrapped = true;
+          deleteLogsForSelectedDayAndBranch = wrappedDeleteLogsForSelectedDayAndBranch;
+        }
+
+        function wrapDeleteAllLogsForSelectedBranch() {
+          if (
+            typeof deleteAllLogsForSelectedBranch !== "function" ||
+            deleteAllLogsForSelectedBranch.__undoWrapped
+          ) return;
+
+          const originalDeleteAllLogsForSelectedBranch = deleteAllLogsForSelectedBranch;
+          const wrappedDeleteAllLogsForSelectedBranch = function() {
+            const branchId = document.getElementById("delete-branch-select")?.value;
+            const branch = state.branches.find((item) => item.id === branchId);
+            const deletedLogs = branch
+              ? branch.logs.map((log, index) => cloneDeletedLog(log, branch.id, index))
+              : [];
+
+            originalDeleteAllLogsForSelectedBranch.apply(this, arguments);
+
+            const wasDeleted = branch && deletedLogs.length && branch.logs.length === 0;
+            if (!wasDeleted) return;
+
+            setLastDeletedLogs(deletedLogs);
+            showUndoToast();
+          };
+
+          wrappedDeleteAllLogsForSelectedBranch.__undoWrapped = true;
+          deleteAllLogsForSelectedBranch = wrappedDeleteAllLogsForSelectedBranch;
+        }
+
+        function install() {
+          setLastDeletedLogs([]);
+          ensureUndoToast();
+          wrapDeleteLog();
+          wrapDeleteLogsForSelectedDayAndBranch();
+          wrapDeleteAllLogsForSelectedBranch();
+        }
+
+        return {
+          install,
+          undoDeleteLogs
+        };
+      })();
+
+      undoDeleteModule.install();
       init();
     })();
   </script>
