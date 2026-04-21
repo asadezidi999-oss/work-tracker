@@ -125,6 +125,71 @@
       transform: scale(0.92);
     }
 
+    /* =========================
+       GLOBAL iOS FEEL
+    ========================= */
+
+    :root {
+      --ease-ios: cubic-bezier(.25,.8,.25,1);
+    }
+
+    /* =========================
+       BUTTONS - iOS Touch
+    ========================= */
+
+    button {
+      transition:
+        transform 0.12s var(--ease-ios),
+        filter 0.12s var(--ease-ios);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    @media (hover: hover) {
+      button:hover {
+        filter: brightness(1.05);
+      }
+    }
+
+    button:active {
+      transform: scale(0.95);
+      filter: brightness(0.95);
+    }
+
+    /* =========================
+       FAB - Floating Button
+    ========================= */
+
+    .fab {
+      transition:
+        transform 0.2s var(--ease-ios),
+        box-shadow 0.2s var(--ease-ios);
+    }
+
+    @media (hover: hover) {
+      .fab:hover {
+        transform: scale(1.08);
+      }
+    }
+
+    .fab:active {
+      transform: scale(0.95);
+    }
+
+    /* =========================
+       TIMER - Running State
+    ========================= */
+
+    .timer-time {
+      transition: all 0.3s var(--ease-ios);
+    }
+
+    .timer-time.running {
+      color: #22c55e;
+      text-shadow: 0 0 10px rgba(34,197,94,0.5);
+      -webkit-text-fill-color: currentColor;
+      background: none;
+    }
+
     .app-shell {
       width: 100%;
       max-width: 1200px;
@@ -138,45 +203,126 @@
 
     .app-header {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .app-title {
-      display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 6px;
+      padding: 8px 12px 10px;
+      flex-shrink: 0;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(10,15,30,0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
     }
 
-    .app-title h1 {
-      margin: 0;
-      font-size: 22px;
-      letter-spacing: 0.02em;
+    .header-top {
       display: flex;
+      justify-content: space-between;
       align-items: center;
       gap: 8px;
     }
 
-    .app-title h1 span.badge {
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 999px;
-      background: var(--accent-soft);
-      color: var(--accent);
-      border: 1px solid rgba(37, 99, 235, 0.25);
+    .app-title {
+      min-width: 0;
     }
 
-    .app-title p {
+    .app-title-main {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+      color: white;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .app-title-sub {
       margin: 0;
       font-size: 12px;
+      opacity: 0.7;
+      margin-top: 2px;
       color: var(--text-soft);
+    }
+
+    .app-header .btn-icon {
+      padding: 8px 12px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .app-header .btn-icon:active {
+      transform: scale(0.92);
     }
 
     .header-actions {
       display: flex;
+      justify-content: flex-start;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .header-actions button {
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .actions {
+      display: flex;
       align-items: center;
       gap: 8px;
+    }
+
+    .action-main {
+      width: auto;
+      min-width: 120px;
+      flex: unset;
+      justify-content: center;
+      padding: 10px 16px;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+      border-radius: 14px;
+      border: none;
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .action-main:hover {
+      box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+    }
+
+    .action-main:active {
+      transform: scale(0.97);
+    }
+
+    .action-menu {
+      padding: 8px 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      flex-shrink: 0;
+      justify-content: center;
+      line-height: 1;
+    }
+
+    .action-menu:active {
+      transform: scale(0.92);
     }
 
     .btn {
@@ -302,9 +448,10 @@
       }
     }
 
+    /* Components */
     .card {
       min-width: 0; /* 🔥 EXTREM wichtig */
-      padding: 20px;
+      padding: 12px;
       border-radius: 26px;
 
       /* 🔥 Starkes Glow Design */
@@ -319,9 +466,17 @@
         0 18px 40px rgba(0, 0, 0, 0.45),
         0 2px 8px rgba(0, 0, 0, 0.35);
 
-      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      transition: transform 0.25s var(--ease-ios), box-shadow 0.25s var(--ease-ios);
+      will-change: transform;
       position: relative;
       overflow: hidden; /* schützt vor Überlauf */
+    }
+
+    @media (hover: hover) {
+      .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      }
     }
 
     .card:active {
@@ -335,7 +490,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
+      margin-bottom: 6px;
     }
 
     .card-title {
@@ -1163,6 +1318,119 @@
       }
     }
 
+    body.sheet-open {
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    body.sheet-open .fab {
+      display: none;
+    }
+
+    .sheet-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 1001;
+      background: rgba(2, 6, 23, 0.42);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease;
+      overscroll-behavior: none;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .sheet-backdrop.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .sheet {
+      position: absolute;
+      left: 50%;
+      bottom: max(12px, env(safe-area-inset-bottom));
+      width: min(calc(100% - 24px), 420px);
+      padding: 12px;
+      border-radius: 28px 28px 22px 22px;
+      background: radial-gradient(circle at top left, rgba(96, 165, 250, 0.22), rgba(15, 23, 42, 0.98));
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      box-shadow: 0 24px 60px rgba(2, 6, 23, 0.55);
+      transform: translateX(-50%) translateY(calc(100% + 24px));
+      touch-action: pan-y;
+      will-change: transform;
+      transition: transform 0.35s cubic-bezier(.22,.8,.22,1);
+    }
+
+    .sheet-backdrop.show .sheet {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .sheet-handle {
+      width: 46px;
+      height: 5px;
+      margin: 0 auto 12px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.5);
+    }
+
+    .sheet-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 6px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .sheet-item,
+    .sheet-cancel {
+      width: 100%;
+      border: none;
+      border-radius: 18px;
+      padding: 14px 16px;
+      background: rgba(15, 23, 42, 0.72);
+      color: var(--text);
+      font-size: 14px;
+      text-align: left;
+      cursor: pointer;
+      transition: transform 0.14s ease, background 0.14s ease;
+    }
+
+    .sheet-item:hover,
+    .sheet-cancel:hover {
+      background: rgba(30, 41, 59, 0.92);
+      transform: translateY(-1px);
+    }
+
+    .sheet-cancel {
+      margin-top: 10px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-soft);
+    }
+
+    @media (max-width: 380px) {
+      .app-title-main {
+        font-size: 15px;
+      }
+
+      .app-title-sub {
+        font-size: 11px;
+      }
+
+      .action-main {
+        font-size: 13px;
+        padding: 8px;
+      }
+
+      .action-menu {
+        font-size: 16px;
+        padding: 6px 10px;
+      }
+    }
+
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -1233,8 +1501,12 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
-      margin-bottom: 10px;
-      padding-top: 2px;
+      margin: 2px -4px 10px;
+      padding: 10px 10px 4px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(15, 23, 42, 0.18));
+      border: 1px solid rgba(148, 163, 184, 0.08);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
     }
 
     .field-group {
@@ -1262,6 +1534,17 @@
       margin-top: 8px;
       border-top: 1px solid rgba(148, 163, 184, 0.16);
       box-shadow: 0 -10px 20px rgba(2, 6, 23, 0.22);
+    }
+
+    .modal-footer::before {
+      content: "";
+      position: absolute;
+      top: -10px;
+      left: 0;
+      right: 0;
+      height: 10px;
+      background: linear-gradient(180deg, rgba(11, 17, 32, 0), rgba(11, 17, 32, 0.42));
+      pointer-events: none;
     }
 
     body.modal-open .fab {
@@ -1717,7 +2000,7 @@
 }
 
 .header-actions {
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .app-shell {
@@ -1741,27 +2024,32 @@
   touch-action: pan-y;
 }
 
+/* Layout */
 .tab-page {
   display: none;
   opacity: 0;
-  transform: translateX(20px);
+  transform: translateY(10px) scale(0.98);
+  transition: all 0.25s var(--ease-ios);
+  pointer-events: none;
 }
 
+/* States */
 .tab-page.active {
   display: block;
   opacity: 1;
-  transform: translateX(0);
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
   animation: slidePage 0.18s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 @keyframes slidePage {
   from {
     opacity: 0;
-    transform: translateX(40px) scale(0.98);
+    transform: translateY(10px) scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateX(0) scale(1);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -1776,11 +2064,19 @@
 @keyframes slidePageRight {
   from {
     opacity: 0;
-    transform: translateX(-40px) scale(0.98);
+    transform: translateY(10px) scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateX(0) scale(1);
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (hover: hover) {
+  .stat-pill:hover,
+  .summary-item:hover {
+    transform: translateY(-2px);
+    background: rgba(255,255,255,0.06);
   }
 }
 
@@ -1857,7 +2153,7 @@ body.light .nav-btn.active {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 12px 32px rgba(34, 197, 94, 0.45);
+  box-shadow: 0 8px 20px rgba(34,197,94,0.35);
   cursor: pointer;
   transition: transform 0.18s ease, box-shadow 0.18s ease;
   z-index: 1001;
@@ -2000,34 +2296,43 @@ body.light {
 <body>
   <div class="app-shell">
     <header class="app-header">
-      <div class="app-title">
-        <h1>
-          ⏱ Arbeitszeit-Tracker
-          <span class="badge">Single-File · LocalStorage</span>
-        </h1>
-        <p>Tracke deine Arbeitszeit mit Filialen, Wochenübersicht, Smart-Fix und JSON-Export – alles im Browser.</p>
+      <div class="header-top">
+        <div class="app-title">
+          <div class="app-title-main">Arbeitszeit-Tracker</div>
+          <div class="app-title-sub">Filialen → Logs · Lokal im Browser</div>
+        </div>
+
+        <button class="btn-icon" id="settings-btn" aria-label="Einstellungen">
+          ⚙️
+        </button>
       </div>
+
       <div class="header-actions">
-        <button id="btn-json-export" class="btn btn-sm">
-          <span class="icon">📤</span> Export
-        </button>
-        <button id="btn-pdf-export" class="btn btn-sm">
-          <span class="icon">📄</span> PDF
-        </button>
-        <button id="btn-json-import" class="btn btn-sm">
-          <span class="icon">📥</span> Import
-        </button>
-        <button id="btn-smart-fix" class="btn btn-sm">
-          <span class="icon">🧠</span> Smart Fix
-        </button>
-        <button id="btn-open-manual" class="btn btn-sm btn-primary">
-          <span class="icon">➕</span> Manuelle Eingabe
-        </button>
-        <div title="Dark / Light Mode" id="toggle-theme" class="toggle">
-          <div class="toggle-thumb"></div>
+        <div class="actions">
+          <button class="btn btn-sm btn-primary action-main" id="export-btn">
+            📤 Export
+          </button>
+
+          <button class="btn btn-sm btn-ghost action-menu" id="open-sheet" aria-haspopup="dialog" aria-controls="sheet-backdrop" aria-expanded="false">
+            ⋯
+          </button>
         </div>
       </div>
     </header>
+
+    <div class="sheet-backdrop" id="sheet-backdrop" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Schnellaktionen">
+      <div class="sheet" id="sheet" tabindex="-1">
+        <div class="sheet-handle"></div>
+
+        <div class="sheet-group">
+          <button class="sheet-item" id="sheet-pdf-export">📄 PDF exportieren</button>
+          <button class="sheet-item" id="sheet-json-import">📥 Import JSON</button>
+          <button class="sheet-item" id="sheet-smart-fix">🧠 Smart Fix</button>
+        </div>
+
+        <button class="sheet-cancel" id="close-sheet">Abbrechen</button>
+      </div>
+    </div>
 
     <div class="app-container">
       <div class="app-content">
@@ -2102,22 +2407,6 @@ body.light {
           </div>
         </div>
       </section>
-
-      <div class="card">
-        <div class="card-header">
-          <div>
-            <div class="card-title">
-              <span class="dot"></span> Hinweise
-            </div>
-            <div class="card-subtitle">Timer läuft im Hintergrund weiter und überlebt Reloads.</div>
-          </div>
-        </div>
-        <ul class="small-text" style="margin: 0 0 4px 16px; padding: 0; line-height: 1.4;">
-          <li>Start → Pause Start → Pause Ende → Ende – beliebig viele Pausen möglich.</li>
-          <li>Smart Fix schließt offene Starts / Pausen und korrigiert Reihenfolgen, ohne Daten zu löschen.</li>
-          <li>Alle Daten werden im Browser (localStorage) gespeichert.</li>
-        </ul>
-      </div>
         </div>
 
         <div class="tab-page" id="tab-stats">
@@ -2289,6 +2578,11 @@ body.light {
             <div class="field-label">Stundenlohn in € (optional)</div>
             <input id="hourly-rate-input" type="number" min="0" step="0.01" placeholder="z. B. 14.50" />
           </div>
+          <div class="field-group">
+            <div class="field-label">Auto-Stop nach (Stunden)</div>
+            <input id="auto-stop-hours-input" type="number" min="1" max="24" step="1" placeholder="Standard: 12" />
+            <div class="note-helper small-text">Timer wird automatisch beendet, wenn er länger als diese Zeit läuft.</div>
+          </div>
           <div class="card-footer-actions">
             <button id="btn-clear-json" class="btn btn-sm btn-ghost">
               <span class="icon">🧹</span> Feld leeren
@@ -2332,6 +2626,7 @@ body.light {
               </div>
               <div class="card-subtitle">Timer läuft im Hintergrund weiter und überlebt Reloads.</div>
             </div>
+            <button id="toggle-theme" class="btn btn-sm btn-ghost" title="Farbschema wechseln">🌙 Theme</button>
           </div>
           <ul class="small-text" style="margin: 0 0 4px 16px; padding: 0; line-height: 1.4;">
             <li>Start → Pause Start → Pause Ende → Ende – beliebig viele Pausen möglich.</li>
@@ -2603,6 +2898,7 @@ body.light {
   selectedMonth: null,
   weekGoal: 40,
       hourlyRate: null,
+  autoStopHours: 12,
   goalReached: false,
   celebrated: false,
   timerInterval: null,
@@ -2626,7 +2922,8 @@ function getLocation() {
           lng: pos.coords.longitude
         });
       },
-      () => {
+      (err) => {
+        console.warn("Geolocation Fehler:", err.message || err);
         resolve(null);
       }
     );
@@ -3191,6 +3488,7 @@ function getLocation() {
           selectedMonth: new Date(now().getFullYear(), now().getMonth(), 1).getTime(),
           weekGoal: 40,
           hourlyRate: null,
+          autoStopHours: 12,
           goalReached: false,
           celebrated: false
         };
@@ -3218,6 +3516,7 @@ function getLocation() {
           selectedMonth: state.selectedMonth,
           weekGoal: state.weekGoal,
           hourlyRate: state.hourlyRate,
+          autoStopHours: state.autoStopHours,
           goalReached: state.goalReached,
           celebrated: state.celebrated
         };
@@ -3500,6 +3799,7 @@ function getLocation() {
           selectedMonth,
           weekGoal: Number.isFinite(data.weekGoal) && data.weekGoal > 0 ? data.weekGoal : defaults.weekGoal,
           hourlyRate: Number.isFinite(data.hourlyRate) && data.hourlyRate >= 0 ? data.hourlyRate : null,
+          autoStopHours: Number.isFinite(data.autoStopHours) && data.autoStopHours >= 1 ? data.autoStopHours : defaults.autoStopHours,
           goalReached: Boolean(data.goalReached),
           celebrated: Boolean(data.celebrated)
         };
@@ -3515,6 +3815,7 @@ function getLocation() {
         state.selectedMonth = parsed?.selectedMonth || defaults.selectedMonth;
         state.weekGoal = Number.isFinite(parsed?.weekGoal) ? parsed.weekGoal : defaults.weekGoal;
         state.hourlyRate = Number.isFinite(parsed?.hourlyRate) ? parsed.hourlyRate : defaults.hourlyRate;
+        state.autoStopHours = Number.isFinite(parsed?.autoStopHours) && parsed.autoStopHours >= 1 ? parsed.autoStopHours : defaults.autoStopHours;
         state.goalReached = Boolean(parsed?.goalReached);
         state.celebrated = Boolean(parsed?.celebrated);
         normalizeAllLogs();
@@ -3560,6 +3861,60 @@ function getLocation() {
         document.body.classList.toggle("modal-open", hasOpenModal);
       }
 
+      let actionSheetStartY = 0;
+      let actionSheetDragging = false;
+      let actionSheetLastFocused = null;
+
+      function openActionSheet() {
+        const backdrop = document.getElementById("sheet-backdrop");
+        const sheet = document.getElementById("sheet");
+        const trigger = document.getElementById("open-sheet");
+        if (!backdrop || !sheet) return;
+
+        if (backdrop.classList.contains("show")) {
+          closeActionSheet();
+          return;
+        }
+
+        actionSheetLastFocused = document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : null;
+
+        backdrop.classList.add("show");
+        document.body.classList.add("sheet-open");
+        backdrop.setAttribute("aria-hidden", "false");
+        trigger?.setAttribute("aria-expanded", "true");
+        sheet.style.transform = "";
+
+        requestAnimationFrame(() => {
+          sheet.focus();
+        });
+
+        navigator.vibrate?.(10);
+      }
+
+      function closeActionSheet() {
+        const backdrop = document.getElementById("sheet-backdrop");
+        const sheet = document.getElementById("sheet");
+        const trigger = document.getElementById("open-sheet");
+        if (!backdrop || !sheet || !backdrop.classList.contains("show")) return;
+
+        backdrop.classList.remove("show");
+        document.body.classList.remove("sheet-open");
+        backdrop.setAttribute("aria-hidden", "true");
+        trigger?.setAttribute("aria-expanded", "false");
+
+        sheet.style.transform = "";
+        actionSheetDragging = false;
+        actionSheetStartY = 0;
+
+        if (actionSheetLastFocused && document.contains(actionSheetLastFocused)) {
+          actionSheetLastFocused.focus();
+        }
+
+        navigator.vibrate?.(5);
+      }
+
       function renderStorageStatus() {
         const pill = document.getElementById("storage-mode-pill");
         const note = document.getElementById("storage-mode-note");
@@ -3591,6 +3946,7 @@ function getLocation() {
           selectedMonth: state.selectedMonth,
           weekGoal: state.weekGoal,
           hourlyRate: state.hourlyRate,
+          autoStopHours: state.autoStopHours,
           goalReached: state.goalReached,
           celebrated: state.celebrated
         });
@@ -3730,7 +4086,11 @@ function getLocation() {
 
         try {
           await writeStateToIndexedDb(data);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(createLocalStorageFallbackSnapshot(data)));
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(createLocalStorageFallbackSnapshot(data)));
+          } catch (lsError) {
+            console.warn("localStorage voll – Fallback-Snapshot konnte nicht gespeichert werden.", lsError);
+          }
           storageFallbackMode = false;
           lastSuccessfulSaveAt = Date.now();
           lastSaveErrorMessage = "";
@@ -3741,7 +4101,12 @@ function getLocation() {
           lastSaveErrorMessage = "Letzter Schreibversuch auf IndexedDB ist fehlgeschlagen. Es wird aktuell ein eingeschraenkter Fallback genutzt.";
           renderStorageStatus();
           showStorageFallbackToast();
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(createLocalStorageFallbackSnapshot(data)));
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(createLocalStorageFallbackSnapshot(data)));
+          } catch (lsError) {
+            console.error("localStorage ebenfalls voll – Daten konnten nicht gespeichert werden!", lsError);
+            alert("⚠️ Speicher voll!\n\nDeine Daten konnten nicht gespeichert werden.\nBitte jetzt einen JSON-Export durchführen (Settings → Backup), um Datenverlust zu vermeiden.");
+          }
         }
       }
 
@@ -3844,6 +4209,10 @@ function getLocation() {
         const hourlyRateInput = document.getElementById("hourly-rate-input");
         if (hourlyRateInput && document.activeElement !== hourlyRateInput) {
           hourlyRateInput.value = state.hourlyRate != null ? String(state.hourlyRate) : "";
+        }
+        const autoStopInput = document.getElementById("auto-stop-hours-input");
+        if (autoStopInput && document.activeElement !== autoStopInput) {
+          autoStopInput.value = String(state.autoStopHours || 12);
         }
         refreshTimelineViews(true);
       }
@@ -4263,8 +4632,9 @@ function getLocation() {
       function guardAutoStop(log) {
         if (log && !log.end) {
           const diff = Date.now() - log.start;
+          const limitMs = (state.autoStopHours || 12) * 3600000;
 
-          if (diff > 12 * 3600000 && !log.autoStopped) {
+          if (diff > limitMs && !log.autoStopped) {
             log.end = Date.now();
             log.status = "ended";
             log.autoStopped = true;
@@ -4500,6 +4870,26 @@ function getLocation() {
         renderEarnings();
       }
 
+      function updateAutoStopHours() {
+        const input = document.getElementById("auto-stop-hours-input");
+        if (!input) return;
+        const raw = input.value.trim();
+        if (!raw) {
+          state.autoStopHours = 12;
+          saveState();
+          return;
+        }
+        const value = Math.round(Number(raw));
+        if (!Number.isFinite(value) || value < 1 || value > 24) {
+          showToast("error", "Auto-Stop", "Bitte einen Wert zwischen 1 und 24 Stunden eingeben.");
+          input.value = String(state.autoStopHours || 12);
+          return;
+        }
+        state.autoStopHours = value;
+        saveState();
+        showToast("success", "Auto-Stop", `Auto-Stop nach ${value} Stunden gesetzt.`);
+      }
+
       function getStreak() {
         let streak = 0;
         const days = getActiveWeekDurations();
@@ -4703,6 +5093,7 @@ function getLocation() {
         const snapshot = getTimerSnapshot();
         const ms = typeof msOverride === "number" ? msOverride : snapshot.ms;
         timerDisplay.textContent = formatDurationClock(ms);
+        timerDisplay.classList.toggle("running", snapshot.statusClass === "status-running");
         timerLabel.textContent = snapshot.label;
         statusPill.className = "status-pill " + snapshot.statusClass;
         statusText.textContent = snapshot.status;
@@ -5630,6 +6021,8 @@ function getLocation() {
           showToast("error", "Import", "Bitte JSON in das Textfeld einfügen.");
           return;
         }
+        // 🔒 Backup vor Import – bei Fehler wird der alte Stand wiederhergestellt
+        const stateBackup = buildPersistedStateSnapshot();
         try {
           const parsed = JSON.parse(text);
           const migrated = migrateImportedState(parsed);
@@ -5640,8 +6033,10 @@ function getLocation() {
           updateJsonImportAssist();
           showToast("success", "Import", "JSON erfolgreich importiert.");
         } catch (e) {
+          // ♻️ Alten Stand wiederherstellen
+          try { applyPersistedState(stateBackup); } catch (_) {}
           setJsonImportFeedback("error", `Importfehler: ${e.message}`);
-          showToast("error", "Import", "JSON ungültig: " + e.message);
+          showToast("error", "Import", "JSON ungültig: " + e.message + " – Daten wurden wiederhergestellt.");
         }
       }
 
@@ -6420,8 +6815,20 @@ function getLocation() {
           .addEventListener("click", requestNotificationPermission);
 
         document
-          .getElementById("btn-json-export")
+          .getElementById("export-btn")
           .addEventListener("click", exportJSON);
+        document
+          .getElementById("open-sheet")
+          .addEventListener("click", openActionSheet);
+        document
+          .getElementById("close-sheet")
+          .addEventListener("click", closeActionSheet);
+        document
+          .getElementById("settings-btn")
+          .addEventListener("click", () => {
+            const nextTab = activateTab("settings", "left");
+            syncTabView(nextTab);
+          });
         document
           .getElementById("json-area")
           .addEventListener("input", updateJsonImportAssist);
@@ -6432,11 +6839,17 @@ function getLocation() {
           .getElementById("btn-json-download")
           .addEventListener("click", downloadJSONBackup);
         document
-          .getElementById("btn-pdf-export")
-          .addEventListener("click", exportPDF);
+          .getElementById("sheet-pdf-export")
+          .addEventListener("click", () => {
+            closeActionSheet();
+            exportPDF();
+          });
         document
-          .getElementById("btn-json-import")
-          .addEventListener("click", importJSON);
+          .getElementById("sheet-json-import")
+          .addEventListener("click", () => {
+            closeActionSheet();
+            importJSON();
+          });
         document
           .getElementById("btn-json-export-2")
           .addEventListener("click", exportJSON);
@@ -6454,12 +6867,19 @@ function getLocation() {
           .addEventListener("change", updateHourlyRate);
 
         document
-          .getElementById("btn-smart-fix")
-          .addEventListener("click", smartFix);
+          .getElementById("auto-stop-hours-input")
+          ?.addEventListener("change", updateAutoStopHours);
+
+        document
+          .getElementById("sheet-smart-fix")
+          .addEventListener("click", () => {
+            closeActionSheet();
+            smartFix();
+          });
 
         document
           .getElementById("btn-open-manual")
-          .addEventListener("click", openManualModal);
+          ?.addEventListener("click", openManualModal);
         document
           .getElementById("btn-open-delete-modal")
           .addEventListener("click", openDeleteModal);
@@ -6508,7 +6928,7 @@ function getLocation() {
 
         document
           .getElementById("toggle-theme")
-          .addEventListener("click", toggleTheme);
+          ?.addEventListener("click", toggleTheme);
 
         document
           .getElementById("manual-modal")
@@ -6517,6 +6937,18 @@ function getLocation() {
               closeManualModal();
             }
           });
+        document
+          .getElementById("sheet-backdrop")
+          .addEventListener("click", (e) => {
+            if (e.target.id === "sheet-backdrop") {
+              closeActionSheet();
+            }
+          });
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") {
+            closeActionSheet();
+          }
+        });
         document
           .getElementById("log-edit-modal")
           .addEventListener("click", (e) => {
@@ -6677,6 +7109,41 @@ function getLocation() {
           indicator.style.opacity = diff > 30 ? "1" : "0";
         });
 
+        const actionSheet = document.getElementById("sheet");
+
+        if (actionSheet) {
+          actionSheet.addEventListener("touchstart", (e) => {
+            if (!document.getElementById("sheet-backdrop")?.classList.contains("show")) return;
+            actionSheetStartY = e.touches[0].clientY;
+            actionSheetDragging = true;
+          }, { passive: true });
+
+          actionSheet.addEventListener("touchmove", (e) => {
+            if (!actionSheetDragging) return;
+
+            const currentY = e.touches[0].clientY;
+            const diff = currentY - actionSheetStartY;
+
+            if (diff > 0) {
+              actionSheet.style.transform = `translateX(-50%) translateY(${diff}px)`;
+            }
+          }, { passive: true });
+
+          actionSheet.addEventListener("touchend", (e) => {
+            if (!actionSheetDragging) return;
+            actionSheetDragging = false;
+
+            const endY = e.changedTouches[0].clientY;
+            const diff = endY - actionSheetStartY;
+
+            if (diff > 120) {
+              closeActionSheet();
+            } else {
+              actionSheet.style.transform = "";
+            }
+          }, { passive: true });
+        }
+
         window.addEventListener("resize", () => {
           updateSlider();
           updateModeToggle();
@@ -6786,6 +7253,10 @@ function getLocation() {
         const hourlyRateInput = document.getElementById("hourly-rate-input");
         if (hourlyRateInput) {
           hourlyRateInput.value = state.hourlyRate != null ? String(state.hourlyRate) : "";
+        }
+        const autoStopInputInit = document.getElementById("auto-stop-hours-input");
+        if (autoStopInputInit) {
+          autoStopInputInit.value = String(state.autoStopHours || 12);
         }
 
         // 🔥 Smooth App Start
