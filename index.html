@@ -4632,12 +4632,14 @@ function getLocation() {
       }
 
       function scrollActiveBranchIntoView() {
+        const container = document.getElementById("branch-toggle");
         const active = document.querySelector(".branch-btn.active");
-        if (!active) return;
+        if (!container || !active) return;
 
-        active.scrollIntoView({
-          behavior: "smooth",
-          inline: "center"
+        const targetLeft = active.offsetLeft - (container.clientWidth / 2) + (active.offsetWidth / 2);
+        container.scrollTo({
+          left: Math.max(0, targetLeft),
+          behavior: "smooth"
         });
       }
 
@@ -6796,9 +6798,10 @@ function scrollToToday() {
   const todayEl = bar.querySelector(".week-day.today");
   if (!todayEl) return;
 
-  todayEl.scrollIntoView({
-    behavior: "smooth",
-    inline: "center"
+  const targetLeft = todayEl.offsetLeft - (bar.clientWidth / 2) + (todayEl.offsetWidth / 2);
+  bar.scrollTo({
+    left: Math.max(0, targetLeft),
+    behavior: "smooth"
   });
 }
 function computeMonthTotal(branch, monthDate) {
