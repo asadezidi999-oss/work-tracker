@@ -1067,7 +1067,7 @@
       -webkit-overflow-scrolling: touch;
       background: var(--bg-card);
       border-radius: 18px;
-      padding: 16px 16px 14px;
+      padding: 16px 16px calc(120px + env(safe-area-inset-bottom));
       box-shadow: 0 18px 40px rgba(15, 23, 42, 0.7);
       border: 1px solid rgba(148, 163, 184, 0.6);
       animation: modal-in 0.18s ease-out;
@@ -1120,9 +1120,20 @@
     }
 
     .modal-footer {
+      position: sticky;
+      bottom: calc(env(safe-area-inset-bottom) * -1);
+      z-index: 10;
+      background: var(--bg-card);
+      padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
       display: flex;
       justify-content: flex-end;
       gap: 6px;
+      margin-top: 8px;
+      border-top: 1px solid rgba(148, 163, 184, 0.12);
+    }
+
+    body.modal-open .fab {
+      display: none;
     }
 
     .badge {
@@ -3059,6 +3070,11 @@ function getLocation() {
         }, 4500);
       }
 
+      function syncModalOpenState() {
+        const hasOpenModal = Boolean(document.querySelector(".modal-backdrop.active"));
+        document.body.classList.toggle("modal-open", hasOpenModal);
+      }
+
       function saveState() {
         const data = clone({
           branches: state.branches,
@@ -4620,6 +4636,7 @@ function getLocation() {
         document.getElementById("log-edit-attachments").value = "";
 
         modal.classList.add("active");
+        syncModalOpenState();
       }
 
       function closeEditLogModal() {
@@ -4630,6 +4647,7 @@ function getLocation() {
         delete modal.dataset.logId;
         editDraftAttachments = [];
         modal.classList.remove("active");
+        syncModalOpenState();
       }
 
       function saveEditedLog() {
@@ -4714,10 +4732,12 @@ function getLocation() {
         document.getElementById("delete-date-input").value = state.selectedDay || toDateOnlyString(now());
         renderDeletePreview();
         document.getElementById("delete-modal").classList.add("active");
+        syncModalOpenState();
       }
 
       function closeDeleteModal() {
         document.getElementById("delete-modal").classList.remove("active");
+        syncModalOpenState();
       }
 
       function deleteLogsForSelectedDayAndBranch() {
@@ -4953,6 +4973,7 @@ function getLocation() {
       function openManualModal() {
         const modal = document.getElementById("manual-modal");
         modal.classList.add("active");
+        syncModalOpenState();
         const todayStr = toDateOnlyString(now());
         document.getElementById("manual-date").value = todayStr;
         document.getElementById("manual-start").value = "";
@@ -4972,6 +4993,7 @@ function getLocation() {
         const modal = document.getElementById("manual-modal");
         manualDraftAttachments = [];
         modal.classList.remove("active");
+        syncModalOpenState();
       }
 
       function saveManualEntry() {
