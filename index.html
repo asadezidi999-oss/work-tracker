@@ -429,6 +429,9 @@
       background: rgba(255,255,255,0.05);
       -webkit-overflow-scrolling: touch;
       scroll-snap-type: x proximity;
+      touch-action: pan-x;
+      overscroll-behavior-x: contain;
+      scrollbar-width: thin;
     }
 
     .branch-slider {
@@ -582,6 +585,21 @@
       background: var(--bg-card-alt);
       color: var(--text-soft);
       border-color: rgba(148, 163, 184, 0.5);
+    }
+
+    .storage-status-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+    }
+
+    .storage-status-note {
+      max-width: 240px;
+      text-align: right;
+      font-size: 10px;
+      color: var(--text-soft);
+      line-height: 1.35;
     }
 
     .timer-actions {
@@ -2141,7 +2159,14 @@ body.light {
               </div>
               <div class="card-subtitle">Exportiere oder importiere deine Daten. Alles bleibt im Browser.</div>
             </div>
-            <span class="pill">LocalStorage</span>
+            <div class="storage-status-wrap">
+              <div class="status-pill status-paused" id="storage-mode-pill">
+                <span class="dot"></span> Speicher wird gepruft
+              </div>
+              <div class="storage-status-note" id="storage-mode-note">
+                Lade Speicher-Backend und prufe, ob IndexedDB verfugbar ist.
+              </div>
+            </div>
           </div>
           <div class="field-group">
             <div class="field-label">JSON Daten (Export / Import)</div>
@@ -2376,11 +2401,20 @@ body.light {
       const THEME_KEY = "worktime-tracker-theme";
       const VIEW_MODE_KEY = "worktime-tracker-view-mode";
       const WEEK_GOAL_HOURS = 40;
+      const DB_NAME = "arbeitszeit-tracker-db";
+      const DB_VERSION = 1;
+      const DB_STORE_STATE = "appState";
+      const DB_STATE_KEY = "main";
+      const IMPORT_SCHEMA_VERSION = 1;
       const MAX_ATTACHMENTS_PER_LOG = 6;
       const MAX_ATTACHMENT_BYTES = 450 * 1024;
 
       let manualDraftAttachments = [];
       let editDraftAttachments = [];
+      let dbPromise = null;
+      let saveStateQueue = Promise.resolve();
+      let storageFallbackMode = false;
+      let storageFallbackToastShown = false;
 
       // 🎬 Animation Engine
       let isAnimating = false;
@@ -3028,6 +3062,188 @@ function getLocation() {
         };
       }
 
+      function isValidDateOnlyString(value) {
+        if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+        const [year, month, day] = value.split("-").map(Number);
+        const candidate = new Date(year, month - 1, day);
+        return (
+          candidate.getFullYear() === year &&
+          candidate.getMonth() === month - 1 &&
+          candidate.getDate() === day
+        );
+      }
+
+      function assertFiniteNumber(value, fieldPath) {
+        if (!Number.isFinite(value)) {
+          throw new Error(`${fieldPath} muss eine Zahl sein.`);
+        }
+        return value;
+      }
+
+      function ensureUniqueId(value, usedIds) {
+        let nextValue = typeof value === "string" && value.trim() ? value.trim() : uuid();
+        while (usedIds.has(nextValue)) {
+          nextValue = uuid();
+        }
+        usedIds.add(nextValue);
+        return nextValue;
+      }
+
+      function validateImportedAttachment(attachment, fieldPath, usedIds) {
+        if (!attachment || typeof attachment !== "object") {
+          throw new Error(`${fieldPath} ist kein gueltiger Anhang.`);
+        }
+
+        if (attachment.storedInIndexedDb && !attachment.dataUrl) {
+          throw new Error(`${fieldPath} verweist nur auf IndexedDB und enthaelt keine exportierten Dateidaten.`);
+        }
+
+        const normalized = normalizeAttachment(attachment);
+        if (!normalized) {
+          throw new Error(`${fieldPath} enthaelt keine lesbaren Dateidaten.`);
+        }
+
+        normalized.id = ensureUniqueId(normalized.id, usedIds);
+        return normalized;
+      }
+
+      function validateImportedPause(pause, fieldPath, logStart, logEnd) {
+        if (!pause || typeof pause !== "object") {
+          throw new Error(`${fieldPath} ist keine gueltige Pause.`);
+        }
+
+        const start = assertFiniteNumber(pause.start, `${fieldPath}.start`);
+        const end = pause.end == null ? null : assertFiniteNumber(pause.end, `${fieldPath}.end`);
+
+        if (end != null && end <= start) {
+          throw new Error(`${fieldPath} hat ein Ende vor oder gleich dem Start.`);
+        }
+
+        if (start < logStart) {
+          throw new Error(`${fieldPath} beginnt vor dem Arbeitsstart.`);
+        }
+
+        if (logEnd != null && start > logEnd) {
+          throw new Error(`${fieldPath} beginnt nach dem Arbeitsende.`);
+        }
+
+        if (logEnd != null && end != null && end > logEnd) {
+          throw new Error(`${fieldPath} endet nach dem Arbeitsende.`);
+        }
+
+        return { start, end };
+      }
+
+      function validateImportedLog(log, fieldPath, usedLogIds, usedAttachmentIds) {
+        if (!log || typeof log !== "object") {
+          throw new Error(`${fieldPath} ist kein gueltiger Log.`);
+        }
+
+        const start = assertFiniteNumber(log.start, `${fieldPath}.start`);
+        const end = log.end == null ? null : assertFiniteNumber(log.end, `${fieldPath}.end`);
+        if (end != null && end <= start) {
+          throw new Error(`${fieldPath}.end muss nach ${fieldPath}.start liegen.`);
+        }
+
+        const derivedDate = toDateOnlyString(new Date(start));
+        const date = isValidDateOnlyString(log.date) ? log.date : derivedDate;
+
+        const pauses = Array.isArray(log.pauses)
+          ? log.pauses.map((pause, index) => validateImportedPause(pause, `${fieldPath}.pauses[${index}]`, start, end))
+          : [];
+
+        const attachments = Array.isArray(log.attachments)
+          ? log.attachments.map((attachment, index) => validateImportedAttachment(attachment, `${fieldPath}.attachments[${index}]`, usedAttachmentIds))
+          : [];
+
+        const nextLog = {
+          ...log,
+          id: ensureUniqueId(log.id, usedLogIds),
+          date,
+          start,
+          end,
+          pauses,
+          note: typeof log.note === "string" ? log.note : "",
+          attachments,
+          status: end ? "ended" : pauses.some((pause) => pause.end == null) ? "paused" : "running"
+        };
+
+        return nextLog;
+      }
+
+      function validateImportedBranch(branch, index, usedBranchIds, usedLogIds, usedAttachmentIds) {
+        const fieldPath = `branches[${index}]`;
+        if (!branch || typeof branch !== "object") {
+          throw new Error(`${fieldPath} ist keine gueltige Filiale.`);
+        }
+
+        const name = typeof branch.name === "string" ? branch.name.trim() : "";
+        if (!name) {
+          throw new Error(`${fieldPath}.name fehlt oder ist leer.`);
+        }
+
+        if (!Array.isArray(branch.logs)) {
+          throw new Error(`${fieldPath}.logs muss ein Array sein.`);
+        }
+
+        return {
+          ...branch,
+          id: ensureUniqueId(branch.id, usedBranchIds),
+          name,
+          logs: branch.logs.map((log, logIndex) => validateImportedLog(log, `${fieldPath}.logs[${logIndex}]`, usedLogIds, usedAttachmentIds))
+        };
+      }
+
+      function validateImportedState(data) {
+        if (!data || typeof data !== "object" || Array.isArray(data)) {
+          throw new Error("Root muss ein JSON-Objekt sein.");
+        }
+
+        if (data.schemaVersion != null && data.schemaVersion > IMPORT_SCHEMA_VERSION) {
+          throw new Error(`schemaVersion ${data.schemaVersion} wird von dieser App noch nicht unterstuetzt.`);
+        }
+
+        if (!Array.isArray(data.branches)) {
+          throw new Error("branches fehlt oder ist kein Array.");
+        }
+
+        const defaults = getDefaultPersistedState();
+        const usedBranchIds = new Set();
+        const usedLogIds = new Set();
+        const usedAttachmentIds = new Set();
+        const branches = data.branches.map((branch, index) => validateImportedBranch(branch, index, usedBranchIds, usedLogIds, usedAttachmentIds));
+        const validBranchIds = new Set(branches.map((branch) => branch.id));
+
+        const selectedBranchId =
+          typeof data.selectedBranchId === "string" && validBranchIds.has(data.selectedBranchId)
+            ? data.selectedBranchId
+            : branches[0]?.id || null;
+
+        const selectedDay = isValidDateOnlyString(data.selectedDay) ? data.selectedDay : defaults.selectedDay;
+
+        const selectedWeekStart = Number.isFinite(data.selectedWeekStart)
+          ? getMonday(new Date(data.selectedWeekStart)).getTime()
+          : defaults.selectedWeekStart;
+
+        const selectedMonth = Number.isFinite(data.selectedMonth)
+          ? new Date(new Date(data.selectedMonth).getFullYear(), new Date(data.selectedMonth).getMonth(), 1).getTime()
+          : defaults.selectedMonth;
+
+        return {
+          schemaVersion: IMPORT_SCHEMA_VERSION,
+          branches,
+          selectedBranchId,
+          viewMode: data.viewMode === "all" ? "all" : "branch",
+          selectedDay,
+          selectedWeekStart,
+          selectedMonth,
+          weekGoal: Number.isFinite(data.weekGoal) && data.weekGoal > 0 ? data.weekGoal : defaults.weekGoal,
+          hourlyRate: Number.isFinite(data.hourlyRate) && data.hourlyRate >= 0 ? data.hourlyRate : null,
+          goalReached: Boolean(data.goalReached),
+          celebrated: Boolean(data.celebrated)
+        };
+      }
+
       function applyPersistedState(parsed) {
         const defaults = getDefaultPersistedState();
         state.branches = Array.isArray(parsed?.branches) ? parsed.branches : defaults.branches;
@@ -3083,8 +3299,25 @@ function getLocation() {
         document.body.classList.toggle("modal-open", hasOpenModal);
       }
 
-      function saveState() {
-        const data = clone({
+      function renderStorageStatus() {
+        const pill = document.getElementById("storage-mode-pill");
+        const note = document.getElementById("storage-mode-note");
+        if (!pill || !note) return;
+
+        if (storageFallbackMode) {
+          pill.className = "status-pill status-paused";
+          pill.innerHTML = "<span class=\"dot\"></span> Fallback aktiv";
+          note.textContent = "Die App speichert aktuell uber LocalStorage. Grosse Anhange und sehr grosse Datenmengen konnen eingeschrankt sein.";
+          return;
+        }
+
+        pill.className = "status-pill status-running";
+        pill.innerHTML = "<span class=\"dot\"></span> IndexedDB aktiv";
+        note.textContent = "Anhange und grossere Daten werden robust im Browser uber IndexedDB gespeichert.";
+      }
+
+      function buildPersistedStateSnapshot() {
+        return clone({
           branches: state.branches,
           selectedBranchId: state.selectedBranchId,
           viewMode: state.viewMode,
@@ -3096,20 +3329,178 @@ function getLocation() {
           goalReached: state.goalReached,
           celebrated: state.celebrated
         });
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        localStorage.setItem(VIEW_MODE_KEY, state.viewMode);
       }
 
-      function loadState() {
-        const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
-        if (!raw) {
-          applyPersistedState(null);
-          return;
+      function createLocalStorageFallbackSnapshot(data) {
+        const snapshot = clone(data);
+        snapshot.branches = Array.isArray(snapshot.branches)
+          ? snapshot.branches.map((branch) => ({
+              ...branch,
+              logs: Array.isArray(branch.logs)
+                ? branch.logs.map((log) => ({
+                    ...log,
+                    attachments: Array.isArray(log.attachments)
+                      ? log.attachments.map((attachment) => ({
+                          id: attachment.id,
+                          name: attachment.name,
+                          type: attachment.type,
+                          size: attachment.size,
+                          storedInIndexedDb: true
+                        }))
+                      : []
+                  }))
+                : []
+            }))
+          : [];
+        snapshot.storageMode = "indexeddb";
+        return snapshot;
+      }
+
+      function showStorageFallbackToast() {
+        if (storageFallbackToastShown) return;
+        storageFallbackToastShown = true;
+        renderStorageStatus();
+        showToast("error", "Speicher", "IndexedDB ist nicht verfügbar. Die App nutzt einen eingeschränkten Fallback ohne große Anhänge.");
+      }
+
+      function openStateDatabase() {
+        if (!window.indexedDB) {
+          storageFallbackMode = true;
+          renderStorageStatus();
+          return Promise.resolve(null);
         }
+
+        if (dbPromise) return dbPromise;
+
+        dbPromise = new Promise((resolve) => {
+          const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+          request.onupgradeneeded = () => {
+            const db = request.result;
+            if (!db.objectStoreNames.contains(DB_STORE_STATE)) {
+              db.createObjectStore(DB_STORE_STATE, { keyPath: "key" });
+            }
+          };
+
+          request.onsuccess = () => {
+            storageFallbackMode = false;
+            renderStorageStatus();
+            resolve(request.result);
+          };
+
+          request.onerror = () => {
+            console.error("IndexedDB open failed", request.error);
+            storageFallbackMode = true;
+            renderStorageStatus();
+            resolve(null);
+          };
+
+          request.onblocked = () => {
+            storageFallbackMode = true;
+            renderStorageStatus();
+            resolve(null);
+          };
+        });
+
+        return dbPromise;
+      }
+
+      async function readStateFromIndexedDb() {
+        const db = await openStateDatabase();
+        if (!db) return null;
+
+        return new Promise((resolve) => {
+          const tx = db.transaction(DB_STORE_STATE, "readonly");
+          const store = tx.objectStore(DB_STORE_STATE);
+          const request = store.get(DB_STATE_KEY);
+
+          request.onsuccess = () => {
+            resolve(request.result?.data || null);
+          };
+
+          request.onerror = () => {
+            console.error("IndexedDB read failed", request.error);
+            storageFallbackMode = true;
+            renderStorageStatus();
+            resolve(null);
+          };
+        });
+      }
+
+      async function writeStateToIndexedDb(data) {
+        const db = await openStateDatabase();
+        if (!db) throw new Error("IndexedDB nicht verfügbar");
+
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(DB_STORE_STATE, "readwrite");
+          const store = tx.objectStore(DB_STORE_STATE);
+          store.put({
+            key: DB_STATE_KEY,
+            data,
+            updatedAt: Date.now()
+          });
+
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error || new Error("IndexedDB write failed"));
+          tx.onabort = () => reject(tx.error || new Error("IndexedDB write aborted"));
+        });
+      }
+
+      function loadLegacyLocalState() {
+        const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
+        if (!raw) return null;
+
         try {
-          applyPersistedState(JSON.parse(raw));
+          return JSON.parse(raw);
         } catch (e) {
-          applyPersistedState(null);
+          return null;
+        }
+      }
+
+      async function persistStateToStorage() {
+        const data = buildPersistedStateSnapshot();
+        localStorage.setItem(VIEW_MODE_KEY, state.viewMode);
+
+        try {
+          await writeStateToIndexedDb(data);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(createLocalStorageFallbackSnapshot(data)));
+          storageFallbackMode = false;
+          renderStorageStatus();
+        } catch (error) {
+          console.error("Persisting to IndexedDB failed", error);
+          storageFallbackMode = true;
+          renderStorageStatus();
+          showStorageFallbackToast();
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(createLocalStorageFallbackSnapshot(data)));
+        }
+      }
+
+      function saveState() {
+        saveStateQueue = saveStateQueue
+          .then(() => persistStateToStorage())
+          .catch((error) => {
+            console.error("saveState queue failed", error);
+          });
+        return saveStateQueue;
+      }
+
+      async function loadState() {
+        let persisted = await readStateFromIndexedDb();
+
+        if (!persisted) {
+          persisted = loadLegacyLocalState();
+          if (persisted) {
+            applyPersistedState(persisted);
+            await persistStateToStorage();
+            return;
+          }
+        }
+
+        applyPersistedState(persisted);
+        renderStorageStatus();
+
+        if (storageFallbackMode) {
+          showStorageFallbackToast();
         }
       }
 
@@ -3961,16 +4352,13 @@ function getLocation() {
 
       function updateSlider() {
         const slider = document.getElementById("branch-slider");
+        const container = document.getElementById("branch-toggle");
         const active = document.querySelector(".branch-btn.active");
 
-        if (!slider || !active) return;
+        if (!slider || !container || !active) return;
 
-        const rect = active.getBoundingClientRect();
-        const parentRect = active.parentElement.getBoundingClientRect();
-
-        slider.style.width = rect.width + "px";
-        slider.style.transform =
-          "translateX(" + (rect.left - parentRect.left) + "px)";
+        slider.style.width = active.offsetWidth + "px";
+        slider.style.transform = "translateX(" + active.offsetLeft + "px)";
       }
 
       function scrollActiveBranchIntoView() {
@@ -4928,6 +5316,7 @@ function getLocation() {
 
       function exportJSON() {
         const data = {
+          schemaVersion: IMPORT_SCHEMA_VERSION,
           branches: state.branches,
           selectedBranchId: state.selectedBranchId,
           viewMode: state.viewMode,
@@ -4954,22 +5343,9 @@ function getLocation() {
           return;
         }
         try {
-          const data = JSON.parse(text);
-          if (!Array.isArray(data.branches)) {
-            throw new Error("branches fehlt");
-          }
-          state.branches = data.branches;
-          state.selectedBranchId = data.selectedBranchId || null;
-          state.viewMode = data.viewMode || state.viewMode || "branch";
-          state.selectedDay = data.selectedDay || toDateOnlyString(now());
-          state.selectedWeekStart = data.selectedWeekStart || getMonday(now()).getTime();
-          state.selectedMonth =
-            data.selectedMonth || new Date(now().getFullYear(), now().getMonth(), 1).getTime();
-          state.weekGoal = Number.isFinite(data.weekGoal) ? data.weekGoal : state.weekGoal;
-          state.hourlyRate = Number.isFinite(data.hourlyRate) ? data.hourlyRate : null;
-          state.goalReached = Boolean(data.goalReached);
-          state.celebrated = Boolean(data.celebrated);
-          normalizeAllLogs();
+          const parsed = JSON.parse(text);
+          const validatedState = validateImportedState(parsed);
+          applyPersistedState(validatedState);
           saveState();
           updateUI();
           showToast("success", "Import", "JSON erfolgreich importiert.");
@@ -5890,25 +6266,8 @@ function getLocation() {
           const branchToggle = document.getElementById("branch-toggle");
 
           if (branchToggle) {
-            let branchStartX = 0;
-
-            branchToggle.addEventListener("touchstart", (e) => {
-              branchStartX = e.touches[0].clientX;
-            }, { passive: true });
-
-            branchToggle.addEventListener("touchend", (e) => {
-              const dx = branchStartX - e.changedTouches[0].clientX;
-              const index = state.branches.findIndex((b) => b.id === state.selectedBranchId);
-
-              if (index === -1) return;
-
-              if (dx > 50 && index < state.branches.length - 1) {
-                selectBranch(state.branches[index + 1].id);
-              }
-
-              if (dx < -50 && index > 0) {
-                selectBranch(state.branches[index - 1].id);
-              }
+            branchToggle.addEventListener("scroll", () => {
+              updateSlider();
             }, { passive: true });
           }
 
@@ -6047,9 +6406,16 @@ function getLocation() {
         }, msUntilMidnight);
       }
 
-      function init() {
+      async function init() {
         applyThemeFromStorage();
-        loadState();
+        renderStorageStatus();
+        try {
+          await loadState();
+        } catch (error) {
+          console.error("loadState failed", error);
+          applyPersistedState(null);
+          showToast("error", "Start", "Gespeicherte Daten konnten nicht vollständig geladen werden.");
+        }
 
         // ⚡ Service Worker
         if ("serviceWorker" in navigator) {
@@ -6377,7 +6743,9 @@ function renderMonth() {
       })();
 
       undoDeleteModule.install();
-      init();
+      init().catch((error) => {
+        console.error("Init failed", error);
+      });
     })();
   </script>
 </body>
