@@ -2353,6 +2353,49 @@ body.light {
   background: rgba(255,255,255,0.2);
   color: #fff;
 }
+
+.form-actions {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(80px + env(safe-area-inset-bottom));
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  padding: 16px;
+  backdrop-filter: blur(20px);
+  background: rgba(15,23,42,0.6);
+  z-index: 999;
+}
+
+.form-actions button {
+  flex: 1;
+  padding: 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.12);
+  color: white;
+  font-weight: 600;
+  transition: 0.2s;
+  cursor: pointer;
+}
+
+.form-actions button:hover {
+  transform: scale(1.03);
+  background: rgba(255,255,255,0.2);
+}
+
+.form-actions .btn-save {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+}
+
+.form-actions .btn-cancel {
+  opacity: 0.7;
+}
+
+#bottomSheet .sheet-content {
+  padding-bottom: 120px;
+}
 </style>
 </head>
 <body>
@@ -4023,8 +4066,10 @@ function getLocation() {
             <div style="margin-bottom:8px;">Name</div>
             <input id="sheet-branch-name" type="text" placeholder="Filialname" value="${preset.replace(/"/g, "&quot;")}" style="width:100%; padding:10px; border-radius:10px; border:none;" />
           </div>
-          <button class="sheet-btn" id="sheet-branch-save">Speichern</button>
-          <button class="sheet-btn" id="sheet-branch-cancel">Abbrechen</button>
+          <div class="form-actions">
+            <button class="btn-save" id="sheet-branch-save">Speichern</button>
+            <button class="btn-cancel" id="sheet-branch-cancel">Abbrechen</button>
+          </div>
         `);
 
         const nameInput = document.getElementById("sheet-branch-name");
@@ -4073,8 +4118,10 @@ function getLocation() {
             <div style="margin-bottom:8px;">Notiz</div>
             <textarea id="sheet-manual-note" rows="3" style="width:100%; padding:10px; border-radius:10px; border:none;"></textarea>
           </div>
-          <button class="sheet-btn" id="sheet-manual-save">Speichern</button>
-          <button class="sheet-btn" id="sheet-manual-cancel">Abbrechen</button>
+          <div class="form-actions">
+            <button class="btn-save" id="sheet-manual-save">Speichern</button>
+            <button class="btn-cancel" id="sheet-manual-cancel">Abbrechen</button>
+          </div>
         `);
 
         const branchInput = document.getElementById("sheet-manual-branch");
@@ -4193,8 +4240,10 @@ function getLocation() {
             <div style="margin-bottom:8px;">📝 Notiz</div>
             <textarea id="sheet-edit-note" rows="4" style="width:100%; padding:10px; border-radius:10px; border:none;"></textarea>
           </div>
-          <button class="sheet-btn" id="sheet-edit-save">💾 Speichern</button>
-          <button class="sheet-btn" id="sheet-edit-cancel">Abbrechen</button>
+          <div class="form-actions">
+            <button class="btn-save" id="sheet-edit-save">💾 Speichern</button>
+            <button class="btn-cancel" id="sheet-edit-cancel">Abbrechen</button>
+          </div>
         `);
 
         const branchSelect = document.getElementById("sheet-edit-branch");
@@ -6433,9 +6482,11 @@ function getLocation() {
             </div>
           </div>
 
-          <button class="sheet-btn" id="delete-day-save">📅 Tag löschen</button>
-          <button class="sheet-btn" id="delete-branch-save">🏢 Filiale leeren</button>
-          <button class="sheet-btn" id="sheet-delete-cancel">Abbrechen</button>
+          <div class="form-actions">
+            <button class="btn-save" id="delete-day-save">📅 Tag löschen</button>
+            <button class="btn-save" id="delete-branch-save">🏢 Filiale leeren</button>
+            <button class="btn-cancel" id="sheet-delete-cancel">Abbrechen</button>
+          </div>
         `);
 
         populateBranchSelect("delete-branch-select", state.selectedBranchId);
