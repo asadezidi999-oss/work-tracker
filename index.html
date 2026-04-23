@@ -610,8 +610,9 @@
       width: 100%;
     }
 
+    #branch-list,
+    .branch-list,
     .branch-toggle {
-      position: relative;
       display: flex;
       gap: 6px;
       overflow-x: auto;
@@ -619,41 +620,17 @@
       padding: 6px;
       border-radius: 999px;
       background: rgba(255,255,255,0.05);
-      -webkit-overflow-scrolling: touch;
-      scroll-snap-type: x mandatory;
-      scroll-padding-inline: 18px;
-      touch-action: pan-x;
-      overscroll-behavior-x: contain;
-      scrollbar-width: none;
-      cursor: grab;
-    }
-
-    .branch-list,
-    .branch-tabs {
-      display: flex;
-      gap: 10px;
-      overflow-x: auto;
-      overflow-y: hidden;
-      padding-bottom: 8px;
-      scroll-behavior: smooth;
-      -webkit-overflow-scrolling: touch;
+      backdrop-filter: blur(4px);
       scroll-snap-type: x proximity;
-      overscroll-behavior-x: contain;
-      touch-action: pan-x;
+      -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
-      will-change: transform;
+      touch-action: pan-x;
     }
 
+    #branch-list::-webkit-scrollbar,
     .branch-list::-webkit-scrollbar,
-    .branch-tabs::-webkit-scrollbar,
     .branch-toggle::-webkit-scrollbar {
       display: none;
-    }
-
-    .branch-toggle.dragging {
-      cursor: grabbing;
-      scroll-snap-type: none;
-      user-select: none;
     }
 
     .branch-slider {
@@ -674,20 +651,20 @@
     .branch-btn,
     .branch-tab {
       flex: 0 0 auto;
-      max-width: 140px;
-      padding: 8px 12px;
+      min-width: 90px;
+      padding: 10px 14px;
       border-radius: 999px;
-      background: rgba(255,255,255,0.05);
-      color: #e4e4e7;
       border: none;
-      cursor: pointer;
+      background: transparent;
+      color: #94a3b8;
       font-size: 13px;
       font-weight: 600;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      scroll-snap-align: start;
+      scroll-snap-align: center;
       transition: transform 0.15s ease;
+      cursor: pointer;
       position: relative;
     }
 
@@ -696,6 +673,7 @@
       transform: scale(0.95);
     }
 
+    #branch-list.scrolling .branch-btn,
     .branch-list.scrolling .branch-btn,
     .branch-tabs.scrolling .branch-tab {
       pointer-events: none;
@@ -1162,6 +1140,16 @@
         overscroll-behavior-x: contain;
         overflow-x: auto;
         padding-bottom: 4px;
+      }
+
+      #week-bar {
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+        scroll-snap-type: x mandatory;
+      }
+
+      #week-bar.dragging {
+        scroll-behavior: auto !important;
       }
 
       .week-day {
@@ -4080,6 +4068,67 @@ body.light {
         el.classList.add(direction === "left" ? "slide-left" : "slide-right");
       }
 
+      let snapTimeout;
+      let userScrolling = false;
+
+      function snapToClosestDay() {
+        const bar = document.getElementById("week-bar");
+        if (!bar) return;
+
+        const days = [...bar.querySelectorAll(".week-day")];
+        if (!days.length) return;
+
+        const barCenter = bar.scrollLeft + bar.clientWidth / 2;
+
+        let closest = null;
+        let minDist = Infinity;
+
+        days.forEach((day) => {
+          const center = day.offsetLeft + day.offsetWidth / 2;
+          const dist = Math.abs(center - barCenter);
+
+          if (dist < minDist) {
+            minDist = dist;
+            closest = day;
+          }
+        });
+
+        if (!closest) return;
+
+        const targetLeft =
+          closest.offsetLeft - bar.clientWidth / 2 + closest.offsetWidth / 2;
+
+        bar.scrollTo({
+          left: targetLeft,
+          behavior: "smooth"
+        });
+      }
+
+      function focusBestDay() {
+        if (userScrolling) return;
+
+        const bar = document.getElementById("week-bar");
+        if (!bar) return;
+
+        const durations = getActiveWeekDurations();
+        if (!durations || !durations.length) return;
+
+        const max = Math.max(...durations);
+        const index = durations.indexOf(max);
+
+        const days = bar.querySelectorAll(".week-day");
+        const target = days[index];
+        if (!target) return;
+
+        const targetLeft =
+          target.offsetLeft - bar.clientWidth / 2 + target.offsetWidth / 2;
+
+        bar.scrollTo({
+          left: targetLeft,
+          behavior: "smooth"
+        });
+      }
+
       function scrollToActiveDay() {
         const bar = document.getElementById("week-bar");
         if (!bar) return;
@@ -4105,6 +4154,7 @@ body.light {
   selectedDay: null,
   selectedWeekStart: null, // ⬅️ أضف هذا السطر
   selectedMonth: null,
+      weekScroll: null,
   weekGoal: 40,
       hourlyRate: null,
   autoStopHours: 12,
@@ -7278,7 +7328,14 @@ function getLocation() {
       }
 
       function scrollActiveBranchIntoView() {
-        highlightSelectedBranch();
+        const active = document.querySelector(".branch-btn.active");
+        if (!active) return;
+
+        active.scrollIntoView({
+          behavior: "smooth",
+          inline: "center",
+          block: "nearest"
+        });
       }
 
       function updateModeToggle() {
@@ -7531,6 +7588,11 @@ function getLocation() {
 
           dayEl.onclick = () => {
             haptic();
+            dayEl.scrollIntoView({
+              behavior: "smooth",
+              inline: "center",
+              block: "nearest"
+            });
             state.selectedDay = dateStr;
             saveState();
             queueRender({
@@ -7543,6 +7605,16 @@ function getLocation() {
 
           bar.appendChild(dayEl);
         });
+
+        if (Number.isFinite(state.weekScroll)) {
+          bar.scrollLeft = state.weekScroll;
+        }
+
+        if (!state.selectedDay) {
+          requestAnimationFrame(() => {
+            focusBestDay();
+          });
+        }
       }
       function renderLogs() {
         const list = document.getElementById("logs-list");
@@ -7854,7 +7926,7 @@ function getLocation() {
           }];
         }
 
-        const avg = activeDays ? total / activeDays : 0;
+        const avg = activeDays >= 2 ? total / activeDays : 0;
 
         const longDays = durations.filter(d => d > 9 * 3600000).length;
         const extremeWorkload = max > 10 * 3600000;
@@ -7864,7 +7936,7 @@ function getLocation() {
         if (veryIntenseWeek) {
           pushUnique(primaryInsights, {
             type: "warning",
-            icon: "🟢",
+            icon: "⚠️",
             text: "Sehr intensive Woche – achte auf Erholung."
           });
         } else if (avg < 3 * 3600000) {
@@ -7882,18 +7954,20 @@ function getLocation() {
         }
 
         // 2) Key event
-        if (extremeWorkload) {
-          pushUnique(eventInsights, {
-            type: "warning",
-            icon: "🔥",
-            text: `Extrem hoher Workload am ${days[maxIndex]} (${formatDurationHM(max)})`
-          });
-        } else {
-          pushUnique(eventInsights, {
-            type: "neutral",
-            icon: "📈",
-            text: `Stärkster Tag: ${days[maxIndex]} (${formatDurationHM(max)})`
-          });
+        if (maxIndex >= 0) {
+          if (extremeWorkload) {
+            pushUnique(eventInsights, {
+              type: "warning",
+              icon: "🔥",
+              text: `Extrem hoher Workload am ${days[maxIndex]} (${formatDurationHM(max)})`
+            });
+          } else {
+            pushUnique(eventInsights, {
+              type: "neutral",
+              icon: "📈",
+              text: `Stärkster Tag: ${days[maxIndex]} (${formatDurationHM(max)})`
+            });
+          }
         }
 
         // 3) Pattern
@@ -7960,7 +8034,7 @@ function getLocation() {
 
         let deviation = 0;
         for (const d of durations) deviation += Math.abs(d - avg);
-        deviation /= 7;
+        deviation /= Math.max(1, activeDays);
 
         if (deviation > 3 * 3600000) {
           pushUnique(analysisInsights, { type: "neutral", icon: "📊", text: "Unregelmäßiger Arbeitsrhythmus" });
@@ -7969,8 +8043,10 @@ function getLocation() {
         }
 
         // 5) Prediction last
-        const predicted = predictWeekHours(durations);
-        pushUnique(predictionInsights, { type: "neutral", icon: "🔮", text: `Wenn du so weitermachst: ~${formatDurationHM(predicted)} diese Woche` });
+        if (activeDays >= 2) {
+          const predicted = predictWeekHours(durations);
+          pushUnique(predictionInsights, { type: "neutral", icon: "🔮", text: `Wenn du so weitermachst: ~${formatDurationHM(predicted)} diese Woche` });
+        }
 
         if (maxIndex === 0) {
           pushUnique(analysisInsights, { type: "neutral", icon: "🧠", text: "Du startest sehr stark – achte auf Balance im Rest der Woche" });
@@ -7987,8 +8063,9 @@ function getLocation() {
         // Remove duplicates while preserving UX order
         const seen = new Set();
         const unique = insights.filter(i => {
-          if (seen.has(i.text)) return false;
-          seen.add(i.text);
+          const key = i.type + "|" + i.text;
+          if (seen.has(key)) return false;
+          seen.add(key);
           return true;
         });
 
@@ -9736,7 +9813,9 @@ function getLocation() {
           resetToToday();
           saveState();
           updateUI();
-          requestAnimationFrame(scrollToToday);
+          requestAnimationFrame(() => {
+            requestAnimationFrame(scrollToToday);
+          });
           triggerFade();
         });
 
@@ -10146,7 +10225,24 @@ function getLocation() {
         }, { passive: true });
 
         if (swipeArea) {
+          const bar = document.getElementById("week-bar");
           const branchToggle = document.getElementById("branch-list");
+
+          bar?.addEventListener("scroll", () => {
+            userScrolling = true;
+            state.weekScroll = bar.scrollLeft;
+
+            clearTimeout(snapTimeout);
+            clearTimeout(window.__scrollEndTimer);
+
+            window.__scrollEndTimer = setTimeout(() => {
+              userScrolling = false;
+            }, 150);
+
+            snapTimeout = setTimeout(() => {
+              snapToClosestDay();
+            }, 120);
+          }, { passive: true });
 
           if (branchToggle) {
             let isBranchDragging = false;
@@ -10158,15 +10254,20 @@ function getLocation() {
               if (!isBranchDragging) return;
               isBranchDragging = false;
               branchToggle.classList.remove("dragging");
+              branchToggle.style.scrollBehavior = "smooth";
               requestAnimationFrame(updateSlider);
             };
 
             branchToggle.addEventListener("pointerdown", (event) => {
+              // Nur mouse-drag, touch/pen scroll muss frei bleiben
+              if (event.pointerType !== "mouse") return;
+              
               isBranchDragging = true;
               branchDragMoved = false;
               branchPointerStartX = event.clientX;
               branchStartScrollLeft = branchToggle.scrollLeft;
               branchToggle.classList.add("dragging");
+              branchToggle.style.scrollBehavior = "auto";
             });
 
             branchToggle.addEventListener("pointermove", (event) => {
@@ -10199,9 +10300,16 @@ function getLocation() {
             }, { passive: true });
 
             let scrollTimeout;
+            let scrollTicking = false;
 
             branchToggle.addEventListener("scroll", () => {
-              updateSlider();
+              if (!scrollTicking) {
+                requestAnimationFrame(() => {
+                  updateSlider();
+                  scrollTicking = false;
+                });
+                scrollTicking = true;
+              }
               
               // Add scrolling class to disable pointer-events on buttons
               branchToggle.classList.add("scrolling");
@@ -10234,10 +10342,10 @@ function getLocation() {
             const dx = touchStartX - e.changedTouches[0].screenX;
             const dy = touchStartY - e.changedTouches[0].screenY;
             const time = Math.max(Date.now() - touchStartTime, 1);
+            const velocity = dx / time;
 
-            if (Math.abs(dy) > 60) return;
-            if (Math.abs(dx) < 80) return;
-            if (Math.abs(dx) / time < 0.35) return;
+            if (!(Math.abs(dx) > 80 && Math.abs(dy) < 40)) return;
+            if (Math.abs(velocity) <= 0.5) return;
 
             const order = ["home", "stats", "logs", "settings"];
             const current = document.querySelector(".nav-btn.active")?.dataset.tab || "home";
@@ -10430,7 +10538,9 @@ function getLocation() {
         safe(() => syncTabView(savedTab), "syncTabView");
         safe(initCompanionLogic, "initCompanionLogic");
         scheduleMidnightUpdate();
-        requestAnimationFrame(scrollToToday);
+        requestAnimationFrame(() => {
+          requestAnimationFrame(scrollToToday);
+        });
         startTimerLoop();
         initEvents();
 
@@ -10453,10 +10563,18 @@ function scrollToToday() {
   const todayEl = bar.querySelector(".week-day.today");
   if (!todayEl) return;
 
-  const targetLeft = todayEl.offsetLeft - (bar.clientWidth / 2) + (todayEl.offsetWidth / 2);
-  bar.scrollTo({
-    left: Math.max(0, targetLeft),
-    behavior: "smooth"
+  requestAnimationFrame(() => {
+    const rect = todayEl.getBoundingClientRect();
+    const barRect = bar.getBoundingClientRect();
+
+    const offset = rect.left - barRect.left;
+    const targetLeft =
+      bar.scrollLeft + offset - bar.clientWidth / 2 + rect.width / 2;
+
+    bar.scrollTo({
+      left: Math.max(0, targetLeft),
+      behavior: "smooth"
+    });
   });
 }
 function computeMonthTotal(branch, monthDate) {
