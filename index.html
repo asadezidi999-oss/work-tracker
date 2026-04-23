@@ -2623,7 +2623,7 @@
 
 .btn,
 .nav-btn,
-.fab-sub,
+#fab-add-branch,
 .icon-btn {
   transition:
     transform 0.18s cubic-bezier(0.25, 0.1, 0.25, 1),
@@ -2632,7 +2632,7 @@
 
 .btn:active,
 .nav-btn:active,
-.fab-sub:active,
+#fab-add-branch:active,
 .icon-btn:active {
   transform: scale(0.94) translateY(1px);
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
@@ -2680,8 +2680,8 @@ body.light .nav-btn.active {
 
 .fab {
   position: fixed;
-  bottom: 22px;
-  right: 22px;
+  bottom: 46px;
+  right: 30px;
   width: 58px;
   height: 58px;
   border-radius: 999px;
@@ -2702,62 +2702,32 @@ body.light .nav-btn.active {
   transform: scale(1.08);
 }
 
-.fab-container {
+#fab-add-branch {
   position: fixed;
-  bottom: 22px;
-  right: 22px;
+  bottom: 118px;
+  right: 30px;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  font-size: 32px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
+  transition: 0.25s;
   z-index: 1002;
 }
 
-.fab-menu {
-  position: absolute;
-  right: 0;
-  bottom: 70px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  opacity: 0;
-  transform: translateY(8px);
-  pointer-events: none;
-  transition: 0.25s;
+#fab-add-branch:hover {
+  transform: scale(1.08);
 }
 
-.fab-menu.show {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
+#fab-add-branch:active {
+  transform: scale(0.92);
 }
 
-.fab-sub {
-  min-width: 140px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: none;
-  background: rgba(15, 23, 42, 0.95);
-  color: white;
-  font-size: 14px;
-  text-align: left;
-  cursor: pointer;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
-}
-
-.fab-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.3);
-  backdrop-filter: blur(2px);
-  opacity: 0;
-  pointer-events: none;
-  transition: 0.25s;
-  z-index: 40;
-}
-
-.fab-overlay.show {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.fab.hide {
+#fab-btn.hide {
   opacity: 0;
   pointer-events: none;
 }
@@ -2765,10 +2735,6 @@ body.light .nav-btn.active {
 .fab:active {
   transform: scale(0.92);
   box-shadow: 0 6px 18px rgba(34, 197, 94, 0.35);
-}
-
-.fab.active {
-  transform: rotate(45deg) scale(1.05);
 }
 
 /* 📊 Chart Wrapper */
@@ -3556,16 +3522,8 @@ body.light {
         </div>
       </div>
 
-      <div class="fab-container">
-        <button class="fab" id="fab-main">+</button>
-
-        <div class="fab-overlay" id="fab-overlay"></div>
-
-        <div class="fab-menu" id="fab-menu">
-          <button class="fab-sub" id="btn-add-branch">Neue Filiale</button>
-          <button class="fab-sub" id="btn-manual">Manual</button>
-        </div>
-      </div>
+      <button class="fab" id="fab-btn">⏱</button>
+      <button id="fab-add-branch">＋</button>
 
       <nav class="bottom-nav glass-nav">
         <button class="nav-btn active" data-tab="home">🏠<span>Home</span></button>
@@ -5120,7 +5078,7 @@ function getLocation() {
         const overlay = document.getElementById("sheetOverlay");
         const content = document.getElementById("sheetContent");
         const actions = document.getElementById("sheetActions");
-        const fab = document.getElementById("fab-main");
+        const fab = document.getElementById("fab-btn");
         if (!sheet || !overlay || !content) return;
 
         actionSheetLastFocused = document.activeElement instanceof HTMLElement
@@ -5137,7 +5095,7 @@ function getLocation() {
       function closeSheet() {
         const sheet = document.getElementById("bottomSheet");
         const overlay = document.getElementById("sheetOverlay");
-        const fab = document.getElementById("fab-main");
+        const fab = document.getElementById("fab-btn");
         if (!sheet || !overlay) return;
 
         sheet.classList.remove("active");
@@ -9683,43 +9641,11 @@ function getLocation() {
         document
           .getElementById("branch-add-btn")
           ?.addEventListener("click", openAddBranchSheet);
-        const fabMain = document.getElementById("fab-main");
-        const fabMenu = document.getElementById("fab-menu");
-        const fabOverlay = document.getElementById("fab-overlay");
-        const btnAddBranch = document.getElementById("btn-add-branch");
-        const btnManual = document.getElementById("btn-manual");
-
-        function openFab() {
-          fabMenu?.classList.add("show");
-          fabOverlay?.classList.add("show");
-          fabMain?.classList.add("active");
-        }
-
-        function closeFab() {
-          fabMenu?.classList.remove("show");
-          fabOverlay?.classList.remove("show");
-          fabMain?.classList.remove("active");
-        }
-
-        if (fabMain && fabMenu && fabOverlay) {
-          fabMain.addEventListener("click", () => {
-            fabMenu.classList.contains("show") ? closeFab() : openFab();
-          });
-
-          fabOverlay.addEventListener("click", closeFab);
-        }
-
-        if (btnAddBranch) {
-          btnAddBranch.onclick = () => {
-            closeFab();
+        const fabAddBranch = document.getElementById("fab-add-branch");
+        if (fabAddBranch) {
+          fabAddBranch.onclick = () => {
+            haptic();
             openBranchCreateModal();
-          };
-        }
-
-        if (btnManual) {
-          btnManual.onclick = () => {
-            closeFab();
-            openManualSheet();
           };
         }
 
@@ -9997,7 +9923,40 @@ function getLocation() {
             }
           });
 
-        // FAB actions are handled via the menu (#fab-menu).
+        const fabButton = document.getElementById("fab-btn");
+        let fabPressTimer = null;
+        let fabLongPressTriggered = false;
+
+        if (fabButton) {
+          fabButton.addEventListener("pointerdown", () => {
+            fabLongPressTriggered = false;
+            fabPressTimer = setTimeout(() => {
+              fabLongPressTriggered = true;
+              navigator.vibrate?.(20);
+              startWork();
+            }, 500);
+          });
+
+          const stopFabPress = () => {
+            if (fabPressTimer) {
+              clearTimeout(fabPressTimer);
+              fabPressTimer = null;
+            }
+          };
+
+          fabButton.addEventListener("pointerup", stopFabPress);
+          fabButton.addEventListener("pointercancel", stopFabPress);
+          fabButton.addEventListener("pointerleave", stopFabPress);
+
+          fabButton.addEventListener("click", () => {
+            if (fabLongPressTriggered) {
+              fabLongPressTriggered = false;
+              return;
+            }
+            navigator.vibrate?.(15);
+            openManualSheet();
+          });
+        }
 
         navButtons.forEach((btn) => {
           btn.addEventListener("click", () => {
