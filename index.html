@@ -605,133 +605,76 @@
       transition: transform 0.3s;
     }
 
-    /* 🔥 Branch Toggle */
-    .branch-toggle-wrapper {
-      width: 100%;
-    }
-
-    #branch-list,
-    .branch-list,
-    .branch-toggle {
+    /* 🔥 NEW BRANCH SYSTEM */
+    #branch-list {
       display: flex;
-      gap: 6px;
+      gap: 10px;
       overflow-x: auto;
       overflow-y: hidden;
-      padding: 6px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.05);
-      backdrop-filter: blur(4px);
-      scroll-snap-type: x proximity;
+      padding: 10px 6px;
+      margin: 0 -6px;
+      scroll-snap-type: x mandatory;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
       touch-action: pan-x;
     }
 
-    #branch-list::-webkit-scrollbar,
-    .branch-list::-webkit-scrollbar,
-    .branch-toggle::-webkit-scrollbar {
+    #branch-list::-webkit-scrollbar {
       display: none;
     }
 
-    .branch-slider {
-      position: absolute;
-      top: 4px;
-      left: 4px;
-      height: calc(100% - 8px);
-      width: 0;
-      border-radius: 999px;
-      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-      box-shadow:
-        0 6px 18px rgba(59,130,246,0.6),
-        0 0 12px rgba(96,165,250,0.6);
-      transition: all 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
-      z-index: 0;
-    }
-
-    .branch-btn,
-    .branch-tab {
+    .branch-chip {
       flex: 0 0 auto;
-      min-width: 90px;
-      padding: 10px 14px;
+      padding: 10px 20px;
       border-radius: 999px;
-      border: none;
-      background: transparent;
-      color: #94a3b8;
-      font-size: 13px;
-      font-weight: 600;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      background: rgba(255,255,255,0.06);
+      color: #cbd5e1;
+      font-size: 14px;
+      font-weight: 500;
       scroll-snap-align: center;
-      transition: transform 0.15s ease;
-      cursor: pointer;
+      transition: all 0.25s cubic-bezier(.4,0,.2,1);
       position: relative;
+      transform: translateY(0);
+      white-space: nowrap;
+      cursor: pointer;
     }
 
-    .branch-btn:active,
-    .branch-tab:active {
-      transform: scale(0.95);
+    .branch-chip:active {
+      transform: scale(0.95) translateY(1px);
     }
 
-    #branch-list.scrolling .branch-btn,
-    .branch-list.scrolling .branch-btn,
-    .branch-tabs.scrolling .branch-tab {
-      pointer-events: none;
-    }
-
-    .branch-btn:hover {
+    .branch-chip.active {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: white;
+      box-shadow: 0 0 22px rgba(34,197,94,0.45);
       transform: scale(1.05);
     }
 
-    .branch-btn.active,
-    .branch-tab.active {
-      background: linear-gradient(135deg, #22c55e, #16a34a);
-      color: white;
-      box-shadow: 0 4px 12px rgba(34,197,94,0.4);
+    .branch-chip.delete-mode {
+      padding-right: 42px;
     }
 
-    .branch-delete {
+    .delete-btn {
       position: absolute;
-      right: 6px;
+      right: 10px;
       top: 50%;
-      transform: translateY(-50%);
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
+      transform: translateY(-50%) scale(0.8);
+      opacity: 0;
+      pointer-events: none;
+      transition: 0.2s ease;
       border: none;
-      background: rgba(239,68,68,0.9);
-      color: white;
-      font-size: 12px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.15s ease;
-      padding: 0;
+      background: transparent;
+      color: #fca5a5;
+      font-size: 14px;
       line-height: 1;
+      cursor: pointer;
+      padding: 0;
     }
 
-    .branch-delete:hover {
-      background: rgba(239,68,68,1);
-    }
-
-    .branch-delete:active {
-      transform: translateY(-50%) scale(0.9);
-    }
-
-    .branch-tab-btn {
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      padding-right: 28px;
-    }
-
-    .branch-name {
-      flex: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      display: inline-block;
+    .branch-chip.delete-mode .delete-btn {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(-50%) scale(1);
     }
 
     .branch-input-row {
@@ -7263,64 +7206,151 @@ function getLocation() {
         }
       }
 
-      function renderBranches() {
+      function snapToClosestBranch() {
+        const bar = document.getElementById("branch-list");
+        if (!bar) return;
+
+        const items = [...bar.querySelectorAll(".branch-chip")];
+        if (!items.length) return;
+
+        const center = bar.scrollLeft + bar.clientWidth / 2;
+
+        let closest = null;
+        let min = Infinity;
+
+        items.forEach((el) => {
+          const c = el.offsetLeft + el.offsetWidth / 2;
+          const d = Math.abs(c - center);
+
+          if (d < min) {
+            min = d;
+            closest = el;
+          }
+        });
+
+        if (!closest) return;
+
+        bar.scrollTo({
+          left: closest.offsetLeft - bar.clientWidth / 2 + closest.offsetWidth / 2,
+          behavior: "smooth"
+        });
+      }
+
+      function focusActiveBranch() {
+        const bar = document.getElementById("branch-list");
+        if (!bar) return;
+        const active = bar.querySelector(".branch-chip.active");
+        if (!active) return;
+
+        bar.scrollTo({
+          left: active.offsetLeft - bar.clientWidth / 2 + active.offsetWidth / 2,
+          behavior: "smooth"
+        });
+      }
+
+      function toggleDeleteMode(el) {
+        el.classList.toggle("delete-mode");
+      }
+
+      function attachBranchInteractions() {
+        const bar = document.getElementById("branch-list");
+        if (!bar) return;
+
+        let snapTimeout;
+        let pressTimer = null;
+
+        if (!bar.dataset.snapBound) {
+          if ("onscrollend" in bar) {
+            bar.addEventListener("scrollend", snapToClosestBranch);
+          } else {
+            bar.addEventListener("scroll", () => {
+              clearTimeout(snapTimeout);
+              snapTimeout = setTimeout(snapToClosestBranch, 120);
+            }, { passive: true });
+          }
+          bar.dataset.snapBound = "1";
+        }
+
+        bar.querySelectorAll(".branch-chip").forEach((el) => {
+          const start = () => {
+            pressTimer = setTimeout(() => toggleDeleteMode(el), 500);
+          };
+
+          const stop = () => {
+            clearTimeout(pressTimer);
+          };
+
+          el.addEventListener("mousedown", start);
+          el.addEventListener("mouseup", stop);
+          el.addEventListener("mouseleave", stop);
+          el.addEventListener("touchstart", start, { passive: true });
+          el.addEventListener("touchend", stop, { passive: true });
+        });
+      }
+
+      function renderBranchToggle() {
         const container = document.getElementById("branch-list");
         if (!container) return;
 
         container.innerHTML = "";
 
-        const allBtn = document.createElement("button");
-        allBtn.className = "branch-btn";
-        allBtn.textContent = "Alle";
-        allBtn.dataset.id = "ALL";
-        allBtn.addEventListener("click", () => selectBranch("ALL"));
-        container.appendChild(allBtn);
+        const allChip = document.createElement("div");
+        allChip.className = "branch-chip";
+        allChip.dataset.id = "ALL";
+        allChip.textContent = "Alle";
+        if (isAllMode()) {
+          allChip.classList.add("active");
+        }
+        allChip.addEventListener("click", () => {
+          selectBranch("ALL");
+          focusActiveBranch();
+        });
+        container.appendChild(allChip);
 
         state.branches.forEach((branch) => {
-          const btn = document.createElement("button");
-          btn.className = "branch-btn branch-tab-btn";
-          btn.innerHTML = `<span class="branch-name">${branch.name}</span>`;
-          btn.dataset.id = branch.id;
-          btn.addEventListener("click", () => selectBranch(branch.id));
+          const chip = document.createElement("div");
+          chip.className = "branch-chip";
+          chip.dataset.id = branch.id;
+          chip.textContent = branch.name;
+          if (branch.id === state.selectedBranchId && !isAllMode()) {
+            chip.classList.add("active");
+          }
 
-          const deleteBtn = document.createElement("button");
-          deleteBtn.className = "branch-delete";
-          deleteBtn.textContent = "✕";
-          deleteBtn.addEventListener("click", (e) => {
+          chip.addEventListener("click", () => {
+            selectBranch(branch.id);
+            focusActiveBranch();
+          });
+
+          const del = document.createElement("span");
+          del.className = "delete-btn";
+          del.textContent = "✕";
+          del.addEventListener("click", (e) => {
             e.stopPropagation();
             deleteBranch(branch.id);
           });
 
-          btn.appendChild(deleteBtn);
-          container.appendChild(btn);
+          chip.appendChild(del);
+          container.appendChild(chip);
         });
 
-        highlightSelectedBranch();
+        attachBranchInteractions();
+        focusActiveBranch();
+      }
+
+      function renderBranches() {
+        renderBranchToggle();
       }
 
       function highlightSelectedBranch() {
         const selectedId = isAllMode() ? "ALL" : state.selectedBranchId;
-        const buttons = document.querySelectorAll("#branch-list .branch-btn");
-
-        buttons.forEach((btn) => {
-          const active = btn.dataset.id === selectedId;
-          btn.classList.toggle("active", active);
-          if (active) {
-            btn.scrollIntoView({
-              behavior: "smooth",
-              inline: "center",
-              block: "nearest"
-            });
-          }
+        const chips = document.querySelectorAll("#branch-list .branch-chip");
+        chips.forEach((chip) => {
+          chip.classList.toggle("active", chip.dataset.id === selectedId);
         });
       }
 
-      function renderBranchToggle() {
-        renderBranches();
-      }
-
       function renderBranchTabs() {
-        renderBranches();
+        renderBranchToggle();
       }
 
       function updateSlider() {
@@ -7328,14 +7358,7 @@ function getLocation() {
       }
 
       function scrollActiveBranchIntoView() {
-        const active = document.querySelector(".branch-btn.active");
-        if (!active) return;
-
-        active.scrollIntoView({
-          behavior: "smooth",
-          inline: "center",
-          block: "nearest"
-        });
+        focusActiveBranch();
       }
 
       function updateModeToggle() {
@@ -10205,6 +10228,19 @@ function getLocation() {
             const nextTab = activateTab(btn.dataset.tab, "left");
             syncTabView(nextTab);
           });
+        });
+
+        document.addEventListener("click", (e) => {
+          const chip = e.target.closest(".branch-chip");
+          if (!chip) return;
+          if (!chip.closest("#branch-list")) return;
+
+          document
+            .querySelectorAll("#branch-list .branch-chip")
+            .forEach((b) => b.classList.remove("active"));
+
+          chip.classList.add("active");
+          focusActiveBranch();
         });
 
         let touchStartX = 0;
