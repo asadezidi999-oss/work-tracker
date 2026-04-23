@@ -98,6 +98,7 @@
       margin: 0;
       font-family: system-ui, -apple-system, "SF Pro Text", sans-serif;
       overscroll-behavior-y: none;
+      overscroll-behavior-x: none;
       max-width: 100vw;
       background: var(--bg);
 
@@ -633,13 +634,14 @@
       gap: 10px;
       overflow-x: auto;
       overflow-y: hidden;
-      padding: 8px 0 6px;
+      padding-bottom: 8px;
       scroll-behavior: smooth;
       -webkit-overflow-scrolling: touch;
-      scroll-snap-type: x mandatory;
+      scroll-snap-type: x proximity;
       overscroll-behavior-x: contain;
       touch-action: pan-x;
       scrollbar-width: none;
+      will-change: transform;
     }
 
     .branch-list::-webkit-scrollbar,
@@ -682,7 +684,17 @@
       font-weight: 600;
       white-space: nowrap;
       scroll-snap-align: start;
-      transition: 0.2s;
+      transition: transform 0.15s ease;
+    }
+
+    .branch-btn:active,
+    .branch-tab:active {
+      transform: scale(0.95);
+    }
+
+    .branch-list.scrolling .branch-btn,
+    .branch-tabs.scrolling .branch-tab {
+      pointer-events: none;
     }
 
     .branch-btn:hover {
@@ -10092,7 +10104,6 @@ function getLocation() {
             };
 
             branchToggle.addEventListener("pointerdown", (event) => {
-              if (event.pointerType === "touch") return;
               isBranchDragging = true;
               branchDragMoved = false;
               branchPointerStartX = event.clientX;
@@ -10120,8 +10131,26 @@ function getLocation() {
               branchDragMoved = false;
             }, true);
 
+            // Allow native touch scrolling as fallback
+            branchToggle.addEventListener("touchstart", () => {
+              stopBranchDrag();
+            }, { passive: true });
+            
+            branchToggle.addEventListener("touchmove", () => {
+              stopBranchDrag();
+            }, { passive: true });
+
+            let scrollTimeout;
+
             branchToggle.addEventListener("scroll", () => {
               updateSlider();
+              
+              // Add scrolling class to disable pointer-events on buttons
+              branchToggle.classList.add("scrolling");
+              clearTimeout(scrollTimeout);
+              scrollTimeout = setTimeout(() => {
+                branchToggle.classList.remove("scrolling");
+              }, 100);
             }, { passive: true });
           }
 
