@@ -6146,6 +6146,16 @@ function getLocation() {
         updateAfterLogChange({ includeWeekBar: true, includeCharts: true, includeMonth: true });
       }
 
+      function renderAll() {
+        updateUI();
+        renderLogs();
+        renderStats();
+        renderInsights();
+        renderChart();
+        renderMonthChart();
+        renderGlobalChart();
+      }
+
       function renderStopUpdates() {
         updateAfterLogChange({ includeWeekBar: true, includeCharts: true, includeMonth: true });
       }
@@ -8572,20 +8582,41 @@ function getLocation() {
           showToast("error", "Import", "Bitte JSON in das Textfeld einfügen.");
           return;
         }
+
         // 🔒 Backup vor Import – bei Fehler wird der alte Stand wiederhergestellt
         const stateBackup = buildPersistedStateSnapshot();
+
         try {
-        if (branchChart) {
-          branchChart.destroy();
-          branchChart = null;
-        }
+          const parsed = JSON.parse(text);
+          const migrated = migrateImportedState(parsed);
+          const importedData = validateImportedState(migrated);
+
+          if (branchChart) {
+            branchChart.destroy();
+            branchChart = null;
+          }
+
+          // state ist const, daher Daten per Object.assign statt Reassignment.
+          Object.assign(state, importedData);
+
+          // Quick-fix: Persist in legacy key too.
+          localStorage.setItem("app-data", JSON.stringify(state));
+
+          // Filter reset after import.
+          state.activeBranch = "all";
+          state.viewMode = "all";
+          state.selectedBranchId = null;
+          state.selectedDay = null;
+
+          renderAll();
           saveState();
-          updateUI();
           updateJsonImportAssist();
           showToast("success", "Import", "JSON erfolgreich importiert.");
         } catch (e) {
           // ♻️ Alten Stand wiederherstellen
-          try { applyPersistedState(stateBackup); } catch (_) {}
+          try {
+            applyPersistedState(stateBackup);
+          } catch (_) {}
           setJsonImportFeedback("error", `Importfehler: ${e.message}`);
           showToast("error", "Import", "JSON ungültig: " + e.message + " – Daten wurden wiederhergestellt.");
         }
