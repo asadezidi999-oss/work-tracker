@@ -627,14 +627,23 @@
       cursor: grab;
     }
 
-    .branch-list {
+    .branch-list,
+    .branch-tabs {
       display: flex;
-      gap: 8px;
+      gap: 10px;
       overflow-x: auto;
-      padding: 8px 0;
+      overflow-y: hidden;
+      padding: 8px 0 6px;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
       scroll-snap-type: x mandatory;
+      overscroll-behavior-x: contain;
+      touch-action: pan-x;
+      scrollbar-width: none;
     }
 
+    .branch-list::-webkit-scrollbar,
+    .branch-tabs::-webkit-scrollbar,
     .branch-toggle::-webkit-scrollbar {
       display: none;
     }
@@ -660,26 +669,31 @@
       z-index: 0;
     }
 
-    .branch-btn {
+    .branch-btn,
+    .branch-tab {
+      flex: 0 0 auto;
       padding: 8px 14px;
-      border-radius: 10px;
-      background: #27272a;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.05);
       color: #e4e4e7;
       border: none;
       cursor: pointer;
+      font-size: 13px;
       font-weight: 600;
       white-space: nowrap;
-      scroll-snap-align: center;
-      transition: background 0.25s ease, color 0.25s ease, transform 0.2s ease;
+      scroll-snap-align: start;
+      transition: 0.2s;
     }
 
     .branch-btn:hover {
       transform: scale(1.05);
     }
 
-    .branch-btn.active {
-      background: var(--accent);
-      color: #fff;
+    .branch-btn.active,
+    .branch-tab.active {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: white;
+      box-shadow: 0 4px 12px rgba(34,197,94,0.4);
     }
 
     .branch-input-row {
@@ -3288,7 +3302,10 @@ body.light {
 
             <!-- 🟣 Today Summary -->
             <section class="card today-summary">
-              <div>Heute: <span id="today-time">0h 0m</span></div>
+              <div class="today-bar">
+                <span class="today-label">⏱ Heute</span>
+                <span class="today-time" id="today-time">3h</span>
+              </div>
             </section>
 
           </div>
