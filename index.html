@@ -3846,16 +3846,19 @@ body.light {
         error: document.getElementById("snd-error")
       };
 
-      function playUiSound(name) {
-        const s = sounds[name];
-        if (!s) {
-          playSound();
+      function playUiSound(type) {
+        const isMobile = /iphone|android/i.test(navigator.userAgent);
+
+        // 📱 موبايل → vibration فقط
+        if (isMobile) {
+          navigator.vibrate?.(15);
           return;
         }
-        s.currentTime = 0;
-        s.play().catch(() => {
-          playSound();
-        });
+
+        // 💻 كمبيوتر → صوت
+        const audio = new Audio(`sounds/${type}.mp3`);
+        audio.volume = 0.4;
+        audio.play().catch(() => {});
       }
 
       function applyTheme(name) {
