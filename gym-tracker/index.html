@@ -11,7 +11,7 @@ html
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
   <!-- PWA minimal -->
   <link rel="manifest" href="manifest.webmanifest" />
@@ -65,7 +65,7 @@ html
       background: var(--bg-graphite);
       color: var(--text-primary);
 
-      font-family: "Inter", sans-serif;
+      font-family: "Manrope", sans-serif;
       text-rendering: optimizeLegibility;
       -webkit-font-smoothing: antialiased;
     }
@@ -161,15 +161,15 @@ html
 
       min-height: 100vh;
 
-      padding-bottom: 120px;
+      padding-bottom: calc(140px + env(safe-area-inset-bottom));
     }
 
     .app-page {
-      max-width: 480px;
+      max-width: 640px;
 
       margin: 0 auto;
 
-      padding: 18px 16px;
+      padding: calc(10px + env(safe-area-inset-top)) 14px 18px;
     }
 
     .page {
@@ -188,7 +188,7 @@ html
       padding-bottom: calc(18px + env(safe-area-inset-bottom));
       display: flex;
       justify-content: center;
-      z-index: 10;
+      z-index: 180;
     }
 
     .bottom-nav-inner {
@@ -246,9 +246,9 @@ html
     .bottom-nav-fab {
       position: absolute;
       left: 50%;
-      transform: translate(-50%, -26px);
-      width: 64px;
-      height: 64px;
+      transform: translate(-50%, -20px);
+      width: 48px;
+      height: 48px;
       border-radius: 999px;
       background: radial-gradient(circle at 30% 0%, #6ee7b7, #22c55e);
       box-shadow: var(--shadow-glow);
@@ -257,7 +257,7 @@ html
       justify-content: center;
       color: #022c22;
       font-weight: 600;
-      font-size: 26px;
+      font-size: 20px;
       border: 3px solid rgba(15, 23, 42, 0.95);
       transition:
         transform 180ms ease,
@@ -266,14 +266,14 @@ html
 
     .bottom-nav-fab:hover {
       transform:
-        translate(-50%, -26px)
-        scale(1.05);
+        translate(-50%, -20px)
+        scale(1.08);
     }
 
     .bottom-nav-fab:active {
       transform:
-        translate(-50%, -26px)
-        scale(0.96);
+        translate(-50%, -20px)
+        scale(0.94);
     }
 
     .hero-card {
@@ -829,6 +829,7 @@ html
 
       box-shadow:
         0 12px 40px rgba(0,0,0,0.42);
+      background: linear-gradient(165deg, rgba(16,20,28,0.9), rgba(8,11,18,0.9));
     }
 
     .chart-card::before {
@@ -874,6 +875,7 @@ html
           rgba(52,211,153,0.16),
           transparent 60%
         );
+      border: 1px solid rgba(255,255,255,0.08);
     }
 
     /* Settings */
@@ -1589,15 +1591,944 @@ html
     }
 
     /* =========================
+       2026 IOS PREMIUM REDESIGN
+       ========================= */
+    :root {
+      --ios-black: #030406;
+      --ios-graphite: #0b0f14;
+      --ios-glass: rgba(16, 21, 30, 0.62);
+      --ios-glass-strong: rgba(12, 16, 24, 0.84);
+      --ios-border: rgba(255, 255, 255, 0.12);
+      --ios-radius-xl: 30px;
+      --ios-radius-lg: 24px;
+      --ios-radius-md: 18px;
+      --ios-accent: #34d399;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at 14% -10%, rgba(52,211,153,0.2), transparent 36%),
+        radial-gradient(circle at 88% 118%, rgba(52,211,153,0.14), transparent 40%),
+        linear-gradient(170deg, var(--ios-black), #070b10 55%, #040608 100%);
+    }
+
+    .app-page {
+      width: min(100%, 680px);
+      max-width: 680px;
+      padding: calc(10px + env(safe-area-inset-top)) 12px 18px;
+    }
+
+    .page {
+      padding-bottom: 26px;
+    }
+
+    .hero-card,
+    .exercise-card,
+    .chart-card,
+    .settings-group,
+    .workout-progress,
+    .sheet,
+    .stat-chip {
+      background: var(--ios-glass);
+      border: 1px solid var(--ios-border);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(20px) saturate(1.15);
+      -webkit-backdrop-filter: blur(20px) saturate(1.15);
+    }
+
+    .hero-card,
+    .chart-card {
+      border-radius: var(--ios-radius-xl);
+    }
+
+    .exercise-card,
+    .settings-group,
+    .workout-progress {
+      border-radius: var(--ios-radius-lg);
+    }
+
+    .section-block {
+      margin-bottom: 14px;
+    }
+
+    .home-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      gap: 10px;
+    }
+
+    .home-greeting {
+      min-width: 0;
+    }
+
+    .home-greeting-eyebrow {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: rgba(255, 255, 255, 0.46);
+      margin-bottom: 6px;
+    }
+
+    .home-greeting-title {
+      font-size: 30px;
+      font-weight: 800;
+      line-height: 1.04;
+      letter-spacing: -0.05em;
+      text-wrap: balance;
+    }
+
+    .home-topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .icon-button,
+    .avatar-pill {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+      transition: transform 160ms ease, box-shadow 160ms ease;
+    }
+
+    .icon-button:active,
+    .avatar-pill:active {
+      transform: scale(0.94);
+    }
+
+    .avatar-pill {
+      font-size: 14px;
+      font-weight: 800;
+      color: #d1fae5;
+      background: linear-gradient(135deg, rgba(52,211,153,0.35), rgba(16,185,129,0.16));
+    }
+
+    .hero-title {
+      font-size: 34px;
+      letter-spacing: -0.06em;
+    }
+
+    .hero-subtitle {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.64);
+    }
+
+    .hero-card {
+      overflow: hidden;
+    }
+
+    .hero-image {
+      position: absolute;
+      right: -20px;
+      top: -8px;
+      width: 210px;
+      height: 210px;
+      border-radius: 40%;
+      background:
+        radial-gradient(circle at 40% 25%, rgba(52,211,153,0.26), transparent 62%),
+        linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0));
+      filter: blur(1px);
+      pointer-events: none;
+    }
+
+    .stat-chip {
+      border-radius: var(--ios-radius-md);
+      padding: 14px 12px;
+    }
+
+    .stat-chip-label {
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.48);
+    }
+
+    .stat-chip-value {
+      font-size: 18px;
+    }
+
+    .next-workout-card {
+      position: relative;
+      overflow: hidden;
+      padding: 16px;
+      border-radius: var(--ios-radius-lg);
+      background: var(--ios-glass-strong);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.46);
+    }
+
+    .next-workout-title {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+    }
+
+    .next-workout-meta {
+      margin-top: 4px;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.68);
+    }
+
+    .next-workout-info {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .next-workout-pill {
+      padding: 8px 10px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 12px;
+      color: rgba(255,255,255,0.72);
+      text-align: center;
+    }
+
+    .primary-btn {
+      margin-top: 14px;
+      width: 100%;
+      border-radius: 18px;
+      padding: 14px 16px;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      color: #042f24;
+      background: linear-gradient(120deg, #6ee7b7, var(--ios-accent));
+      box-shadow: 0 12px 28px rgba(16, 185, 129, 0.35), 0 0 36px rgba(52, 211, 153, 0.24);
+      transition: transform 160ms ease, box-shadow 160ms ease;
+    }
+
+    .primary-btn:hover {
+      box-shadow: 0 16px 36px rgba(16, 185, 129, 0.42), 0 0 44px rgba(52, 211, 153, 0.3);
+    }
+
+    .primary-btn:active {
+      transform: scale(0.97);
+    }
+
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .quick-tile {
+      border-radius: 18px;
+      padding: 12px 10px 10px;
+      min-height: 92px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: flex-start;
+      text-align: left;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.92);
+      transition: transform 160ms ease, background 160ms ease;
+    }
+
+    .quick-tile:hover {
+      transform: translateY(-2px);
+      background: rgba(52,211,153,0.1);
+    }
+
+    .quick-tile:active {
+      transform: scale(0.96);
+    }
+
+    .quick-tile-label {
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .quick-tile i {
+      width: 22px;
+      height: 22px;
+      min-width: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(52,211,153,0.22), rgba(16,185,129,0.08));
+      border: 1px solid rgba(52,211,153,0.24);
+      box-shadow: 0 8px 18px rgba(0,0,0,0.28);
+      color: #6ee7b7;
+    }
+
+    .motivation-card {
+      border-radius: 28px;
+      padding: 22px 18px;
+      background: linear-gradient(160deg, rgba(18,24,34,0.8), rgba(9,12,18,0.92));
+      border: 1px solid rgba(52,211,153,0.18);
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08);
+    }
+
+    .motivation-quote {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.35;
+      text-wrap: balance;
+    }
+
+    .workout-subtitle {
+      margin-top: 4px;
+      color: rgba(255,255,255,0.68);
+      font-size: 14px;
+    }
+
+    .exercise-card {
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .exercise-side {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      min-width: 66px;
+    }
+
+    .exercise-status-circle {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 800;
+      color: rgba(255,255,255,0.8);
+      border: 2px solid rgba(255,255,255,0.2);
+      background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.12), rgba(255,255,255,0.02));
+    }
+
+    .exercise-status-circle.done {
+      border-color: rgba(52,211,153,0.75);
+      color: #6ee7b7;
+      box-shadow: 0 0 20px rgba(52,211,153,0.26);
+    }
+
+    .set-main {
+      margin-bottom: 2px;
+      font-size: 16px;
+    }
+
+    .set-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .set-kv {
+      border-radius: 12px;
+      padding: 7px 8px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.08);
+      text-align: center;
+    }
+
+    .set-k {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.56);
+    }
+
+    .set-v {
+      margin-top: 2px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .workout-bottom-cta {
+      position: sticky;
+      bottom: 112px;
+      z-index: 5;
+    }
+
+    .segmented {
+      display: inline-flex;
+      width: 100%;
+      padding: 4px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      gap: 4px;
+    }
+
+    .segmented button {
+      flex: 1;
+      min-height: 34px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.66);
+      transition: all 160ms ease;
+    }
+
+    .segmented button.is-active {
+      color: #d1fae5;
+      background: rgba(52,211,153,0.24);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 0 20px rgba(52,211,153,0.16);
+    }
+
+    .health-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .health-card {
+      border-radius: 18px;
+      padding: 12px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .health-title {
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 8px;
+    }
+
+    .recovery-item,
+    .heat-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      margin-bottom: 7px;
+    }
+
+    .recovery-bar {
+      flex: 1;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.1);
+      overflow: hidden;
+    }
+
+    .recovery-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #34d399, #10b981);
+      border-radius: inherit;
+    }
+
+    .exercise-detail-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .exercise-detail-tabs button {
+      flex: 1;
+      min-height: 34px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.68);
+    }
+
+    .exercise-detail-tabs button.is-active {
+      color: #d1fae5;
+      border-color: rgba(52,211,153,0.4);
+      background: rgba(52,211,153,0.14);
+    }
+
+    .rest-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 240;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at center, rgba(9, 13, 19, 0.64), rgba(3, 4, 8, 0.92));
+      backdrop-filter: blur(18px);
+      transition: opacity 180ms ease;
+    }
+
+    .rest-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .rest-overlay.hidden .rest-panel {
+      transform: translateY(14px) scale(0.97);
+      filter: blur(1px);
+    }
+
+    .rest-panel {
+      width: min(420px, calc(100vw - 34px));
+      border-radius: 32px;
+      padding: 20px 18px 16px;
+      background: rgba(10, 14, 22, 0.86);
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: 0 24px 54px rgba(0,0,0,0.55);
+      text-align: center;
+    }
+
+    .rest-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: rgba(255,255,255,0.58);
+    }
+
+    .rest-ring {
+      --ring-progress: 0;
+      margin: 14px auto;
+      width: 210px;
+      height: 210px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background:
+        conic-gradient(#34d399 calc(var(--ring-progress) * 1%), rgba(255,255,255,0.12) 0);
+      box-shadow: 0 0 40px rgba(52,211,153,0.2);
+    }
+
+    .rest-ring::before {
+      content: "";
+      width: 174px;
+      height: 174px;
+      border-radius: 50%;
+      background: rgba(7, 10, 16, 0.98);
+      border: 1px solid rgba(255,255,255,0.08);
+      position: absolute;
+    }
+
+    .rest-time {
+      position: relative;
+      z-index: 1;
+      font-size: 44px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+
+    .rest-exercise {
+      margin-top: 8px;
+      font-size: 14px;
+      color: rgba(255,255,255,0.7);
+    }
+
+    .rest-actions {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .rest-actions button {
+      min-height: 38px;
+      border-radius: 13px;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .rest-actions .is-primary {
+      color: #042f24;
+      background: linear-gradient(120deg, #6ee7b7, #34d399);
+      border-color: rgba(110,231,183,0.7);
+    }
+
+    .settings-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .settings-title-row .section-title {
+      margin: 0;
+    }
+
+    .bottom-nav-inner {
+      background: rgba(8, 11, 18, 0.78);
+      border: 1px solid rgba(255,255,255,0.16);
+      backdrop-filter: blur(26px) saturate(1.2);
+      border-radius: 30px;
+      padding: 8px 10px;
+      max-width: 680px;
+    }
+
+    .bottom-nav-item {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      padding: 6px 0 3px;
+    }
+
+    .bottom-nav-fab {
+      width: 56px;
+      height: 56px;
+      transform: translate(-50%, -24px);
+      box-shadow: 0 0 0 6px rgba(3,6,10,0.78), 0 0 27px rgba(52,211,153,0.44), 0 11px 18px rgba(16,185,129,0.38);
+    }
+
+    .bottom-nav-fab:hover {
+      transform: translate(-50%, -24px) scale(1.06);
+    }
+
+    .bottom-nav-fab:active {
+      transform: translate(-50%, -24px) scale(0.94);
+    }
+
+    .empty-state {
+      border-radius: 26px;
+      background: var(--ios-glass-strong);
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: 0 16px 34px rgba(0,0,0,0.45);
+      text-wrap: balance;
+    }
+
+    .page-header {
+      margin-bottom: 12px;
+    }
+
+    .page-title {
+      line-height: 1.05;
+    }
+
+    @media (min-width: 1024px) {
+      .app-page {
+        width: min(100%, 760px);
+        max-width: 760px;
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      .bottom-nav-inner {
+        max-width: 760px;
+      }
+    }
+
+    /* =========================
+       IOS MOTION POLISH LAYER
+       ========================= */
+    :root {
+      --scroll-progress: 0;
+      --ios-spring-1: cubic-bezier(0.24, 1, 0.34, 1);
+      --ios-spring-2: cubic-bezier(0.22, 0.92, 0.22, 1);
+      --ios-spring-3: cubic-bezier(0.18, 1, 0.28, 1);
+    }
+
+    .page-enter {
+      animation: page-slide-in 342ms var(--ios-spring-3);
+    }
+
+    .page-leave {
+      animation: page-slide-out 252ms cubic-bezier(0.4, 0, 1, 1) forwards;
+    }
+
+    @keyframes page-slide-in {
+      from { opacity: 0; transform: translateX(20px) scale(0.985); }
+      to { opacity: 1; transform: translateX(0) scale(1); }
+    }
+
+    @keyframes page-slide-out {
+      from { opacity: 1; transform: translateX(0) scale(1); }
+      to { opacity: 0; transform: translateX(-16px) scale(0.99); }
+    }
+
+    .hero-card {
+      transform-style: preserve-3d;
+      will-change: transform;
+      transform:
+        translate3d(var(--hero-move-x, 0px), var(--hero-move-y, 0px), 0)
+        rotateX(var(--hero-rot-x, 0deg))
+        rotateY(var(--hero-rot-y, 0deg));
+      transition: transform 342ms var(--ios-spring-2), box-shadow 270ms ease;
+    }
+
+    .hero-card.is-parallax {
+      box-shadow: 0 24px 46px rgba(0,0,0,0.56), 0 0 24px rgba(52,211,153,0.15);
+    }
+
+    .hero-image {
+      transition: transform 324ms var(--ios-spring-2);
+    }
+
+    .hero-card,
+    .exercise-card,
+    .chart-card,
+    .settings-group,
+    .workout-progress,
+    .next-workout-card,
+    .motivation-card,
+    .health-card {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .glass-reflect::after {
+      content: "";
+      position: absolute;
+      top: -120%;
+      left: -45%;
+      width: 45%;
+      height: 280%;
+      background: linear-gradient(110deg, transparent, rgba(255,255,255,0.16), transparent);
+      transform: rotate(8deg);
+      opacity: 0.42;
+      pointer-events: none;
+      animation: glass-sweep 8200ms linear infinite;
+    }
+
+    .primary-btn,
+    .quick-tile,
+    .icon-button,
+    .avatar-pill,
+    .sheet-button-primary,
+    .sheet-button-secondary,
+    .sheet-button-danger,
+    .rest-actions button,
+    .exercise-actions button,
+    .settings-control,
+    .bottom-nav-item,
+    .pill-timer,
+    .quick-timer,
+    .quick-rest-default {
+      transition: transform 162ms var(--ios-spring-1), filter 162ms ease, box-shadow 180ms ease, background 180ms ease;
+    }
+
+    .primary-btn:active,
+    .quick-tile:active,
+    .icon-button:active,
+    .avatar-pill:active,
+    .sheet-button-primary:active,
+    .sheet-button-secondary:active,
+    .sheet-button-danger:active,
+    .rest-actions button:active,
+    .exercise-actions button:active,
+    .settings-control:active,
+    .pill-timer:active,
+    .quick-timer:active,
+    .quick-rest-default:active {
+      transform: scale(0.96) translateY(1px);
+      filter: saturate(1.08);
+    }
+
+    .bottom-nav-inner {
+      backdrop-filter: blur(calc(20px + 12px * var(--scroll-progress))) saturate(calc(1.08 + 0.2 * var(--scroll-progress)));
+      transition: backdrop-filter 234ms ease, background 234ms ease, transform 234ms var(--ios-spring-1);
+    }
+
+    .bottom-nav-item.nav-press {
+      transform: translateY(1px) scale(0.95);
+    }
+
+    .bottom-nav-item--active .bottom-nav-icon {
+      animation: nav-icon-pop 378ms var(--ios-spring-3);
+    }
+
+    .bottom-nav-fab {
+      animation: fab-bob 4320ms ease-in-out infinite;
+      transition: transform 198ms var(--ios-spring-1), box-shadow 198ms ease;
+    }
+
+    .bottom-nav-fab.nav-press {
+      transform: translate(-50%, -24px) scale(0.94);
+    }
+
+    .workout-progress-fill {
+      transition: width 468ms var(--ios-spring-2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .workout-progress-fill::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 38px;
+      left: -60px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.36), transparent);
+      animation: progress-sheen 1980ms linear infinite;
+    }
+
+    .motion-item {
+      opacity: 0;
+      transform: translateY(14px) scale(0.985);
+      animation: card-rise-in 504ms var(--ios-spring-3) forwards;
+      animation-delay: calc(var(--stagger-index, 0) * 38ms);
+    }
+
+    .motion-item.motion-item-fast {
+      animation-duration: 378ms;
+      animation-delay: calc(var(--stagger-index, 0) * 23ms);
+    }
+
+    .chart-canvas-wrapper {
+      transition: transform 234ms var(--ios-spring-1), filter 234ms ease;
+    }
+
+    .set-list-wrap {
+      transition: grid-template-rows 288ms var(--ios-spring-2), opacity 216ms ease;
+    }
+
+    .chart-canvas-wrapper.is-skeleton {
+      position: relative;
+      overflow: hidden;
+      background: rgba(255,255,255,0.06);
+    }
+
+    .chart-canvas-wrapper.is-skeleton::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      transform: translateX(-100%);
+      background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,0.16) 48%, transparent 76%);
+      animation: skeleton-shimmer 1080ms ease-in-out infinite;
+    }
+
+    .rest-overlay {
+      transition: opacity 234ms var(--ios-spring-2), backdrop-filter 234ms ease;
+    }
+
+    .rest-panel {
+      animation: rest-panel-in 342ms var(--ios-spring-3);
+    }
+
+    .rest-ring {
+      animation: ring-breathe 2520ms ease-in-out infinite;
+    }
+
+    .app-root {
+      transition: opacity 90ms ease;
+    }
+
+    .app-root.haptic-bump {
+      opacity: 0.995;
+    }
+
+    .app-root.scrolling .bg-glow-emerald {
+      opacity: calc(0.75 - 0.28 * var(--scroll-progress));
+      filter: blur(calc(62px + 22px * var(--scroll-progress)));
+    }
+
+    @keyframes card-rise-in {
+      from {
+        opacity: 0;
+        transform: translateY(14px) scale(0.985);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes nav-icon-pop {
+      0% { transform: scale(0.86) translateY(2px); }
+      55% { transform: scale(1.1) translateY(-1px); }
+      100% { transform: scale(1) translateY(0); }
+    }
+
+    @keyframes fab-bob {
+      0%, 100% { transform: translate(-50%, -24px) translateY(0); }
+      50% { transform: translate(-50%, -24px) translateY(-2px); }
+    }
+
+    @keyframes ring-breathe {
+      0%, 100% { box-shadow: 0 0 34px rgba(52,211,153,0.16); }
+      50% { box-shadow: 0 0 48px rgba(52,211,153,0.28); }
+    }
+
+    @keyframes progress-sheen {
+      0% { left: -60px; }
+      100% { left: 100%; }
+    }
+
+    @keyframes skeleton-shimmer {
+      100% { transform: translateX(100%); }
+    }
+
+    @keyframes rest-panel-in {
+      from {
+        opacity: 0;
+        transform: translateY(18px) scale(0.97);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes glass-sweep {
+      0% { transform: translateX(-130%) rotate(8deg); }
+      45% { transform: translateX(-130%) rotate(8deg); }
+      100% { transform: translateX(320%) rotate(8deg); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    /* =========================
        RESPONSIVE
        ========================= */
     @media (min-width: 768px) {
       .app-page {
-        padding-top: 26px;
+        padding-top: calc(16px + env(safe-area-inset-top));
       }
     }
 
     @media (max-width: 420px) {
+      .quick-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .health-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .home-greeting-title {
+        font-size: 25px;
+      }
+
+      .rest-ring {
+        width: 188px;
+        height: 188px;
+      }
+
+      .rest-ring::before {
+        width: 154px;
+        height: 154px;
+      }
+
+      .rest-time {
+        font-size: 38px;
+      }
+
       .workout-header {
         flex-direction: column;
         align-items: stretch;
@@ -1641,6 +2572,20 @@ html
 
     <!-- Global Overlays -->
     <div id="sheet-root"></div>
+    <div id="rest-timer-overlay" class="rest-overlay hidden" aria-live="polite">
+      <div class="rest-panel">
+        <div class="rest-label">Next set in</div>
+        <div id="rest-ring" class="rest-ring">
+          <div data-rest-overlay-time class="rest-time">00:00</div>
+        </div>
+        <div data-rest-overlay-exercise class="rest-exercise">Bench Press</div>
+        <div class="rest-actions">
+          <button data-action="pause-overlay">Pause</button>
+          <button class="is-primary" data-action="skip-overlay">Skip</button>
+          <button data-action="close-overlay">Close</button>
+        </div>
+      </div>
+    </div>
     <div id="rest-timer-bar" class="rest-timer hidden">
       <span data-rest-label>Rest Timer</span>
       <span data-rest-time>00:00</span>
@@ -1837,6 +2782,8 @@ html
         }
       } catch (e) {
         console.warn("State load failed", e);
+      
+        recalcStats();
       }
     }
 
@@ -1850,6 +2797,40 @@ html
 
     function getTodayKey() {
       return new Date().toISOString().slice(0, 10);
+    }
+
+    function hasAnyWorkouts() {
+      return Array.isArray(state.data.workouts) && state.data.workouts.length > 0;
+    }
+
+    function hasAnyStats() {
+      return hasAnyWorkouts();
+    }
+
+    function formatDateGerman(iso) {
+      return new Date(iso).toLocaleDateString("de-DE", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+    }
+
+    function formatDateGermanLong(iso) {
+      return new Date(iso).toLocaleDateString("de-DE", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+    }
+
+    function calcWorkoutVolume(workout) {
+      if (!workout || !workout.exercises) return 0;
+      return workout.exercises.reduce((total, ex) => {
+        const setVolume = (ex.setsData || []).reduce((sum, set) => {
+          return sum + (set.reps * set.weight);
+        }, 0);
+        return total + setVolume;
+      }, 0);
     }
 
     function uid() {
@@ -1892,6 +2873,8 @@ html
       });
 
       if (didNormalize) {
+          recalcStats();
+      
         saveState();
       }
 
@@ -2048,15 +3031,11 @@ html
     }
 
     function getWeeklyVolumeSeries() {
-      const days = [];
-      for (let i = 6; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        const key = d.toISOString().slice(0, 10);
-        const workout = state.data.workouts.find(w => w.date === key);
-        days.push(workout?.volume || 0);
+      const fromStats = state.data.stats?.weeklySeries;
+      if (Array.isArray(fromStats) && fromStats.length === 7) {
+        return fromStats;
       }
-      return days;
+      return buildWeeklySeries(state.data.workouts || []);
     }
 
     function generateWorkout({ goal = "hypertrophy", split = "push", level = "intermediate" }) {
@@ -2094,6 +3073,14 @@ html
     function hapticLight() {
       if (!state.data.preferences.haptics) return;
       if (navigator.vibrate) navigator.vibrate(10);
+      const root = document.getElementById("app-root");
+      if (root) {
+        root.classList.remove("haptic-bump");
+        requestAnimationFrame(() => {
+          root.classList.add("haptic-bump");
+          setTimeout(() => root.classList.remove("haptic-bump"), 80);
+        });
+      }
     }
 
     // =========================
@@ -2171,14 +3158,34 @@ html
     function startRestTimer(setId, seconds = 90) {
       const now = Date.now();
       restState.active = true;
+      restState.paused = false;
       restState.currentSetId = setId;
       restState.duration = seconds;
+      restState.remainingMs = seconds * 1000;
       restState.endsAt = now + (seconds * 1000);
       renderRestTimer();
     }
 
+    function findExerciseNameBySetId(setId) {
+      const allExercises = state.today?.exercises || [];
+      for (const exercise of allExercises) {
+        if ((exercise.setsData || []).some((set) => set.id === setId)) {
+          return exercise.name;
+        }
+      }
+      return "Bench Press";
+    }
+
     function renderRestTimer() {
       const bar = document.getElementById("rest-timer-bar");
+      const overlay = document.getElementById("rest-timer-overlay");
+      const ring = document.getElementById("rest-ring");
+      const overlayTimeEl = overlay?.querySelector("[data-rest-overlay-time]");
+      const overlayExerciseEl = overlay?.querySelector("[data-rest-overlay-exercise]");
+      const pauseBtn = overlay?.querySelector("[data-action='pause-overlay']");
+      const skipBtn = overlay?.querySelector("[data-action='skip-overlay']");
+      const closeOverlayBtn = overlay?.querySelector("[data-action='close-overlay']");
+
       if (!bar) return;
 
       const timeEl = bar.querySelector("[data-rest-time]");
@@ -2186,6 +3193,7 @@ html
 
       if (!restState.active) {
         bar.classList.add("hidden");
+        overlay?.classList.add("hidden");
         if (restTimerInterval) {
           clearInterval(restTimerInterval);
         }
@@ -2193,10 +3201,12 @@ html
       }
 
       bar.classList.remove("hidden");
+      overlay?.classList.remove("hidden");
 
       if (closeBtn && !closeBtn.dataset.listenerAttached) {
         closeBtn.addEventListener("click", () => {
           restState.active = false;
+          restState.paused = false;
           if (restTimerInterval) clearInterval(restTimerInterval);
           renderRestTimer();
           showToast("Timer gelöscht");
@@ -2205,12 +3215,55 @@ html
         closeBtn.dataset.listenerAttached = "true";
       }
 
+      if (pauseBtn && !pauseBtn.dataset.listenerAttached) {
+        pauseBtn.addEventListener("click", () => {
+          restState.paused = !restState.paused;
+          if (!restState.paused) {
+            restState.endsAt = Date.now() + Math.max(0, restState.remainingMs);
+          }
+          renderRestTimer();
+          hapticLight();
+        });
+        pauseBtn.dataset.listenerAttached = "true";
+      }
+
+      if (skipBtn && !skipBtn.dataset.listenerAttached) {
+        skipBtn.addEventListener("click", () => {
+          restState.active = false;
+          restState.paused = false;
+          if (restTimerInterval) clearInterval(restTimerInterval);
+          renderRestTimer();
+          showToast("Rest übersprungen");
+          hapticLight();
+        });
+        skipBtn.dataset.listenerAttached = "true";
+      }
+
+      if (closeOverlayBtn && !closeOverlayBtn.dataset.listenerAttached) {
+        closeOverlayBtn.addEventListener("click", () => {
+          restState.active = false;
+          restState.paused = false;
+          if (restTimerInterval) clearInterval(restTimerInterval);
+          renderRestTimer();
+          showToast("Timer geschlossen");
+          hapticLight();
+        });
+        closeOverlayBtn.dataset.listenerAttached = "true";
+      }
+
       function tick() {
-        const remainingMs = restState.endsAt - Date.now();
+        let remainingMs = restState.paused
+          ? restState.remainingMs
+          : restState.endsAt - Date.now();
+
+        remainingMs = Math.max(0, remainingMs);
+        restState.remainingMs = remainingMs;
 
         if (remainingMs <= 0) {
           timeEl.textContent = "00:00";
+          if (overlayTimeEl) overlayTimeEl.textContent = "00:00";
           restState.active = false;
+          restState.paused = false;
           clearInterval(restTimerInterval);
           renderRestTimer();
           showToast("Rest beendet 🔥");
@@ -2222,6 +3275,15 @@ html
         const minutes = String(Math.floor(totalSec / 60)).padStart(2, "0");
         const seconds = String(totalSec % 60).padStart(2, "0");
         timeEl.textContent = `${minutes}:${seconds}`;
+        if (overlayTimeEl) overlayTimeEl.textContent = `${minutes}:${seconds}`;
+
+        const progress = restState.duration > 0
+          ? ((restState.duration * 1000 - remainingMs) / (restState.duration * 1000)) * 100
+          : 0;
+
+        if (ring) ring.style.setProperty("--ring-progress", String(Math.max(0, Math.min(100, progress))));
+        if (overlayExerciseEl) overlayExerciseEl.textContent = findExerciseNameBySetId(restState.currentSetId);
+        if (pauseBtn) pauseBtn.textContent = restState.paused ? "Resume" : "Pause";
       }
 
       tick();
@@ -2284,11 +3346,19 @@ html
       let startX = 0;
       let currentX = 0;
       let dragging = false;
+      let lastMoveTs = 0;
+      let lastMoveX = 0;
+      let velocityX = 0;
 
       function reset() {
         dragging = false;
         currentX = 0;
-        card.style.transform = "";
+        card.style.transition = "transform 234ms cubic-bezier(0.22, 1, 0.36, 1)";
+        card.style.transform = "translateX(0px) scale(1)";
+        setTimeout(() => {
+          card.style.transition = "";
+          card.style.transform = "";
+        }, 252);
         card.classList.remove("swiping");
       }
 
@@ -2297,6 +3367,10 @@ html
         (e) => {
           dragging = true;
           startX = e.clientX;
+          lastMoveTs = performance.now();
+          lastMoveX = startX;
+          velocityX = 0;
+          card.style.transition = "";
           card.setPointerCapture(
             e.pointerId
           );
@@ -2307,10 +3381,20 @@ html
         "pointermove",
         (e) => {
           if (!dragging) return;
-          currentX =
-            e.clientX - startX;
+          const rawX = e.clientX - startX;
+          const resistance = 1 - Math.min(0.42, Math.abs(rawX) / 520);
+          currentX = rawX * resistance;
+
+          const now = performance.now();
+          const dt = Math.max(1, now - lastMoveTs);
+          velocityX = (e.clientX - lastMoveX) / dt;
+          lastMoveTs = now;
+          lastMoveX = e.clientX;
+
+          const tilt = Math.max(-4, Math.min(4, currentX / 20));
+          const scale = 1 - Math.min(0.02, Math.abs(currentX) / 1800);
           card.style.transform =
-            `translateX(${currentX}px)`;
+            `translateX(${currentX}px) rotate(${tilt}deg) scale(${scale})`;
           if (
             Math.abs(currentX) > 20
           ) {
@@ -2325,13 +3409,16 @@ html
         "pointerup",
         () => {
           if (!dragging) return;
-          if (currentX < -90) {
+          const projected = currentX + velocityX * 120;
+          if (projected < -84) {
             hapticLight();
+            card.style.transition = "transform 162ms cubic-bezier(0.2, 0.9, 0.2, 1)";
+            card.style.transform = "translateX(-120px) scale(0.96)";
             onLeft?.();
-          } else if (
-            currentX > 90
-          ) {
+          } else if (projected > 84) {
             hapticLight();
+            card.style.transition = "transform 162ms cubic-bezier(0.2, 0.9, 0.2, 1)";
+            card.style.transform = "translateX(120px) scale(0.96)";
             onRight?.();
           }
           reset();
@@ -2377,28 +3464,73 @@ html
     }
 
     function recalcWorkoutVolume(workout) {
-
       workout.volume =
         workout.exercises.reduce(
           (total, ex) => {
-
             const setVolume =
               (ex.setsData || []).reduce(
                 (sum, set) => {
-                  return sum +
-                    (
-                      set.reps *
-                      set.weight
-                    );
+                  return sum + (set.reps * set.weight);
                 },
                 0
               );
 
             return total + setVolume;
-
           },
           0
         );
+    }
+
+    function recalcStats() {
+      const workouts = state.data.workouts || [];
+      const today = new Date();
+      const weekStart = new Date(today);
+      weekStart.setDate(today.getDate() - 6);
+
+      const weeklyWorkouts = workouts.filter((w) => {
+        const d = new Date(w.date);
+        return d >= weekStart && d <= today;
+      });
+
+      const weeklyVolume = weeklyWorkouts.reduce((acc, w) => acc + (w.volume || 0), 0);
+
+      if (!state.data.stats) {
+        state.data.stats = {};
+      }
+
+      state.data.stats.weeklyVolumeKg = +(weeklyVolume / 1000).toFixed(1);
+      state.data.stats.weeklySessions = weeklyWorkouts.length;
+      state.data.stats.weeklyPRs = (state.data.prs && state.data.prs.length) || 0;
+      state.data.stats.weeklySeries = buildWeeklySeries(workouts);
+      state.data.stats.monthlySeries = buildMonthlySeries(workouts);
+    }
+
+    function buildWeeklySeries(workouts = []) {
+      const today = new Date();
+      const series = [];
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().slice(0, 10);
+        const workout = workouts.find((w) => w.date === dateStr);
+        series.push(workout ? (workout.volume || 0) : 0);
+      }
+      return series;
+    }
+
+    function buildMonthlySeries(workouts = []) {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = today.getMonth();
+      const series = [];
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        const workout = workouts.find((w) => w.date === dateStr);
+        series.push(workout ? (workout.volume || 0) : 0);
+      }
+      return series;
     }
 
     // =========================
@@ -2451,6 +3583,8 @@ html
       active: false,
       endsAt: null,
       duration: 90,
+      remainingMs: 0,
+      paused: false,
       currentSetId: null,
     };
 
@@ -2458,6 +3592,89 @@ html
 
     let weeklyChartInstance = null;
     let monthlyChartInstance = null;
+    let statsRange = "month";
+
+    function applyMotionPolishToPage(pageNode, route = "home") {
+      if (!pageNode) return;
+
+      const motionTargets = pageNode.querySelectorAll(
+        ".home-topbar, .hero-card, .section-block, .next-workout-card, .exercise-card, .chart-card, .settings-group, .workout-progress, .motivation-card, .health-card"
+      );
+
+      motionTargets.forEach((el, index) => {
+        el.classList.add("motion-item");
+        if (route === "workout" || route === "stats") {
+          el.classList.add("motion-item-fast");
+        }
+        el.style.setProperty("--stagger-index", String(index));
+      });
+
+      pageNode
+        .querySelectorAll(".hero-card, .exercise-card, .chart-card, .settings-group, .workout-progress, .next-workout-card, .motivation-card, .health-card")
+        .forEach((el) => el.classList.add("glass-reflect"));
+    }
+
+    function initMotionInteractions() {
+      const appRoot = document.getElementById("app-root");
+      const appPage = document.getElementById("app-page");
+      if (!appRoot || !appPage) return;
+
+      let ticking = false;
+
+      function updateScrollMotion() {
+        ticking = false;
+        const y = Math.max(window.scrollY || 0, document.documentElement.scrollTop || 0);
+        const progress = Math.max(0, Math.min(1, y / 260));
+        document.documentElement.style.setProperty("--scroll-progress", progress.toFixed(3));
+        appRoot.classList.toggle("scrolling", y > 8);
+
+        const hero = appPage.querySelector(".hero-card");
+        if (hero) {
+          const heroY = Math.max(-10, Math.min(10, -y * 0.06));
+          hero.style.setProperty("--hero-move-y", `${heroY}px`);
+        }
+      }
+
+      function onScroll() {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(updateScrollMotion);
+      }
+
+      window.addEventListener("scroll", onScroll, { passive: true });
+      updateScrollMotion();
+
+      appPage.addEventListener("pointermove", (e) => {
+        const hero = e.target.closest(".hero-card");
+        if (!hero) return;
+        const rect = hero.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width;
+        const y = (e.clientY - rect.top) / rect.height;
+        const tiltX = (0.5 - y) * 4;
+        const tiltY = (x - 0.5) * 5;
+
+        hero.classList.add("is-parallax");
+        hero.style.setProperty("--hero-rot-x", `${tiltX.toFixed(2)}deg`);
+        hero.style.setProperty("--hero-rot-y", `${tiltY.toFixed(2)}deg`);
+        hero.style.setProperty("--hero-move-x", `${(tiltY * 0.45).toFixed(2)}px`);
+
+        const image = hero.querySelector(".hero-image");
+        if (image) {
+          image.style.transform = `translate3d(${(tiltY * 2.4).toFixed(2)}px, ${(tiltX * -1.8).toFixed(2)}px, 0)`;
+        }
+      });
+
+      appPage.addEventListener("pointerleave", () => {
+        const hero = appPage.querySelector(".hero-card");
+        if (!hero) return;
+        hero.classList.remove("is-parallax");
+        hero.style.setProperty("--hero-rot-x", "0deg");
+        hero.style.setProperty("--hero-rot-y", "0deg");
+        hero.style.setProperty("--hero-move-x", "0px");
+        const image = hero.querySelector(".hero-image");
+        if (image) image.style.transform = "translate3d(0, 0, 0)";
+      });
+    }
 
     function initRouter() {
       navigateTo("home");
@@ -2469,6 +3686,8 @@ html
     }
 
     function animatePageTransition(container, oldNode, newNode) {
+      applyMotionPolishToPage(newNode, newNode.dataset.route || "home");
+
       if (!oldNode) {
         container.appendChild(newNode);
         return;
@@ -2818,6 +4037,7 @@ ${(state.data.workoutTemplates || []).map(template => `
           state.today.exercises.push(...exercises);
           state.today.label = template.name;
           recalcWorkoutVolume(state.today);
+            recalcStats();
           saveState();
           showToast(`${template.name} generiert 💪`);
           close();
@@ -2950,8 +4170,8 @@ ${(state.data.workoutTemplates || []).map(template => `
 
       const tabs = [
         { id: "home", label: "Home", icon: "house" },
-        { id: "workout", label: "Workout", icon: "dumbbell" },
-        { id: "stats", label: "Stats", icon: "chart-column" },
+        { id: "workout", label: "Workouts", icon: "dumbbell" },
+        { id: "stats", label: "Progress", icon: "chart-column" },
         { id: "settings", label: "Settings", icon: "settings-2" },
       ];
 
@@ -2966,6 +4186,8 @@ ${(state.data.workoutTemplates || []).map(template => `
           <span>${tab.label}</span>
         `;
         item.addEventListener("click", () => {
+          item.classList.add("nav-press");
+          setTimeout(() => item.classList.remove("nav-press"), 152);
           hapticLight();
           window.dispatchEvent(new CustomEvent("gym:navigate", { detail: { route: tab.id } }));
         });
@@ -2977,6 +4199,8 @@ ${(state.data.workoutTemplates || []).map(template => `
       fab.setAttribute("aria-label", "Neues Workout / Quick Action");
       fab.textContent = "+";
       fab.addEventListener("click", () => {
+        fab.classList.add("nav-press");
+        setTimeout(() => fab.classList.remove("nav-press"), 152);
         hapticLight();
         openWorkoutGenerator();
       });
@@ -2998,96 +4222,120 @@ ${(state.data.workoutTemplates || []).map(template => `
     // =========================
     function renderHeroCard(root, data) {
       const hero = document.createElement("section");
-
       hero.className = "hero-card";
-
       hero.innerHTML = `
+        <div class="hero-image"></div>
         <div class="hero-inner">
-
           <div class="hero-header">
-
             <div>
-              <div class="hero-title">
-                Hey 👋
-              </div>
-
-              <div class="hero-subtitle">
-                Heute: ${data.dayLabel}
-              </div>
+              <div class="hero-title">Ready to reach your goals?</div>
+              <div class="hero-subtitle">${data.dayLabel}</div>
             </div>
-
             <button class="hero-streak">
-              🔥 ${data.streakCurrent} Tage
+              🔥 ${data.streakCurrent} Day Streak
             </button>
-
           </div>
-
           <div class="stat-row">
-
             <div class="stat-chip">
-              <div class="stat-chip-label">Heute</div>
-              <div class="stat-chip-value">
-                ${data.todayExercises}
-              </div>
+              <div class="stat-chip-label">Workout Streak</div>
+              <div class="stat-chip-value">${data.streakCurrent}</div>
             </div>
-
             <div class="stat-chip">
-              <div class="stat-chip-label">Volumen</div>
-              <div class="stat-chip-value">
-                ${data.todayVolumeKg.toFixed(1)}k
-              </div>
+              <div class="stat-chip-label">Weekly Volume</div>
+              <div class="stat-chip-value">${data.weeklyVolume.toLocaleString("de-DE")} kg</div>
             </div>
-
             <div class="stat-chip">
-              <div class="stat-chip-label">Woche</div>
-              <div class="stat-chip-value">
-                ${data.weekSessions}
-              </div>
+              <div class="stat-chip-label">Progress</div>
+              <div class="stat-chip-value">${data.progressPercent}%</div>
             </div>
-
           </div>
-
         </div>
       `;
-
       root.appendChild(hero);
+    }
+
+    function inferMuscleGroupsFromWorkout(day) {
+      const groups = [];
+      (day?.exercises || []).forEach((exercise) => {
+        const dbMatch = (state.data.exerciseDatabase || []).find((entry) => entry.name === exercise.name);
+        const label = dbMatch?.muscleGroup || exercise.tag || "Body";
+        if (label && !groups.includes(label)) groups.push(label);
+      });
+      return groups.slice(0, 3);
     }
 
     function renderHomePage(root) {
       const today = state.today;
       const streak = state.data.streak;
 
+      // التحقق من الحالات الفارغة
+      if (!hasAnyWorkouts()) {
+        root.innerHTML = `
+          <section class="empty-state" style="text-align: center; padding: 60px 20px;">
+            <h2 style="font-size: 24px; margin-bottom: 12px;">👋 Your fitness journey starts now</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 24px;">Create your first workout to unlock insights, progress and streaks.</p>
+            <button class="primary-btn" id="startWorkoutBtn" style="padding: 12px 24px; font-size: 16px;">Create your first workout</button>
+          </section>
+        `;
+        document.getElementById("startWorkoutBtn")?.addEventListener("click", () => {
+          window.dispatchEvent(new CustomEvent("gym:navigate", { detail: { route: "settings" } }));
+        });
+        return;
+      }
+
       root.innerHTML = `
-        <div class="page-header">
-          <div class="page-title">Home</div>
-          <div class="page-subtitle">Dein heutiger Überblick</div>
+        <div class="home-topbar">
+          <div class="home-greeting">
+            <div class="home-greeting-eyebrow">Good Morning, Leon 👋</div>
+            <div class="home-greeting-title">Train Smarter.<br/>Be Stronger.</div>
+          </div>
+          <div class="home-topbar-actions">
+            <button class="icon-button" data-home-action="notifications" aria-label="Notifications">
+              <i data-lucide="bell"></i>
+            </button>
+            <button class="avatar-pill" data-home-action="settings" aria-label="Profile">
+              LE
+            </button>
+          </div>
         </div>
 
         <section class="section-block">
           <header class="section-header">
-            <h2 class="section-title">Nächstes Workout</h2>
-            <button class="section-link" data-action="open-workout">Details</button>
+            <h2 class="section-title">Next Workout</h2>
+            <button class="section-link" data-action="open-workout">Open</button>
           </header>
           <div data-home-next></div>
         </section>
 
         <section class="section-block">
           <header class="section-header">
-            <h2 class="section-title">Quick Stats</h2>
+            <h2 class="section-title">Quick Access</h2>
           </header>
-          <div class="quick-stats-row">
-            <div class="stat-chip">
-              Streak
-              <span class="stat-chip-value">${streak.current} Tage</span>
-            </div>
-            <div class="stat-chip">
-              Best
-              <span class="stat-chip-value">${streak.best} Tage</span>
-            </div>
-            <div class="stat-chip">
-              PRs
-              <span class="stat-chip-value">${countPRs()}</span>
-            </div>
+          <div class="quick-grid">
+            <button class="quick-tile" data-home-action="training-plan">
+              <i data-lucide="clipboard-list"></i>
+              <span class="quick-tile-label">Training Plan</span>
+            </button>
+            <button class="quick-tile" data-home-action="exercises">
+              <i data-lucide="dumbbell"></i>
+              <span class="quick-tile-label">Exercises</span>
+            </button>
+            <button class="quick-tile" data-home-action="progress">
+              <i data-lucide="line-chart"></i>
+              <span class="quick-tile-label">Progress</span>
+            </button>
+            <button class="quick-tile" data-home-action="nutrition">
+              <i data-lucide="apple"></i>
+              <span class="quick-tile-label">Nutrition</span>
+            </button>
+            <button class="quick-tile" data-home-action="recovery">
+              <i data-lucide="heart-pulse"></i>
+              <span class="quick-tile-label">Recovery</span>
+            </button>
+            <button class="quick-tile" data-home-action="calendar">
+              <i data-lucide="calendar-days"></i>
+              <span class="quick-tile-label">Calendar</span>
+            </button>
           </div>
         </section>
 
@@ -3095,9 +4343,9 @@ ${(state.data.workoutTemplates || []).map(template => `
           <header class="section-header">
             <h2 class="section-title">Motivation</h2>
           </header>
-          <p class="motivation-text">
-            Kleine Schritte, große Wirkung. Dein Körper erinnert sich an jede Wiederholung.
-          </p>
+          <div class="motivation-card">
+            <p class="motivation-quote">Today is a good day to become stronger than yesterday.</p>
+          </div>
         </section>
       `;
 
@@ -3117,15 +4365,17 @@ ${(state.data.workoutTemplates || []).map(template => `
         root.appendChild(card);
       }
 
+      const setProgress = getWorkoutSetProgress(today);
+      const weeklyVolume = Math.round(calcWeeklyVolume());
+
       renderHeroCard(root, {
-        dayLabel: today.label || "Trainingstag",
+        dayLabel: today.label || "Push Day",
         streakCurrent: streak.current || 0,
-        todayExercises: today.exercises.length,
-        todayVolumeKg: (today.volume || 0) / 1000,
-        weekSessions: calcWeeklySessions(),
+        progressPercent: setProgress.percent,
+        weeklyVolume,
       });
 
-      const header = root.querySelector(".page-header");
+      const header = root.querySelector(".home-topbar");
       const heroNode = root.querySelector(".hero-card");
       if (header && heroNode) {
         header.insertAdjacentElement("afterend", heroNode);
@@ -3137,20 +4387,81 @@ ${(state.data.workoutTemplates || []).map(template => `
       root.querySelector("[data-action='open-workout']")?.addEventListener("click", () => {
         window.dispatchEvent(new CustomEvent("gym:navigate", { detail: { route: "workout" } }));
       });
+
+      root.querySelector("[data-action='start-next-workout']")?.addEventListener("click", () => {
+        hapticLight();
+        window.dispatchEvent(new CustomEvent("gym:navigate", { detail: { route: "workout" } }));
+      });
+
+      root.querySelectorAll("[data-home-action]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          const action = button.dataset.homeAction;
+          hapticLight();
+          if (action === "training-plan") {
+            openWorkoutGenerator();
+            return;
+          }
+          if (action === "exercises") {
+            openQuickAddExerciseSheet();
+            return;
+          }
+          if (action === "progress") {
+            navigateTo("stats");
+            return;
+          }
+          if (action === "settings") {
+            navigateTo("settings");
+            return;
+          }
+          if (action === "notifications") {
+            await requestNotificationPermission();
+            const permission = ("Notification" in window) ? Notification.permission : "n/a";
+            showToast(`Notifications: ${permission}`);
+            return;
+          }
+          if (action === "nutrition") {
+            showToast("Nutrition tracking bleibt aktiv in deinen Notes & Analytics.");
+            return;
+          }
+          if (action === "recovery") {
+            showToast(getRestDaySuggestion().message);
+            return;
+          }
+          if (action === "calendar") {
+            navigateTo("stats");
+          }
+        });
+      });
+
+      lucide.createIcons();
     }
 
     function renderNextWorkoutPreview(today) {
       if (!today.exercises.length) {
-        return `<p class="text-muted">Noch keine Übungen für heute – tippe auf das + unten, um zu starten.</p>`;
+        return `
+          <article class="next-workout-card">
+            <div class="next-workout-title">Push Day</div>
+            <div class="next-workout-meta">No exercises yet. Build your next session with one tap.</div>
+            <button class="primary-btn" data-action="start-next-workout">Create Workout</button>
+          </article>
+        `;
       }
+
       const first = today.exercises[0];
+      const groups = inferMuscleGroupsFromWorkout(today);
+      const groupLabel = groups.length ? groups.join(" • ") : "Chest • Shoulders • Triceps";
+      const volumeKg = Math.round((today.volume || 0));
+
       return `
-        <article class="exercise-card">
-          <div class="exercise-main">
-            <div class="exercise-name">${first.name}</div>
-            <div class="exercise-meta">${getExerciseSets(first)} Sätze · ${getExerciseReps(first)} Reps · ${getExerciseWeight(first)} kg</div>
+        <article class="next-workout-card">
+          <div class="next-workout-title">${today.label || "Push Day"}</div>
+          <div class="next-workout-meta">${groupLabel}</div>
+          <div class="next-workout-info">
+            <div class="next-workout-pill">${today.exercises.length} Exercises</div>
+            <div class="next-workout-pill">${getExerciseSets(first)} Sets</div>
+            <div class="next-workout-pill">${volumeKg.toLocaleString("de-DE")} kg</div>
           </div>
-          <span class="exercise-tag">Preview</span>
+          <button class="primary-btn" data-action="start-next-workout">Start Workout</button>
         </article>
       `;
     }
@@ -3166,8 +4477,7 @@ ${(state.data.workoutTemplates || []).map(template => `
     }
 
     function countPRs() {
-      // Placeholder: später echte PR-Logik
-      return state.data.workouts.reduce((acc, w) => acc + (w.prs || 0), 0);
+      return (state.data.prs && state.data.prs.length) || 0;
     }
 
     function getWorkoutSetProgress(day) {
@@ -3207,17 +4517,19 @@ ${(state.data.workoutTemplates || []).map(template => `
     function renderWorkoutPage(root) {
       const today = state.today;
       const progress = getWorkoutSetProgress(today);
+      const groups = inferMuscleGroupsFromWorkout(today);
+      const subtitle = groups.length ? groups.join(" • ") : "Chest • Shoulders • Triceps";
 
       root.innerHTML = `
         <div class="page-header">
-          <div class="page-title">Workout</div>
-          <div class="page-subtitle">Dein heutiges Training</div>
+          <div class="page-title">${today.label || "Push Day"}</div>
+          <div class="workout-subtitle">${subtitle}</div>
         </div>
 
         <section class="section-block">
           <header class="workout-header">
             <div>
-              <div class="section-title">${today.label}</div>
+              <div class="section-title">Active Workout</div>
               <div class="text-muted">${today.date}</div>
             </div>
             <div class="workout-header-actions" role="group" aria-label="Rest timer shortcuts">
@@ -3243,6 +4555,10 @@ ${(state.data.workoutTemplates || []).map(template => `
           </div>
 
           <div class="exercise-list" data-exercise-list></div>
+        </section>
+
+        <section class="section-block workout-bottom-cta">
+          <button class="primary-btn" data-action="start-workout-cta">Start Workout</button>
         </section>
 
         <section class="section-block">
@@ -3273,12 +4589,17 @@ ${(state.data.workoutTemplates || []).map(template => `
         hapticLight();
         openCustomTimerSheet();
       });
+
+      root.querySelector("[data-action='start-workout-cta']")?.addEventListener("click", () => {
+        hapticLight();
+        showToast("Workout läuft. Tracke deine Sätze unten.");
+      });
     }
 
     function renderExerciseList(root, day) {
       root.innerHTML = "";
       if (!day.exercises.length) {
-        root.innerHTML = `<p class="text-muted">Noch keine Übungen – tippe auf das + unten, um eine Übung hinzuzufügen.</p>`;
+        root.innerHTML = `<p class="text-muted">Start your first workout to unlock your daily training flow.</p>`;
         return;
       }
       day.exercises.forEach((ex, index) => {
@@ -3286,13 +4607,16 @@ ${(state.data.workoutTemplates || []).map(template => `
         const done = isExerciseDone(ex);
         const collapsed = done && !expandedDoneExercises.has(ex.id);
         const nextSetId = ex.setsData?.find(s => !s.done)?.id;
+        const doneSets = ex.setsData.filter(s => s.done).length;
+        const totalSets = Math.max(1, ex.setsData.length);
+        const exercisePercent = Math.round((doneSets / totalSets) * 100);
 
         const card = document.createElement("article");
-        card.className = "exercise-card";
+        card.className = "exercise-card glass-reflect";
         card.innerHTML = `
           <div class="exercise-main">
             <div class="exercise-name">${ex.name}</div>
-            <div class="exercise-meta">${getExerciseSets(ex)} Sätze · ${getExerciseReps(ex)} Reps · ${getExerciseWeight(ex)} kg</div>
+            <div class="exercise-meta">${getExerciseSets(ex)} Sets • ${getExerciseReps(ex)} Reps • ${getExerciseWeight(ex)} kg</div>
             <div class="exercise-actions">
               <button data-action="history" data-index="${index}">History</button>
               <button data-action="edit" data-index="${index}">Bearbeiten</button>
@@ -3307,7 +4631,10 @@ ${(state.data.workoutTemplates || []).map(template => `
               <div class="set-list" data-set-list="${index}"></div>
             </div>
           </div>
-          <span class="exercise-tag">${isExerciseDone(ex) ? "Done" : (ex.tag || "Workout")}</span>
+          <div class="exercise-side">
+            <div class="exercise-status-circle ${done ? "done" : ""}">${exercisePercent}%</div>
+            <span class="exercise-tag">${isExerciseDone(ex) ? "Done" : (ex.tag || "Active")}</span>
+          </div>
         `;
         root.appendChild(card);
 
@@ -3400,6 +4727,8 @@ ${(state.data.workoutTemplates || []).map(template => `
             );
           }
 
+          recalcWorkoutVolume(day);
+          recalcStats();
           saveState();
           renderExerciseList(root, day);
         });
@@ -3419,7 +4748,7 @@ ${(state.data.workoutTemplates || []).map(template => `
       const card =
         document.createElement("div");
 
-      card.className = "set-card";
+      card.className = "set-card glass-reflect";
 
       if (set.done) {
         card.classList.add("done");
@@ -3453,14 +4782,30 @@ ${(state.data.workoutTemplates || []).map(template => `
           <div>
 
             <div class="set-main">
-              ${set.reps} Reps ×
-              ${set.weight} kg
+              Set ${Math.max(1, (ex.setsData || []).findIndex((entry) => entry.id === set.id) + 1)}
+            </div>
+
+            <div class="set-grid">
+              <div class="set-kv">
+                <div class="set-k">Weight</div>
+                <div class="set-v">${set.weight}kg</div>
+              </div>
+              <div class="set-kv">
+                <div class="set-k">Reps</div>
+                <div class="set-v">${set.reps}</div>
+              </div>
+              <div class="set-kv">
+                <div class="set-k">RIR</div>
+                <div class="set-v">${set.rir ?? "-"}</div>
+              </div>
+              <div class="set-kv">
+                <div class="set-k">PR</div>
+                <div class="set-v">${set.isPR ? "Yes" : "-"}</div>
+              </div>
             </div>
 
             <div class="set-meta-row">
-              <div class="set-meta">
-                Rest ${set.restSeconds}s
-              </div>
+              <div class="set-meta">Rest ${set.restSeconds}s</div>
               ${
                 set.done
                   ? `<div class="set-done-badge">Done</div>`
@@ -3843,6 +5188,7 @@ ${(state.data.workoutTemplates || []).map(template => `
         }
 
         state.today.exercises.push(ex);
+          recalcStats();
         recalcWorkoutVolume(state.today);
         saveState();
 
@@ -3889,6 +5235,7 @@ ${(state.data.workoutTemplates || []).map(template => `
       const getVal = (sel) => content.querySelector(sel)?.value?.trim();
 
       content.querySelector("[data-action='delete']").addEventListener("click", () => {
+          recalcStats();
         const removedExercise = deepClone(day.exercises[index]);
         day.exercises.splice(index, 1);
         recalcWorkoutVolume(state.today);
@@ -3900,6 +5247,7 @@ ${(state.data.workoutTemplates || []).map(template => `
         }
 
         showUndoToast("Übung entfernt", () => {
+                    recalcStats();
           day.exercises.splice(index, 0, deepClone(removedExercise));
           recalcWorkoutVolume(day);
           saveState();
@@ -4091,22 +5439,52 @@ ${(state.data.workoutTemplates || []).map(template => `
         .slice(-7)
         .reverse();
 
-      if (!history.length) {
-        content.innerHTML = `<p class="text-muted">Noch keine History für diese Übung.</p>`;
-      } else {
-        history.forEach(h => {
-          const row = document.createElement("div");
-          row.className = "settings-item";
-          row.innerHTML = `
-            <span class="settings-label">${h.date}</span>
-            <span class="settings-control">${getExerciseSets(h)}x${getExerciseReps(h)} · ${getExerciseWeight(h)} kg</span>
-          `;
-          content.appendChild(row);
-        });
-      }
+      const latest = history[0];
+      const estimated1RM = latest
+        ? Math.round(estimate1RM(getExerciseWeight(latest), getExerciseReps(latest)))
+        : 0;
+
+      const historyRows = history.length
+        ? history.map((h) => `
+            <div class="settings-item">
+              <span class="settings-label">${h.date}</span>
+              <span class="settings-control">${getExerciseSets(h)}x${getExerciseReps(h)} · ${getExerciseWeight(h)} kg</span>
+            </div>
+          `).join("")
+        : `<p class="text-muted">Start your first workout to unlock insights.</p>`;
+
+      content.innerHTML = `
+        <div class="exercise-detail-tabs">
+          <button class="is-active" type="button">Overview</button>
+          <button type="button">History</button>
+          <button type="button">Statistics</button>
+        </div>
+        <div class="settings-group" style="margin-bottom:10px;">
+          <div class="settings-item">
+            <span class="settings-label">1RM Max</span>
+            <span class="settings-control">${estimated1RM} kg</span>
+          </div>
+          <div class="settings-item">
+            <span class="settings-label">Last Entry</span>
+            <span class="settings-control">${latest ? latest.date : "-"}</span>
+          </div>
+          <div class="settings-item">
+            <span class="settings-label">Progress Graph</span>
+            <span class="settings-control">Available in Progress</span>
+          </div>
+        </div>
+        <div class="settings-group">${historyRows}</div>
+        <div class="sheet-row" style="margin-top:10px;">
+          <button class="sheet-button-primary" data-add-entry>Add new entry</button>
+        </div>
+      `;
+
+      content.querySelector("[data-add-entry]")?.addEventListener("click", () => {
+        openQuickAddExerciseSheet();
+      });
 
       openSheet({
-        title: "Exercise History",
+        title: exerciseName,
         subtitle: exerciseName,
         content,
       });
@@ -4116,21 +5494,60 @@ ${(state.data.workoutTemplates || []).map(template => `
     // STATS PAGE
     // =========================
     function renderStatsPage(root) {
-      const weeklyVolume = calcWeeklyVolume();
+      recalcStats();
+
+      if (!hasAnyStats()) {
+        root.innerHTML = `
+          <section class="empty-state" style="text-align: center; padding: 60px 20px;">
+            <h2 style="font-size: 24px; margin-bottom: 12px;">📊 Progress awaits</h2>
+            <p style="color: var(--text-secondary);">Start your first workout to unlock insights</p>
+          </section>
+        `;
+        return;
+      }
+
       const monthlyVolume = calcMonthlyVolume();
+      const monthlySessions = calcMonthlySessions();
+      const monthlyTrend = getMonthlyTrendLabel();
+      const streak = state.data.streak || { current: 0, best: 0 };
+      const prHistory = (state.data.prs || []).slice(-4).reverse();
+
+      const recoveryEntries = Object.entries(state.data.recovery?.byMuscle || {})
+        .slice(0, 4)
+        .map(([muscle, value]) => ({
+          muscle,
+          fatigue: Math.max(0, Math.min(1, Number(value?.fatigue || 0))),
+        }));
+
+      const heatMapItems = ["Chest", "Back", "Legs", "Shoulders", "Arms"].map((muscle) => {
+        const fatigue = Number(state.data.recovery?.byMuscle?.[muscle]?.fatigue || 0);
+        return {
+          muscle,
+          value: Math.round(Math.max(0, Math.min(1, fatigue)) * 100),
+        };
+      });
 
       root.innerHTML = `
         <div class="page-header">
-          <div class="page-title">Stats</div>
-          <div class="page-subtitle">Deine Performance im Blick</div>
+          <div class="page-title">Progress</div>
+          <div class="page-subtitle">Apple Health inspired analytics</div>
+        </div>
+
+        <section class="section-block">
+          <div class="segmented" role="tablist" aria-label="Progress range">
+            <button data-range="week" class="${statsRange === "week" ? "is-active" : ""}">Week</button>
+            <button data-range="month" class="${statsRange === "month" ? "is-active" : ""}">Month</button>
+            <button data-range="year" class="${statsRange === "year" ? "is-active" : ""}">Year</button>
+            <button data-range="all" class="${statsRange === "all" ? "is-active" : ""}">All</button>
+          </div>
         </div>
 
         <section class="section-block">
           <header class="section-header">
-            <h2 class="section-title">Wochenstatistik</h2>
+            <h2 class="section-title">Training Volume</h2>
           </header>
           <div class="chart-card">
-            <div class="chart-canvas-wrapper chart-canvas-wrap">
+            <div class="chart-canvas-wrapper chart-canvas-wrap is-skeleton">
               <canvas id="weeklyChart" class="chart-canvas"></canvas>
             </div>
             <div class="stat-row">
@@ -4144,7 +5561,7 @@ ${(state.data.workoutTemplates || []).map(template => `
                 </span>
               </div>
               <div class="stat-chip">
-                Sessions
+                Frequency
                 <span
                   class="stat-chip-value"
                   data-stat="weekly-sessions"
@@ -4167,10 +5584,10 @@ ${(state.data.workoutTemplates || []).map(template => `
 
         <section class="section-block">
           <header class="section-header">
-            <h2 class="section-title">Monatsstatistik</h2>
+            <h2 class="section-title">Workout Frequency</h2>
           </header>
           <div class="chart-card">
-            <div class="chart-canvas-wrapper chart-canvas-wrap">
+            <div class="chart-canvas-wrapper chart-canvas-wrap is-skeleton">
               <canvas id="monthlyChart" class="chart-canvas"></canvas>
             </div>
             <div class="stat-row">
@@ -4179,35 +5596,90 @@ ${(state.data.workoutTemplates || []).map(template => `
                 <span class="stat-chip-value">${monthlyVolume} kg</span>
               </div>
               <div class="stat-chip">
-                Tage aktiv
-                <span class="stat-chip-value">${calcMonthlySessions()}</span>
+                Active Days
+                <span class="stat-chip-value">${monthlySessions}</span>
               </div>
               <div class="stat-chip">
                 Trend
-                <span class="stat-chip-value">↗︎ stabil</span>
+                <span class="stat-chip-value">${monthlyTrend}</span>
               </div>
             </div>
           </div>
         </section>
+
+        <section class="section-block">
+          <header class="section-header">
+            <h2 class="section-title">Health Insights</h2>
+          </header>
+          <div class="health-grid">
+            <article class="health-card">
+              <div class="health-title">PR History</div>
+              ${prHistory.length ? prHistory.map((pr) => `
+                <div class="heat-item">
+                  <span>${pr.date}</span>
+                  <strong>${pr.weight}kg × ${pr.reps}</strong>
+                </div>
+              `).join("") : `<div class="text-muted">Start your first workout to unlock insights</div>`}
+            </article>
+
+            <article class="health-card">
+              <div class="health-title">Muscle Recovery</div>
+              ${recoveryEntries.length ? recoveryEntries.map((entry) => `
+                <div class="recovery-item">
+                  <span>${entry.muscle}</span>
+                  <div class="recovery-bar"><div class="recovery-fill" style="width:${Math.round(entry.fatigue * 100)}%"></div></div>
+                </div>
+              `).join("") : `<div class="text-muted">Start your first workout to unlock insights</div>`}
+            </article>
+
+            <article class="health-card">
+              <div class="health-title">Body Heat Map</div>
+              ${heatMapItems.map((item) => `
+                <div class="heat-item">
+                  <span>${item.muscle}</span>
+                  <strong>${item.value}%</strong>
+                </div>
+              `).join("")}
+            </article>
+
+            <article class="health-card">
+              <div class="health-title">Streak Stats</div>
+              <div class="heat-item"><span>Current</span><strong>${streak.current} Days</strong></div>
+              <div class="heat-item"><span>Best</span><strong>${streak.best} Days</strong></div>
+              <div class="heat-item"><span>Total PRs</span><strong>${countPRs()}</strong></div>
+            </article>
+          </div>
+        </section>
       `;
+
+      root.querySelectorAll("[data-range]").forEach((button) => {
+        button.addEventListener("click", () => {
+          statsRange = button.dataset.range;
+          renderStatsPage(root);
+        });
+      });
 
       requestAnimationFrame(() => {
         initWeeklyChart();
         initMonthlyChart();
         initStatsNumbers();
+        setTimeout(() => {
+          root.querySelectorAll(".chart-canvas-wrapper.is-skeleton").forEach((el) => {
+            el.classList.remove("is-skeleton");
+          });
+        }, 378);
       });
     }
 
     function initStatsNumbers() {
-
       const weeklyVolume =
-        calcWeeklyVolume() / 1000;
+        state.data.stats?.weeklyVolumeKg || 0;
 
       const weeklySessions =
-        calcWeeklySessions();
+        state.data.stats?.weeklySessions || 0;
 
       const prs =
-        countPRs();
+        state.data.stats?.weeklyPRs || countPRs();
 
       animateCount(
         document.querySelector("[data-stat='weekly-volume']"),
@@ -4229,6 +5701,58 @@ ${(state.data.workoutTemplates || []).map(template => `
       );
     }
 
+    function getVolumeSeriesForRange(range = "month") {
+      if (range === "week") {
+        return {
+          labels: ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"],
+          data: getWeeklyVolumeSeries(),
+        };
+      }
+
+      if (range === "year") {
+        const labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const buckets = Array.from({ length: 12 }, () => 0);
+        (state.data.workouts || []).forEach((workout) => {
+          const date = new Date(workout.date);
+          if (!Number.isNaN(date.getTime())) {
+            buckets[date.getMonth()] += workout.volume || 0;
+          }
+        });
+        return { labels, data: buckets };
+      }
+
+      if (range === "all") {
+        const years = new Map();
+        (state.data.workouts || []).forEach((workout) => {
+          const date = new Date(workout.date);
+          if (Number.isNaN(date.getTime())) return;
+          const year = String(date.getFullYear());
+          years.set(year, (years.get(year) || 0) + (workout.volume || 0));
+        });
+        const labels = Array.from(years.keys()).sort();
+        const data = labels.map((year) => years.get(year));
+        return {
+          labels: labels.length ? labels : [String(new Date().getFullYear())],
+          data: data.length ? data : [0],
+        };
+      }
+
+      const monthly = state.data.stats?.monthlySeries;
+      const monthData = Array.isArray(monthly) && monthly.length
+        ? monthly
+        : buildMonthlySeries(state.data.workouts || []);
+      const labels = monthData.map((_, index) => `${index + 1}`);
+      return { labels, data: monthData };
+    }
+
+    function getFrequencySeriesForRange(range = "month") {
+      const volumeSeries = getVolumeSeriesForRange(range);
+      return {
+        labels: volumeSeries.labels,
+        data: volumeSeries.data.map((value) => (value > 0 ? 1 : 0)),
+      };
+    }
+
     function initWeeklyChart() {
       const ctx = document.getElementById("weeklyChart");
 
@@ -4240,14 +5764,13 @@ ${(state.data.workoutTemplates || []).map(template => `
 
       weeklyChartInstance = new Chart(ctx, {
         type: "line",
-
         data: {
-          labels: ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"],
+          labels: getVolumeSeriesForRange(statsRange).labels,
 
           datasets: [{
-            data: getWeeklyVolumeSeries(),
+            data: getVolumeSeriesForRange(statsRange).data,
 
-            borderColor: "#34d399",
+            borderColor: "rgba(110,231,183,0.96)",
 
             backgroundColor: (context) => {
 
@@ -4266,7 +5789,7 @@ ${(state.data.workoutTemplates || []).map(template => `
 
               gradient.addColorStop(
                 0,
-                "rgba(52,211,153,0.28)"
+                "rgba(52,211,153,0.24)"
               );
 
               gradient.addColorStop(
@@ -4281,13 +5804,13 @@ ${(state.data.workoutTemplates || []).map(template => `
 
             fill: true,
 
-            borderWidth: 3,
+            borderWidth: 2.6,
 
             pointRadius: 0,
 
             pointHoverRadius: 6,
 
-            pointHoverBackgroundColor: "#34d399",
+            pointHoverBackgroundColor: "#6ee7b7",
 
             pointHoverBorderColor: "#ffffff",
 
@@ -4297,7 +5820,7 @@ ${(state.data.workoutTemplates || []).map(template => `
 
         options: {
           animation: {
-            duration: 1200,
+            duration: 1080,
 
             easing: "easeOutCubic",
           },
@@ -4346,27 +5869,33 @@ ${(state.data.workoutTemplates || []).map(template => `
         monthlyChartInstance.destroy();
       }
 
+      const frequencySeries = getFrequencySeriesForRange(statsRange);
+
       monthlyChartInstance = new Chart(ctx, {
         type: "bar",
 
         data: {
-          labels: ["W1", "W2", "W3", "W4"],
+          labels: frequencySeries.labels,
 
           datasets: [{
-            data: [28000, 34000, 31000, 39000],
+            data: frequencySeries.data,
 
             borderRadius: 16,
+            borderSkipped: false,
 
-            backgroundColor: [
-              "rgba(52,211,153,0.9)",
-              "rgba(52,211,153,0.7)",
-              "rgba(52,211,153,0.5)",
-              "rgba(52,211,153,0.85)"
-            ]
+            backgroundColor: frequencySeries.data.map((value) => {
+              const alpha = value > 0 ? 0.85 : 0.2;
+              return `rgba(52,211,153,${alpha})`;
+            })
           }]
         },
 
         options: {
+          animation: {
+            duration: 792,
+            easing: "easeOutQuart",
+          },
+
           responsive: true,
 
           maintainAspectRatio: false,
@@ -4403,6 +5932,10 @@ ${(state.data.workoutTemplates || []).map(template => `
     }
 
     function calcWeeklyVolume() {
+      if (typeof state.data.stats?.weeklyVolumeKg === "number") {
+        return Math.round(state.data.stats.weeklyVolumeKg * 1000);
+      }
+
       const today = new Date();
       const start = new Date(today);
       start.setDate(today.getDate() - 6);
@@ -4415,6 +5948,11 @@ ${(state.data.workoutTemplates || []).map(template => `
     }
 
     function calcMonthlyVolume() {
+      const fromStats = state.data.stats?.monthlySeries;
+      if (Array.isArray(fromStats) && fromStats.length) {
+        return fromStats.reduce((acc, v) => acc + (v || 0), 0);
+      }
+
       const today = new Date();
       const start = new Date(today.getFullYear(), today.getMonth(), 1);
       return state.data.workouts
@@ -4426,12 +5964,48 @@ ${(state.data.workoutTemplates || []).map(template => `
     }
 
     function calcMonthlySessions() {
+      const fromStats = state.data.stats?.monthlySeries;
+      if (Array.isArray(fromStats) && fromStats.length) {
+        return fromStats.filter((v) => v > 0).length;
+      }
+
       const today = new Date();
       const start = new Date(today.getFullYear(), today.getMonth(), 1);
       return state.data.workouts.filter(w => {
         const d = new Date(w.date);
         return d >= start && d <= today && w.completed;
       }).length;
+    }
+
+    function getMonthlyWeeklyBuckets() {
+      const series = state.data.stats?.monthlySeries || [];
+      if (!Array.isArray(series) || !series.length) {
+        return [0, 0, 0, 0];
+      }
+
+      const buckets = [0, 0, 0, 0];
+      series.forEach((value, index) => {
+        const bucketIndex = Math.min(3, Math.floor((index / series.length) * 4));
+        buckets[bucketIndex] += value || 0;
+      });
+      return buckets;
+    }
+
+    function getMonthlyTrendLabel() {
+      const buckets = getMonthlyWeeklyBuckets();
+      const firstHalf = buckets[0] + buckets[1];
+      const secondHalf = buckets[2] + buckets[3];
+
+      if (!firstHalf && !secondHalf) {
+        return "→ stabil";
+      }
+      if (secondHalf > firstHalf * 1.05) {
+        return "↗ steigt";
+      }
+      if (secondHalf < firstHalf * 0.95) {
+        return "↘ sinkt";
+      }
+      return "→ stabil";
     }
 
     // =========================
@@ -4443,56 +6017,63 @@ ${(state.data.workoutTemplates || []).map(template => `
       root.innerHTML = `
         <div class="page-header">
           <div class="page-title">Settings</div>
-          <div class="page-subtitle">Deine App, dein Setup</div>
+          <div class="page-subtitle">iPhone style control center for your training app</div>
         </div>
 
         <section class="section-block">
-          <header class="section-header">
-            <h2 class="section-title">Theme & Sprache</h2>
-          </header>
           <div class="settings-group">
             <div class="settings-item">
-              <span class="settings-label">Theme</span>
+              <span class="settings-label">Appearance</span>
               <button class="settings-control" data-setting="theme">${prefs.theme === "dark" ? "Dark" : "Light"}</button>
             </div>
             <div class="settings-item">
-              <span class="settings-label">Sprache</span>
+              <span class="settings-label">Language</span>
               <button class="settings-control" data-setting="language">${prefs.language.toUpperCase()}</button>
             </div>
-          </div>
-        </section>
-
-        <section class="section-block">
-          <header class="section-header">
-            <h2 class="section-title">Feedback</h2>
-          </header>
-          <div class="settings-group">
             <div class="settings-item">
               <span class="settings-label">Haptics</span>
               <button class="settings-control" data-setting="haptics">${prefs.haptics ? "On" : "Off"}</button>
             </div>
-              <div class="settings-item">
+            <div class="settings-item">
               <span class="settings-label">Sound</span>
               <button class="settings-control" data-setting="sound">${prefs.sound ? "On" : "Off"}</button>
+            </div>
+            <div class="settings-item">
+              <span class="settings-label">Notifications</span>
+              <button class="settings-control" data-setting="notifications">${("Notification" in window) ? Notification.permission : "n/a"}</button>
+            </div>
+            <div class="settings-item">
+              <span class="settings-label">Default Rest Timer</span>
+              <button class="settings-control" data-setting="default-rest">${prefs.defaultRestSeconds}s</button>
             </div>
           </div>
         </section>
 
         <section class="section-block">
-          <header class="section-header">
-            <h2 class="section-title">Backup & Reset</h2>
-          </header>
           <div class="settings-group">
             <div class="settings-item">
-              <span class="settings-label">Export</span>
+              <span class="settings-label">Data Export</span>
               <button class="settings-control" data-setting="export">JSON</button>
             </div>
             <div class="settings-item">
-              <span class="settings-label">Import</span>
-              <button class="settings-control" data-setting="import">JSON</button>
+              <span class="settings-label">Backup</span>
+              <button class="settings-control" data-setting="backup">Create</button>
             </div>
             <div class="settings-item">
-              <span class="settings-label">Reset</span>
+              <span class="settings-label">Import Backup</span>
+              <button class="settings-control" data-setting="import">Restore</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-block">
+          <div class="settings-group">
+            <div class="settings-item">
+              <span class="settings-label">About</span>
+              <button class="settings-control" data-setting="about">Emerald Gym</button>
+            </div>
+            <div class="settings-item">
+              <span class="settings-label">Reset Data</span>
               <button class="settings-control" data-setting="reset">Alles löschen</button>
             </div>
           </div>
@@ -4510,7 +6091,7 @@ ${(state.data.workoutTemplates || []).map(template => `
         case "theme":
           prefs.theme = prefs.theme === "dark" ? "light" : "dark";
           document.documentElement.classList.toggle("theme-dark", prefs.theme === "dark");
-          showToast(`Theme: ${prefs.theme}`);
+          showToast(`Appearance: ${prefs.theme === "dark" ? "Dark" : "Light"}`);
           break;
         case "language":
           prefs.language = prefs.language === "de" ? "en" : "de";
@@ -4518,18 +6099,42 @@ ${(state.data.workoutTemplates || []).map(template => `
           break;
         case "haptics":
           prefs.haptics = !prefs.haptics;
-          showToast(`Haptics: ${prefs.haptics ? "On" : "Off"}`);
+          showToast(`Haptics: ${prefs.haptics ? "Ein" : "Aus"}`);
           break;
         case "sound":
           prefs.sound = !prefs.sound;
-          showToast(`Sound: ${prefs.sound ? "On" : "Off"}`);
+          showToast(`Sound: ${prefs.sound ? "Ein" : "Aus"}`);
+          break;
+        case "notifications":
+          requestNotificationPermission().then(() => {
+            const permission = ("Notification" in window) ? Notification.permission : "n/a";
+            showToast(`Notifications: ${permission}`);
+          });
+          break;
+        case "default-rest":
+          openDefaultRestSheet();
           break;
         case "export":
+          exportData();
+          break;
+        case "backup":
           exportData();
           break;
         case "import":
           importData();
           break;
+        case "about": {
+          const content = document.createElement("div");
+          content.innerHTML = `
+            <div class="sheet-subtitle">Emerald Gym 2026 · Premium Local-First Fitness App</div>
+            <div class="sheet-row">
+              <button class="sheet-button-primary" data-close>Schließen</button>
+            </div>
+          `;
+          const { close } = openSheet({ title: "About", content });
+          content.querySelector("[data-close]")?.addEventListener("click", close);
+          break;
+        }
         case "reset":
           if (confirm("Wirklich alles löschen?")) {
             localStorage.removeItem(STORAGE_KEY);
@@ -4608,6 +6213,7 @@ ${(state.data.workoutTemplates || []).map(template => `
       requestNotificationPermission();
       document.documentElement.classList.toggle("theme-dark", state.data.preferences.theme === "dark");
       initBottomNav();
+      initMotionInteractions();
       initRouter();
     }
 
@@ -4624,4 +6230,3 @@ ${(state.data.workoutTemplates || []).map(template => `
   </script>
 </body>
 </html>
-
