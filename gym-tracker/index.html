@@ -1,5 +1,3 @@
-html
-
 <!doctype html>
 <html lang="de" class="theme-dark">
 <head>
@@ -22,6 +20,7 @@ html
        ========================= */
     :root {
       --bg-graphite: #050608;
+      --bottom-nav-safe: 180px;
 
       --surface-primary: rgba(15, 18, 24, 0.88);
       --surface-secondary: rgba(15, 23, 42, 0.88);
@@ -38,13 +37,28 @@ html
         0 12px 40px rgba(0,0,0,0.45);
 
       --shadow-glow:
-        0 0 30px rgba(52,211,153,0.35);
+        0 0 22px rgba(52,211,153,0.26);
 
       --text-muted: #6b7280;
       --accent-emerald-soft: rgba(52, 211, 153, 0.18);
       --bg-elevated-strong: rgba(15, 18, 24, 0.98);
       --transition-fast: 160ms ease-out;
       --transition-med: 220ms ease-out;
+    }
+
+    html.theme-light,
+    html:not(.theme-dark) {
+      --bg-graphite: #eef4f2;
+      --surface-primary: rgba(255, 255, 255, 0.82);
+      --surface-secondary: rgba(246, 251, 249, 0.88);
+      --text-primary: #0b1220;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --border-soft: rgba(15, 23, 42, 0.14);
+      --accent-emerald-soft: rgba(52, 211, 153, 0.2);
+      --bg-elevated-strong: rgba(255, 255, 255, 0.95);
+      --shadow-soft: 0 12px 34px rgba(15, 23, 42, 0.12);
+      --shadow-glow: 0 0 18px rgba(16, 185, 129, 0.16);
     }
 
     * {
@@ -73,6 +87,12 @@ html
     body {
       overflow-x: hidden;
       overscroll-behavior-y: none;
+    }
+
+    body.modal-open {
+      overflow: hidden;
+      touch-action: none;
+      overscroll-behavior: none;
     }
 
     button {
@@ -144,15 +164,33 @@ html
       background:
         radial-gradient(
           circle,
-          rgba(52,211,153,0.42),
-          rgba(52,211,153,0.14) 42%,
+          rgba(52,211,153,0.31),
+          rgba(52,211,153,0.1) 42%,
           transparent 72%
         );
 
-      filter: blur(70px);
+      filter: blur(56px);
 
       animation:
         emeraldFloat 11s ease-in-out infinite alternate;
+    }
+
+    html.theme-light .bg-gradient,
+    html:not(.theme-dark) .bg-gradient {
+      background:
+        radial-gradient(circle at 20% 0%, rgba(16, 185, 129, 0.18) 0%, rgba(226, 242, 238, 0.88) 44%, #edf5f2 100%);
+    }
+
+    html.theme-light .bg-noise,
+    html:not(.theme-dark) .bg-noise {
+      opacity: 0.32;
+      mix-blend-mode: overlay;
+    }
+
+    html.theme-light .bg-glow-emerald,
+    html:not(.theme-dark) .bg-glow-emerald {
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.16), rgba(16, 185, 129, 0.06) 42%, transparent 72%);
+      filter: blur(50px);
     }
 
     .app-frame {
@@ -161,7 +199,7 @@ html
 
       min-height: 100vh;
 
-      padding-bottom: calc(140px + env(safe-area-inset-bottom));
+      padding-bottom: calc(var(--bottom-nav-safe, 180px) + env(safe-area-inset-bottom));
     }
 
     .app-page {
@@ -169,7 +207,7 @@ html
 
       margin: 0 auto;
 
-      padding: calc(10px + env(safe-area-inset-top)) 14px 18px;
+      padding: calc(10px + env(safe-area-inset-top)) 14px calc(var(--bottom-nav-safe, 180px) + env(safe-area-inset-bottom));
     }
 
     .page {
@@ -205,6 +243,25 @@ html
       position: relative;
     }
 
+    html.theme-light .bottom-nav-inner,
+    html:not(.theme-dark) .bottom-nav-inner {
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid rgba(15, 23, 42, 0.12);
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.18);
+    }
+
+    html.theme-light .bottom-nav-item,
+    html:not(.theme-dark) .bottom-nav-item {
+      color: #475569;
+    }
+
+    html.theme-light .bottom-nav-item--active,
+    html:not(.theme-dark) .bottom-nav-item--active {
+      color: #0f172a;
+      background: rgba(16, 185, 129, 0.1);
+      box-shadow: 0 4px 11px rgba(16, 185, 129, 0.1);
+    }
+
     .bottom-nav-item {
       flex: 1;
       text-align: center;
@@ -230,17 +287,14 @@ html
 
     .bottom-nav-item--active {
       color: var(--accent-emerald);
+      background: rgba(52, 211, 153, 0.11);
+      box-shadow: 0 6px 14px rgba(16,185,129,0.14);
+      transform: scale(1.01);
+    }
 
-      background:
-        radial-gradient(
-          circle at top,
-          rgba(52,211,153,0.22),
-          rgba(15,118,110,0.12)
-        );
-
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.04),
-        0 0 22px rgba(52,211,153,0.12);
+    .bottom-nav-item:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.22);
     }
 
     .bottom-nav-fab {
@@ -251,7 +305,7 @@ html
       height: 48px;
       border-radius: 999px;
       background: radial-gradient(circle at 30% 0%, #6ee7b7, #22c55e);
-      box-shadow: var(--shadow-glow);
+      box-shadow: 0 0 13px rgba(52, 211, 153, 0.19);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -259,6 +313,7 @@ html
       font-weight: 600;
       font-size: 20px;
       border: 3px solid rgba(15, 23, 42, 0.95);
+      filter: saturate(1.02);
       transition:
         transform 180ms ease,
         box-shadow 180ms ease;
@@ -887,12 +942,27 @@ html
       border: 1px solid rgba(55, 65, 81, 0.8);
     }
 
+    html.theme-light .settings-group,
+    html:not(.theme-dark) .settings-group {
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid rgba(15, 23, 42, 0.12);
+    }
+
     .settings-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 6px 0;
       font-size: 13px;
+    }
+
+    .settings-item[data-setting-row] {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .settings-item[data-setting-row]:active {
+      background: rgba(255, 255, 255, 0.04);
     }
 
     .settings-item + .settings-item {
@@ -914,16 +984,23 @@ html
     .sheet-backdrop {
       position: fixed;
       inset: 0;
-
-      background: rgba(0,0,0,0.45);
-
+      --sheet-backdrop-opacity: 0.62;
+      background: rgba(2, 6, 12, var(--sheet-backdrop-opacity));
       backdrop-filter: blur(14px);
-
       z-index: 200;
-
       display: flex;
       justify-content: center;
       align-items: flex-end;
+      opacity: 0;
+      transition: opacity 220ms cubic-bezier(0.22, 1, 0.36, 1), backdrop-filter 220ms ease;
+    }
+
+    .sheet-backdrop.is-open {
+      opacity: 1;
+    }
+
+    .sheet-backdrop.is-closing {
+      opacity: 0;
     }
 
     .modal-backdrop {
@@ -939,10 +1016,10 @@ html
 
     .sheet {
       width: 100%;
-      max-width: 480px;
+      max-width: 680px;
 
       padding:
-        18px 18px 26px;
+        16px 16px 26px;
 
       border-radius:
         30px 30px 0 0;
@@ -953,9 +1030,21 @@ html
 
       border:
         1px solid rgba(148,163,184,0.16);
+      transform: translateY(24px);
+      opacity: 0;
+      transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1), opacity 220ms ease;
+      touch-action: none;
+      will-change: transform;
+    }
 
-      animation:
-        sheetUp 0.28s cubic-bezier(.25,.8,.25,1);
+    .sheet-backdrop.is-open .sheet {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .sheet-backdrop.is-closing .sheet {
+      transform: translateY(24px);
+      opacity: 0;
     }
 
     .sheet-handle {
@@ -972,6 +1061,24 @@ html
 
       backdrop-filter:
         blur(10px);
+      cursor: grab;
+      touch-action: none;
+    }
+
+    .sheet-handle:active {
+      cursor: grabbing;
+    }
+
+    .sheet-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .sheet-title-wrap {
+      min-width: 0;
+      flex: 1;
     }
 
     .sheet-title {
@@ -984,6 +1091,28 @@ html
       margin-bottom: 6px;
 
       color: white;
+    }
+
+    .sheet-close {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      color: rgba(255,255,255,0.84);
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      transition: transform 160ms ease, background 160ms ease;
+    }
+
+    .sheet-close:hover {
+      background: rgba(255,255,255,0.14);
+    }
+
+    .sheet-close:active {
+      transform: scale(0.92);
     }
 
     .sheet-subtitle {
@@ -1615,7 +1744,7 @@ html
     .app-page {
       width: min(100%, 680px);
       max-width: 680px;
-      padding: calc(10px + env(safe-area-inset-top)) 12px 18px;
+      padding: calc(10px + env(safe-area-inset-top)) 12px calc(var(--bottom-nav-safe, 180px) + env(safe-area-inset-bottom));
     }
 
     .page {
@@ -1739,6 +1868,54 @@ html
       pointer-events: none;
     }
 
+    .media-fill {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      border-radius: inherit;
+      pointer-events: none;
+    }
+
+    .media-fill img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      transform: scale(1.02);
+      filter: saturate(1.05) contrast(1.04);
+    }
+
+    .hero-card {
+      overflow: hidden;
+      min-height: 254px;
+    }
+
+    .hero-media {
+      z-index: 0;
+    }
+
+    .hero-media-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      border-radius: inherit;
+      background:
+        linear-gradient(160deg, rgba(3, 6, 10, 0.4), rgba(3, 6, 10, 0.74) 58%, rgba(3, 6, 10, 0.9)),
+        radial-gradient(circle at top right, rgba(52, 211, 153, 0.24), transparent 54%);
+      backdrop-filter: blur(1.4px);
+      pointer-events: none;
+    }
+
+    .hero-card::before,
+    .hero-card::after,
+    .hero-image {
+      z-index: 2;
+    }
+
+    .hero-inner {
+      z-index: 3;
+    }
+
     .stat-chip {
       border-radius: var(--ios-radius-md);
       padding: 14px 12px;
@@ -1763,6 +1940,34 @@ html
       background: var(--ios-glass-strong);
       border: 1px solid rgba(255, 255, 255, 0.15);
       box-shadow: 0 14px 34px rgba(0, 0, 0, 0.46);
+      min-height: 206px;
+    }
+
+    .workout-card-media {
+      z-index: 0;
+    }
+
+    .workout-card-media img {
+      object-fit: cover;
+      object-position: right center;
+      transform: scale(1.01);
+    }
+
+    .workout-card-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      border-radius: inherit;
+      background:
+        linear-gradient(90deg, rgba(3, 6, 10, 0.72) 0%, rgba(3, 6, 10, 0.46) 44%, rgba(3, 6, 10, 0.18) 72%, rgba(3, 6, 10, 0.08) 100%),
+        radial-gradient(circle at 92% 10%, rgba(52, 211, 153, 0.16), transparent 50%);
+      backdrop-filter: blur(1.2px);
+      pointer-events: none;
+    }
+
+    .next-workout-card > *:not(.workout-card-media):not(.workout-card-overlay) {
+      position: relative;
+      z-index: 2;
     }
 
     .next-workout-title {
@@ -1851,7 +2056,7 @@ html
       line-height: 1.25;
     }
 
-    .quick-tile i {
+    .quick-tile-icon {
       width: 22px;
       height: 22px;
       min-width: 22px;
@@ -1864,15 +2069,75 @@ html
       border: 1px solid rgba(52,211,153,0.24);
       box-shadow: 0 8px 18px rgba(0,0,0,0.28);
       color: #6ee7b7;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .quick-tile-icon i,
+    .quick-tile-icon svg {
+      width: 18px;
+      height: 18px;
     }
 
     .motivation-card {
+      position: relative;
+      overflow: hidden;
       border-radius: 28px;
       padding: 22px 18px;
       background: linear-gradient(160deg, rgba(18,24,34,0.8), rgba(9,12,18,0.92));
       border: 1px solid rgba(52,211,153,0.18);
       text-align: center;
       box-shadow: 0 20px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08);
+      min-height: 164px;
+    }
+
+    .motivation-media {
+      z-index: 0;
+    }
+
+    .motivation-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      border-radius: inherit;
+      background:
+        linear-gradient(160deg, rgba(3, 6, 10, 0.46), rgba(3, 6, 10, 0.86) 62%),
+        radial-gradient(circle at 50% 0%, rgba(52, 211, 153, 0.18), transparent 60%);
+      backdrop-filter: blur(2.2px);
+      pointer-events: none;
+    }
+
+    .motivation-card > *:not(.motivation-media):not(.motivation-overlay) {
+      position: relative;
+      z-index: 2;
+    }
+
+    .recovery-card {
+      position: relative;
+      overflow: hidden;
+      min-height: 110px;
+    }
+
+    .recovery-media {
+      z-index: 0;
+    }
+
+    .recovery-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      border-radius: inherit;
+      background:
+        linear-gradient(165deg, rgba(3, 6, 10, 0.45), rgba(3, 6, 10, 0.84) 70%),
+        radial-gradient(circle at 20% 0%, rgba(52, 211, 153, 0.22), transparent 54%);
+      backdrop-filter: blur(2px);
+      pointer-events: none;
+    }
+
+    .recovery-card > *:not(.recovery-media):not(.recovery-overlay) {
+      position: relative;
+      z-index: 2;
     }
 
     .motivation-quote {
@@ -2032,6 +2297,258 @@ html
       border-radius: inherit;
     }
 
+    .muscle-groups-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 28px;
+      padding: 18px;
+      background: linear-gradient(180deg, rgba(14, 18, 26, 0.88), rgba(11, 15, 22, 0.8));
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 14px 30px rgba(0,0,0,0.34), inset 0 1px 0 rgba(255,255,255,0.05);
+      backdrop-filter: blur(16px) saturate(1.06);
+      -webkit-backdrop-filter: blur(16px) saturate(1.06);
+    }
+
+    .muscle-groups-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      box-shadow: inset 0 0 0 1px rgba(52,211,153,0.05), inset 0 0 20px rgba(52,211,153,0.05);
+      pointer-events: none;
+    }
+
+    .muscle-groups-copy {
+      position: relative;
+      z-index: 1;
+      margin-bottom: 14px;
+      font-size: 13px;
+      line-height: 1.45;
+      color: rgba(255,255,255,0.66);
+    }
+
+    .muscle-groups-layout {
+      display: grid;
+      grid-template-columns: minmax(204px, 0.78fr) minmax(0, 1.32fr);
+      gap: 8px;
+      align-items: center;
+    }
+
+    .muscle-groups-figure {
+      position: relative;
+      min-height: 324px;
+      border-radius: 24px;
+      padding: 2px 0;
+      background:
+        radial-gradient(circle at 50% 12%, rgba(52,211,153,0.11), transparent 36%),
+        radial-gradient(circle at 52% 54%, rgba(16,185,129,0.06), transparent 46%),
+        rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    .muscle-groups-figure::before {
+      content: "";
+      position: absolute;
+      inset: 18px 26px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 50% 42%, rgba(167,243,208,0.1), transparent 58%);
+      filter: blur(18px);
+      opacity: 0.8;
+      pointer-events: none;
+    }
+
+    .muscle-groups-figure svg {
+      position: relative;
+      z-index: 1;
+      width: min(100%, 238px);
+      height: auto;
+      overflow: visible;
+      animation: muscleBreath 6.4s ease-in-out infinite;
+    }
+
+    .body-silhouette {
+      fill: url(#bodyGradient);
+      stroke: rgba(255,255,255,0.065);
+      stroke-width: 1.1;
+    }
+
+    .body-detail {
+      fill: none;
+      stroke: rgba(255,255,255,0.052);
+      stroke-width: 0.85;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .muscle-highlight {
+      fill: url(#muscleGradientPrimary);
+      opacity: var(--muscle-alpha,0.18);
+      filter: drop-shadow(0 0 7px rgba(52,211,153,0.08));
+      animation: musclePulse 5.2s ease-in-out infinite;
+      transform-origin: center;
+    }
+
+    .muscle-highlight.is-secondary {
+      fill: url(#muscleGradientSecondary);
+    }
+
+    .muscle-groups-bars {
+      display: grid;
+      gap: 16px;
+      padding-left: 0;
+    }
+
+    .muscle-row {
+      display: grid;
+      grid-template-columns: minmax(56px, auto) minmax(0, 1fr) 38px;
+      gap: 12px;
+      align-items: center;
+      width: 100%;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      text-align: left;
+      cursor: pointer;
+      transition: transform 180ms ease, opacity 180ms ease;
+    }
+
+    .muscle-row:hover {
+      transform: translateX(2px);
+    }
+
+    .muscle-row.is-active .muscle-label,
+    .muscle-row.is-active .muscle-value {
+      color: #ecfdf5;
+    }
+
+    .muscle-row.is-active .muscle-track {
+      background: linear-gradient(90deg, rgba(255,255,255,0.11), rgba(255,255,255,0.06));
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.05), 0 0 0 1px rgba(52,211,153,0.1);
+    }
+
+    .muscle-label {
+      font-size: 13px;
+      letter-spacing: 0.01em;
+      color: rgba(255,255,255,0.86);
+      white-space: nowrap;
+    }
+
+    .muscle-value {
+      font-size: 12px;
+      color: rgba(255,255,255,0.7);
+      min-width: 42px;
+      text-align: right;
+    }
+
+    .muscle-track {
+      position: relative;
+      height: 6px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: linear-gradient(90deg, rgba(255,255,255,0.085), rgba(255,255,255,0.045));
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.04);
+    }
+
+    .muscle-track::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.035);
+      pointer-events: none;
+    }
+
+    .muscle-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, rgba(209,250,229,0.9), rgba(52,211,153,0.78) 52%, rgba(16,185,129,0.68));
+      box-shadow: 0 0 10px rgba(52,211,153,0.1);
+      transform-origin: left center;
+      animation: muscleFillGrow 1100ms cubic-bezier(0.22, 1, 0.36, 1) both;
+      transition: width 700ms cubic-bezier(0.22, 1, 0.36, 1), filter 260ms ease;
+    }
+
+    .muscle-row.is-active .muscle-fill {
+      filter: saturate(1.08) brightness(1.04);
+    }
+
+    .muscle-focus {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025));
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    .muscle-focus-top {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+
+    .muscle-focus-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.92);
+    }
+
+    .muscle-focus-percent {
+      font-size: 15px;
+      font-weight: 700;
+      color: #d1fae5;
+    }
+
+    .muscle-focus-label {
+      margin-bottom: 4px;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+    }
+
+    .muscle-focus-exercises {
+      font-size: 13px;
+      line-height: 1.5;
+      color: rgba(255,255,255,0.78);
+    }
+
+    @keyframes muscleFillGrow {
+      from {
+        transform: scaleX(0);
+      }
+      to {
+        transform: scaleX(1);
+      }
+    }
+
+    @keyframes musclePulse {
+      0%,
+      100% {
+        opacity: calc(var(--muscle-alpha, 0.18) * 0.9);
+        filter: drop-shadow(0 0 5px rgba(52,211,153,0.06));
+      }
+      50% {
+        opacity: calc(var(--muscle-alpha, 0.18) * 1.08);
+        filter: drop-shadow(0 0 9px rgba(52,211,153,0.12));
+      }
+    }
+
+    @keyframes muscleBreath {
+      0%,
+      100% {
+        transform: translateY(0) scale(0.996);
+      }
+      50% {
+        transform: translateY(-3px) scale(1.012);
+      }
+    }
+
     .exercise-detail-tabs {
       display: flex;
       gap: 8px;
@@ -2066,6 +2583,18 @@ html
       transition: opacity 180ms ease;
     }
 
+    .rest-overlay::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: url("assets/images/generated/rest-timer-background.jpg");
+      background-size: cover;
+      background-position: center;
+      filter: blur(1px) brightness(0.74) saturate(1.02);
+      transform: scale(1.02);
+      pointer-events: none;
+    }
+
     .rest-overlay.hidden {
       opacity: 0;
       pointer-events: none;
@@ -2077,6 +2606,8 @@ html
     }
 
     .rest-panel {
+      position: relative;
+      overflow: hidden;
       width: min(420px, calc(100vw - 34px));
       border-radius: 32px;
       padding: 20px 18px 16px;
@@ -2084,6 +2615,196 @@ html
       border: 1px solid rgba(255,255,255,0.14);
       box-shadow: 0 24px 54px rgba(0,0,0,0.55);
       text-align: center;
+    }
+
+    .rest-panel-media {
+      display: none;
+    }
+
+    .rest-panel-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      border-radius: inherit;
+      background:
+        linear-gradient(170deg, rgba(3, 6, 10, 0.45), rgba(3, 6, 10, 0.88) 60%),
+        radial-gradient(circle at 50% 0%, rgba(52, 211, 153, 0.22), transparent 62%);
+      backdrop-filter: blur(2.4px);
+      pointer-events: none;
+    }
+
+    .rest-panel-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .progress-hero {
+      position: relative;
+      overflow: hidden;
+      min-height: 180px;
+      height: clamp(180px, 24vw, 220px);
+      border-radius: 32px;
+      padding: 16px 18px;
+      background: rgba(11, 17, 27, 0.76);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 0 16px 38px rgba(0, 0, 0, 0.46);
+      margin-bottom: 12px;
+    }
+
+    .progress-hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      border-radius: inherit;
+      box-shadow:
+        inset 0 0 0 1px rgba(52, 211, 153, 0.18),
+        inset 0 0 28px rgba(52, 211, 153, 0.1),
+        0 0 18px rgba(52, 211, 153, 0.09);
+      pointer-events: none;
+    }
+
+    .progress-hero-media {
+      z-index: 0;
+      background-size: cover;
+      background-position: center center;
+    }
+
+    .progress-hero-media img {
+      object-position: right center;
+      object-fit: cover;
+      filter: brightness(1.42) contrast(1.12) saturate(1.08);
+      transform: scale(1.02);
+    }
+
+    .progress-hero-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      border-radius: inherit;
+      background:
+        linear-gradient(to right, rgba(0,0,0,.35), rgba(0,0,0,.15)),
+        linear-gradient(to bottom, rgba(0,0,0,0) 72%, rgba(0,0,0,.2) 100%);
+      backdrop-filter: blur(0.5px);
+      pointer-events: none;
+    }
+
+    .progress-hero > *:not(.progress-hero-media):not(.progress-hero-overlay) {
+      position: relative;
+      z-index: 3;
+    }
+
+    .progress-hero-title {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      margin-bottom: 4px;
+      max-width: 22ch;
+    }
+
+    .progress-hero-kicker {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 8px;
+    }
+
+    .progress-hero-copy {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.72);
+      max-width: 32ch;
+    }
+
+    .exercise-detail-hero {
+      position: relative;
+      overflow: hidden;
+      border-radius: 22px;
+      min-height: 128px;
+      margin-bottom: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(10, 14, 22, 0.76);
+      padding: 14px;
+      display: flex;
+      align-items: flex-end;
+    }
+
+    .exercise-detail-hero-media {
+      z-index: 0;
+    }
+
+    .exercise-detail-hero-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      border-radius: inherit;
+      background:
+        linear-gradient(170deg, rgba(3, 6, 10, 0.34), rgba(3, 6, 10, 0.88) 72%);
+      backdrop-filter: blur(1.8px);
+      pointer-events: none;
+    }
+
+    .exercise-detail-hero-label {
+      position: relative;
+      z-index: 2;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.88);
+      letter-spacing: 0.02em;
+    }
+
+    .health-card-recovery {
+      position: relative;
+      overflow: hidden;
+      min-height: 164px;
+    }
+
+    .health-card-media {
+      z-index: 0;
+    }
+
+    .health-card-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      border-radius: inherit;
+      background:
+        linear-gradient(170deg, rgba(3, 6, 10, 0.46), rgba(3, 6, 10, 0.88) 66%);
+      backdrop-filter: blur(2px);
+      pointer-events: none;
+    }
+
+    .health-card-recovery > *:not(.health-card-media):not(.health-card-overlay) {
+      position: relative;
+      z-index: 2;
+    }
+
+    .generator-template-button {
+      position: relative;
+      overflow: hidden;
+      min-height: 122px;
+    }
+
+    .template-button-media {
+      z-index: 0;
+      border-radius: 26px;
+    }
+
+    .template-button-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      border-radius: 26px;
+      background:
+        linear-gradient(155deg, rgba(3, 6, 10, 0.14), rgba(3, 6, 10, 0.35) 74%),
+        radial-gradient(circle at 84% 12%, rgba(52, 211, 153, 0.2), transparent 52%);
+      backdrop-filter: blur(1px);
+      pointer-events: none;
+    }
+
+    .generator-template-button > *:not(.template-button-media):not(.template-button-overlay) {
+      position: relative;
+      z-index: 2;
     }
 
     .rest-label {
@@ -2184,7 +2905,7 @@ html
       width: 56px;
       height: 56px;
       transform: translate(-50%, -24px);
-      box-shadow: 0 0 0 6px rgba(3,6,10,0.78), 0 0 27px rgba(52,211,153,0.44), 0 11px 18px rgba(16,185,129,0.38);
+      box-shadow: 0 0 0 5px rgba(3,6,10,0.62), 0 0 22px rgba(52,211,153,0.35), 0 9px 14px rgba(16,185,129,0.3);
     }
 
     .bottom-nav-fab:hover {
@@ -2574,15 +3295,21 @@ html
     <div id="sheet-root"></div>
     <div id="rest-timer-overlay" class="rest-overlay hidden" aria-live="polite">
       <div class="rest-panel">
-        <div class="rest-label">Next set in</div>
-        <div id="rest-ring" class="rest-ring">
-          <div data-rest-overlay-time class="rest-time">00:00</div>
+        <div class="rest-panel-media media-fill">
+          <img src="assets/images/generated/rest-timer-background.jpg" alt="Rest timer" loading="lazy" decoding="async" width="1600" height="1066" />
         </div>
-        <div data-rest-overlay-exercise class="rest-exercise">Bench Press</div>
-        <div class="rest-actions">
-          <button data-action="pause-overlay">Pause</button>
-          <button class="is-primary" data-action="skip-overlay">Skip</button>
-          <button data-action="close-overlay">Close</button>
+        <div class="rest-panel-overlay"></div>
+        <div class="rest-panel-content">
+          <div class="rest-label">Naechster Satz in</div>
+          <div id="rest-ring" class="rest-ring">
+            <div data-rest-overlay-time class="rest-time">00:00</div>
+          </div>
+          <div data-rest-overlay-exercise class="rest-exercise">Bench Press</div>
+          <div class="rest-actions">
+            <button data-action="pause-overlay">Pause</button>
+            <button class="is-primary" data-action="skip-overlay">Ueberspringen</button>
+            <button data-action="close-overlay">Schliessen</button>
+          </div>
         </div>
       </div>
     </div>
@@ -2599,6 +3326,108 @@ html
     // STATE & STORAGE (local-first)
     // =========================
     const STORAGE_KEY = "emerald-gym-v1";
+
+    const IMAGE_ASSETS = {
+      hero: {
+        src: "assets/images/generated/hero-athlete-back.jpg",
+        alt: "Athlete back pose in gym",
+        width: 1600,
+        height: 1066,
+      },
+      workoutPush: {
+        src: "assets/images/generated/push-workout-athlete.jpg",
+        alt: "Push day strength training",
+        width: 1600,
+        height: 1066,
+      },
+      workoutPull: {
+        src: "assets/images/generated/pull-workout-athlete.jpg",
+        alt: "Pull day back training",
+        width: 1600,
+        height: 1066,
+      },
+      workoutLeg: {
+        src: "assets/images/generated/leg-day-athlete.jpg",
+        alt: "Leg day barbell session",
+        width: 1600,
+        height: 1066,
+      },
+      motivation: {
+        src: "assets/images/generated/motivation-card-image.jpg",
+        alt: "Motivational gym scene",
+        width: 1600,
+        height: 1066,
+      },
+      restTimer: {
+        src: "assets/images/generated/rest-timer-background.jpg",
+        alt: "Rest timer ambient background",
+        width: 1600,
+        height: 1066,
+      },
+      progress: {
+        src: "assets/images/generated/hero-athlete-back.jpg",
+        alt: "Progress athlete hero",
+        width: 1600,
+        height: 1066,
+      },
+      recovery: {
+        src: "assets/images/generated/recovery-background.jpg",
+        alt: "Recovery and wellness scene",
+        width: 1600,
+        height: 1066,
+      },
+      exerciseBench: {
+        src: "assets/images/generated/bench-press-athlete.jpg",
+        alt: "Bench press detail",
+        width: 1600,
+        height: 1066,
+      },
+      exerciseSquat: {
+        src: "assets/images/generated/squat-scene.jpg",
+        alt: "Squat detail",
+        width: 1600,
+        height: 1066,
+      },
+      exerciseDeadlift: {
+        src: "assets/images/generated/deadlift-scene.jpg",
+        alt: "Deadlift detail",
+        width: 1600,
+        height: 1066,
+      },
+    };
+
+    function createMediaImageMarkup(asset, className, options = {}) {
+      if (!asset?.src) return "";
+      const loading = options.loading || "lazy";
+      const fetchpriority = options.fetchpriority ? ` fetchpriority="${options.fetchpriority}"` : "";
+      const width = asset.width || 1600;
+      const height = asset.height || 1066;
+      return `
+        <div class="${className} media-fill">
+          <img src="${asset.src}" alt="${asset.alt || ""}" loading="${loading}" decoding="async"${fetchpriority} width="${width}" height="${height}" />
+        </div>
+      `;
+    }
+
+    function getWorkoutCardImage(type = "push") {
+      const normalized = String(type || "push").toLowerCase();
+      if (normalized.includes("pull")) return IMAGE_ASSETS.workoutPull;
+      if (normalized.includes("leg")) return IMAGE_ASSETS.workoutLeg;
+      return IMAGE_ASSETS.workoutPush;
+    }
+
+    function getExerciseHeroImage(exerciseName = "") {
+      const name = String(exerciseName).toLowerCase();
+      if (name.includes("bench")) return IMAGE_ASSETS.exerciseBench;
+      if (name.includes("incline") || name.includes("dumbbell press")) return IMAGE_ASSETS.workoutPush;
+      if (name.includes("shoulder press")) return IMAGE_ASSETS.workoutPush;
+      if (name.includes("barbell row")) return IMAGE_ASSETS.workoutPull;
+      if (name.includes("lat pulldown")) return IMAGE_ASSETS.workoutPull;
+      if (name.includes("biceps curl")) return IMAGE_ASSETS.workoutPull;
+      if (name.includes("squat")) return IMAGE_ASSETS.exerciseSquat;
+      if (name.includes("deadlift")) return IMAGE_ASSETS.exerciseDeadlift;
+      return IMAGE_ASSETS.exerciseBench;
+    }
 
     const EXERCISE_DB = [
       {
@@ -2732,6 +3561,7 @@ html
         language: "de",
         haptics: true,
         sound: false,
+        notifications: "default",
         defaultRestSeconds: 120,
       },
       workoutTemplates: createDefaultWorkoutTemplates(),
@@ -2752,12 +3582,164 @@ html
       today: null,
     };
 
+    function normalizePreferences(raw = {}) {
+      const safeRest = Number(raw.defaultRestSeconds);
+      const safeNotifications = ["default", "granted", "denied"].includes(raw.notifications)
+        ? raw.notifications
+        : "default";
+
+      return {
+        theme: raw.theme === "light" ? "light" : "dark",
+        language: raw.language === "en" ? "en" : "de",
+        haptics: typeof raw.haptics === "boolean" ? raw.haptics : true,
+        sound: typeof raw.sound === "boolean" ? raw.sound : false,
+        notifications: safeNotifications,
+        defaultRestSeconds: Number.isFinite(safeRest) && safeRest > 0 ? safeRest : 120,
+      };
+    }
+
+    const I18N = {
+      de: {
+        "nav.home": "Home",
+        "nav.workout": "Workouts",
+        "nav.stats": "Fortschritt",
+        "nav.settings": "Einstellungen",
+        "settings.title": "Einstellungen",
+        "settings.subtitle": "iPhone Style Kontrollzentrum fuer deine Trainings-App",
+        "settings.appearance": "Darstellung",
+        "settings.language": "Sprache",
+        "settings.haptics": "Haptik",
+        "settings.sound": "Sound",
+        "settings.notifications": "Benachrichtigungen",
+        "settings.defaultRest": "Standard-Pausentimer",
+        "settings.dataExport": "Datenexport",
+        "settings.backup": "Backup",
+        "settings.importBackup": "Backup importieren",
+        "settings.about": "Info",
+        "settings.reset": "Daten zuruecksetzen",
+        "settings.deleteAll": "Alles loeschen",
+        "values.dark": "Dark",
+        "values.light": "Light",
+        "values.on": "On",
+        "values.off": "Off",
+        "values.open": "Oeffnen",
+        "values.create": "Erstellen",
+        "values.restore": "Wiederherstellen",
+        "home.greeting": "Guten Morgen, Leon 👋",
+        "home.title": "Trainiere smarter.<br/>Werde staerker.",
+        "home.nextWorkout": "Naechstes Workout",
+        "home.quickAccess": "Schnellzugriff",
+        "home.trainingPlan": "Trainingsplan",
+        "home.exercises": "Uebungen",
+        "home.progress": "Fortschritt",
+        "home.nutrition": "Ernaehrung",
+        "home.recovery": "Regeneration",
+        "home.calendar": "Kalender",
+        "home.motivation": "Motivation",
+        "home.motivationQuote": "Heute ist ein guter Tag, staerker als gestern zu werden.",
+        "hero.ready": "Bereit, deine Ziele zu erreichen?",
+        "hero.dayStreak": "Tage Serie",
+        "hero.workoutStreak": "Workout-Serie",
+        "hero.weeklyVolume": "Wochenvolumen",
+        "hero.progress": "Fortschritt",
+        "workout.pushDay": "Push Day",
+        "workout.none": "Noch keine Uebungen. Erstelle dein naechstes Training mit einem Tap.",
+        "workout.create": "Workout erstellen",
+        "workout.exercises": "Uebungen",
+        "workout.sets": "Saetze",
+        "workout.start": "Workout starten",
+        "stats.muscleGroupsSubtitle": "Basierend auf deinem Trainingsverlauf",
+        "stats.muscleGroupsExercises": "Top-Uebungen",
+        "toast.appearance": "Darstellung: {value}",
+        "toast.language": "Sprache: {value}",
+        "toast.haptics": "Haptik: {value}",
+        "toast.sound": "Sound: {value}",
+        "toast.notifications": "Benachrichtigungen: {value}",
+      },
+      en: {
+        "nav.home": "Home",
+        "nav.workout": "Workouts",
+        "nav.stats": "Progress",
+        "nav.settings": "Settings",
+        "settings.title": "Settings",
+        "settings.subtitle": "iPhone style control center for your training app",
+        "settings.appearance": "Appearance",
+        "settings.language": "Language",
+        "settings.haptics": "Haptics",
+        "settings.sound": "Sound",
+        "settings.notifications": "Notifications",
+        "settings.defaultRest": "Default Rest Timer",
+        "settings.dataExport": "Data Export",
+        "settings.backup": "Backup",
+        "settings.importBackup": "Import Backup",
+        "settings.about": "About",
+        "settings.reset": "Reset Data",
+        "settings.deleteAll": "Delete all",
+        "values.dark": "Dark",
+        "values.light": "Light",
+        "values.on": "On",
+        "values.off": "Off",
+        "values.open": "Open",
+        "values.create": "Create",
+        "values.restore": "Restore",
+        "home.greeting": "Good Morning, Leon 👋",
+        "home.title": "Train Smarter.<br/>Be Stronger.",
+        "home.nextWorkout": "Next Workout",
+        "home.quickAccess": "Quick Access",
+        "home.trainingPlan": "Training Plan",
+        "home.exercises": "Exercises",
+        "home.progress": "Progress",
+        "home.nutrition": "Nutrition",
+        "home.recovery": "Recovery",
+        "home.calendar": "Calendar",
+        "home.motivation": "Motivation",
+        "home.motivationQuote": "Today is a good day to become stronger than yesterday.",
+        "hero.ready": "Ready to reach your goals?",
+        "hero.dayStreak": "Day Streak",
+        "hero.workoutStreak": "Workout Streak",
+        "hero.weeklyVolume": "Weekly Volume",
+        "hero.progress": "Progress",
+        "workout.pushDay": "Push Day",
+        "workout.none": "No exercises yet. Build your next session with one tap.",
+        "workout.create": "Create Workout",
+        "workout.exercises": "Exercises",
+        "workout.sets": "Sets",
+        "workout.start": "Start Workout",
+        "stats.muscleGroupsSubtitle": "Training distribution based on your workout history",
+        "stats.muscleGroupsExercises": "Top exercises",
+        "toast.appearance": "Appearance: {value}",
+        "toast.language": "Language: {value}",
+        "toast.haptics": "Haptics: {value}",
+        "toast.sound": "Sound: {value}",
+        "toast.notifications": "Notifications: {value}",
+      },
+    };
+
+    function getLanguage() {
+      return state.data?.preferences?.language === "en" ? "en" : "de";
+    }
+
+    function t(key, vars = {}) {
+      const lang = getLanguage();
+      const template = I18N[lang]?.[key] || I18N.de[key] || key;
+      return template.replace(/\{(\w+)\}/g, (_, name) => String(vars[name] ?? ""));
+    }
+
+    function getNumberLocale() {
+      return getLanguage() === "en" ? "en-US" : "de-DE";
+    }
+
+    function applyLanguage(language = "de") {
+      document.documentElement.setAttribute("lang", language === "en" ? "en" : "de");
+    }
+
     function loadState() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return;
         const parsed = JSON.parse(raw);
         state.data = { ...defaultState(), ...parsed };
+        state.data.preferences = normalizePreferences(state.data.preferences);
 
         if (!Array.isArray(state.data.workoutTemplates) || !state.data.workoutTemplates.length) {
           state.data.workoutTemplates = createDefaultWorkoutTemplates();
@@ -2963,6 +3945,36 @@ html
     function estimate1RM(weight, reps) {
       return weight * (1 + reps / 30);
     }
+
+    // ── Hybrid Scoring Helpers ─────────────────────────────────────────────
+    function getExerciseDifficulty(exerciseName) {
+      const n = String(exerciseName || "").toLowerCase();
+      if (/squat|deadlift|bench\s*press|overhead\s*press|barbell\s*row|pull.?up|chin.?up|clean|snatch|rdl|sumo/.test(n)) return 1.3;
+      if (/dip|lunge|incline|decline|row|press|hip\s*thrust|pushdown|step.?up/.test(n)) return 1.15;
+      return 1.0;
+    }
+
+    function getExerciseIntensityMultiplier(exercise) {
+      const prs = (state.data.prs || []).filter(pr => pr.exerciseId === exercise?.id);
+      const bestPR1RM = prs.reduce((best, pr) => Math.max(best, pr.estimated1RM || 0), 0);
+      if (!bestPR1RM) return 0.85;
+      const current1RM = (exercise.setsData || []).reduce((best, set) => {
+        return Math.max(best, estimate1RM(set.weight || 0, set.reps || 0));
+      }, 0);
+      if (!current1RM) return 0.85;
+      return Math.max(0.5, Math.min(1.5, current1RM / bestPR1RM));
+    }
+
+    function calcExerciseScore(exercise) {
+      const vol = (exercise.setsData || []).reduce((s, set) => s + ((set.reps || 0) * (set.weight || 0)), 0);
+      if (!vol) return 0;
+      return vol * getExerciseIntensityMultiplier(exercise) * getExerciseDifficulty(exercise.name);
+    }
+
+    function calcWorkoutScore(workout) {
+      return Math.round((workout.exercises || []).reduce((s, ex) => s + calcExerciseScore(ex), 0));
+    }
+    // ──────────────────────────────────────────────────────────────────────
 
     function checkAndStorePR(exercise, set) {
       const estimated1RM = estimate1RM(set.weight, set.reps);
@@ -3479,6 +4491,7 @@ html
           },
           0
         );
+      workout.score = calcWorkoutScore(workout);
     }
 
     function recalcStats() {
@@ -3493,6 +4506,7 @@ html
       });
 
       const weeklyVolume = weeklyWorkouts.reduce((acc, w) => acc + (w.volume || 0), 0);
+      const weeklyScore = weeklyWorkouts.reduce((acc, w) => acc + (w.score ?? calcWorkoutScore(w)), 0);
 
       if (!state.data.stats) {
         state.data.stats = {};
@@ -3501,8 +4515,11 @@ html
       state.data.stats.weeklyVolumeKg = +(weeklyVolume / 1000).toFixed(1);
       state.data.stats.weeklySessions = weeklyWorkouts.length;
       state.data.stats.weeklyPRs = (state.data.prs && state.data.prs.length) || 0;
+      state.data.stats.weeklyScore = Math.round(weeklyScore);
       state.data.stats.weeklySeries = buildWeeklySeries(workouts);
       state.data.stats.monthlySeries = buildMonthlySeries(workouts);
+      state.data.stats.weeklyScoreSeries = buildWeeklyScoreSeries(workouts);
+      state.data.stats.monthlyScoreSeries = buildMonthlyScoreSeries(workouts);
     }
 
     function buildWeeklySeries(workouts = []) {
@@ -3533,11 +4550,86 @@ html
       return series;
     }
 
+    function buildWeeklyScoreSeries(workouts = []) {
+      const today = new Date();
+      const series = [];
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().slice(0, 10);
+        const workout = workouts.find((w) => w.date === dateStr);
+        series.push(workout ? (workout.score ?? calcWorkoutScore(workout)) : 0);
+      }
+      return series;
+    }
+
+    function buildMonthlyScoreSeries(workouts = []) {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = today.getMonth();
+      const series = [];
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        const workout = workouts.find((w) => w.date === dateStr);
+        series.push(workout ? (workout.score ?? calcWorkoutScore(workout)) : 0);
+      }
+      return series;
+    }
+
     // =========================
     // BOTTOM SHEET
     // =========================
+    let modalLockCount = 0;
+    let modalLockedScrollY = 0;
+
+    function lockModalScroll() {
+      if (modalLockCount === 0) {
+        modalLockedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+        document.body.classList.add("modal-open");
+        document.body.style.position = "fixed";
+        document.body.style.top = `-${modalLockedScrollY}px`;
+        document.body.style.left = "0";
+        document.body.style.right = "0";
+        document.body.style.width = "100%";
+      }
+      modalLockCount += 1;
+    }
+
+    function unlockModalScroll({ force = false } = {}) {
+      if (force) {
+        modalLockCount = 0;
+      } else {
+        modalLockCount = Math.max(0, modalLockCount - 1);
+      }
+
+      if (modalLockCount !== 0) return;
+
+      const top = document.body.style.top;
+      document.body.classList.remove("modal-open");
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.left = "";
+      document.body.style.right = "";
+      document.body.style.width = "";
+
+      const restoreY = modalLockedScrollY || Math.abs(parseInt(top || "0", 10)) || 0;
+      window.scrollTo(0, restoreY);
+    }
+
+    function forceCloseAllSheets() {
+      const root = document.getElementById("sheet-root");
+      if (!root) return;
+      root.querySelectorAll(".sheet-backdrop").forEach((node) => node.remove());
+      unlockModalScroll({ force: true });
+    }
+
     function openSheet({ title, subtitle, content, onClose }) {
       const root = document.getElementById("sheet-root");
+      if (!root) return { close: () => {} };
+
+      lockModalScroll();
+
       const backdrop = document.createElement("div");
       backdrop.className = "sheet-backdrop";
 
@@ -3545,24 +4637,168 @@ html
       sheet.className = "sheet";
       sheet.innerHTML = `
         <div class="sheet-handle"></div>
-        <div class="sheet-title">${title}</div>
+        <div class="sheet-head">
+          <div class="sheet-title-wrap">
+            <div class="sheet-title">${title}</div>
+          </div>
+          <button class="sheet-close" type="button" data-action="close-sheet" aria-label="Close sheet">✕</button>
+        </div>
         ${subtitle ? `<div class="sheet-subtitle">${subtitle}</div>` : ""}
         <div class="sheet-content"></div>
       `;
+
       const contentRoot = sheet.querySelector(".sheet-content");
       contentRoot.appendChild(content);
 
       backdrop.appendChild(sheet);
       root.appendChild(backdrop);
 
-      function close() {
-        backdrop.remove();
-        onClose && onClose();
+      requestAnimationFrame(() => backdrop.classList.add("is-open"));
+
+      let closed = false;
+      let dragging = false;
+      let dragStartY = 0;
+      let startTranslate = 0;
+      let currentTranslate = 0;
+      let lastMoveY = 0;
+      let lastMoveTs = 0;
+      let velocityY = 0;
+      let sheetHeight = 0;
+
+      const handle = sheet.querySelector(".sheet-handle");
+      const head = sheet.querySelector(".sheet-head");
+      const closeButton = sheet.querySelector("[data-action='close-sheet']");
+
+      function updateBackdropOpacity(offsetY = 0) {
+        const fadeRange = Math.max(160, sheetHeight * 0.6);
+        const progress = Math.max(0, Math.min(1, offsetY / fadeRange));
+        const opacity = 0.62 - progress * 0.36;
+        backdrop.style.setProperty("--sheet-backdrop-opacity", opacity.toFixed(3));
       }
 
-      backdrop.addEventListener("click", (e) => {
+      function setSheetTranslate(y, withTransition = false) {
+        currentTranslate = y;
+        if (withTransition) {
+          sheet.style.transition = "transform 220ms cubic-bezier(0.22, 1, 0.36, 1)";
+        } else {
+          sheet.style.transition = "none";
+        }
+        sheet.style.transform = `translateY(${y}px)`;
+        updateBackdropOpacity(Math.max(0, y));
+      }
+
+      function snapToNearestDetent(projectedY) {
+        const detents = [0, 64];
+        const nearest = detents.reduce((acc, value) => {
+          return Math.abs(value - projectedY) < Math.abs(acc - projectedY) ? value : acc;
+        }, 0);
+        setSheetTranslate(nearest, true);
+      }
+
+      function cleanup() {
+        document.removeEventListener("keydown", onKeyDown);
+        backdrop.removeEventListener("click", onBackdropClick);
+        closeButton?.removeEventListener("click", onCloseButton);
+        handle?.removeEventListener("pointerdown", onDragStart);
+        head?.removeEventListener("pointerdown", onDragStart);
+        sheet.removeEventListener("pointermove", onDragMove);
+        sheet.removeEventListener("pointerup", onDragEnd);
+        sheet.removeEventListener("pointercancel", onDragEnd);
+      }
+
+      function close() {
+        if (closed) return;
+        closed = true;
+        cleanup();
+
+        backdrop.classList.remove("is-open");
+        backdrop.classList.add("is-closing");
+        sheet.style.transition = "transform 200ms cubic-bezier(0.4, 0, 1, 1)";
+        sheet.style.transform = `translateY(${Math.max(36, sheet.offsetHeight * 0.25)}px)`;
+
+        setTimeout(() => {
+          backdrop.remove();
+          unlockModalScroll();
+          onClose && onClose();
+        }, 220);
+      }
+
+      function onCloseButton() {
+        close();
+      }
+
+      function onBackdropClick(e) {
         if (e.target === backdrop) close();
-      });
+      }
+
+      function onKeyDown(e) {
+        if (e.key === "Escape") {
+          e.preventDefault();
+          close();
+        }
+      }
+
+      function onDragStart(e) {
+        if (closed) return;
+        if (e.target?.closest("button, input, textarea, select, a")) return;
+
+        dragging = true;
+        dragStartY = e.clientY;
+        startTranslate = currentTranslate;
+        sheetHeight = sheet.getBoundingClientRect().height;
+        lastMoveY = e.clientY;
+        lastMoveTs = performance.now();
+        velocityY = 0;
+
+        sheet.style.transition = "none";
+        sheet.setPointerCapture?.(e.pointerId);
+      }
+
+      function onDragMove(e) {
+        if (!dragging || closed) return;
+
+        const rawOffset = e.clientY - dragStartY;
+        const maxDown = Math.max(260, sheetHeight);
+        let nextOffset = startTranslate + rawOffset;
+
+        if (nextOffset < 0) nextOffset *= 0.3;
+        if (nextOffset > maxDown) nextOffset = maxDown + (nextOffset - maxDown) * 0.15;
+
+        const now = performance.now();
+        const dt = Math.max(1, now - lastMoveTs);
+        velocityY = (e.clientY - lastMoveY) / dt;
+        lastMoveY = e.clientY;
+        lastMoveTs = now;
+
+        setSheetTranslate(nextOffset, false);
+      }
+
+      function onDragEnd(e) {
+        if (!dragging || closed) return;
+        dragging = false;
+        sheet.releasePointerCapture?.(e.pointerId);
+
+        const closeThreshold = Math.min(240, sheetHeight * 0.38);
+        const projected = currentTranslate + velocityY * 90;
+
+        if (projected > closeThreshold || velocityY > 0.75) {
+          close();
+          return;
+        }
+
+        snapToNearestDetent(projected);
+      }
+
+      backdrop.addEventListener("click", onBackdropClick);
+      closeButton?.addEventListener("click", onCloseButton);
+      document.addEventListener("keydown", onKeyDown);
+      handle?.addEventListener("pointerdown", onDragStart);
+      head?.addEventListener("pointerdown", onDragStart);
+      sheet.addEventListener("pointermove", onDragMove);
+      sheet.addEventListener("pointerup", onDragEnd);
+      sheet.addEventListener("pointercancel", onDragEnd);
+
+      updateBackdropOpacity(0);
 
       return { close };
     }
@@ -3578,6 +4814,16 @@ html
     };
 
     let currentRoute = "home";
+    let bottomNavRouteListenerBound = false;
+    let bottomNavResizeListenerBound = false;
+
+    function updateBottomSafeAreaFromNav() {
+      const nav = document.getElementById("bottom-nav");
+      if (!nav) return;
+      const navHeight = Math.ceil(nav.getBoundingClientRect().height || 0);
+      const safe = Math.max(180, navHeight + 24);
+      document.documentElement.style.setProperty("--bottom-nav-safe", `${safe}px`);
+    }
 
     const restState = {
       active: false,
@@ -3593,6 +4839,7 @@ html
     let weeklyChartInstance = null;
     let monthlyChartInstance = null;
     let statsRange = "month";
+    let selectedMuscleGroupKey = "Chest";
 
     function applyMotionPolishToPage(pageNode, route = "home") {
       if (!pageNode) return;
@@ -3721,10 +4968,7 @@ html
     // BOTTOM NAV + FAB
     // =========================
     function openWorkoutGenerator() {
-      const root = document.getElementById("sheet-root");
-      if (root) {
-        root.innerHTML = "";
-      }
+      forceCloseAllSheets();
       openWorkoutGeneratorSheet();
     }
 
@@ -3889,6 +5133,8 @@ ${(state.data.workoutTemplates || []).map(template => `
       class="generator-template-button"
       data-template="${template.id}"
     >
+      ${createMediaImageMarkup(getWorkoutCardImage(template.type), "template-button-media")}
+      <div class="template-button-overlay"></div>
 
       <div
         class="generator-template-left"
@@ -4165,14 +5411,15 @@ ${(state.data.workoutTemplates || []).map(template => `
 
     function initBottomNav() {
       const nav = document.getElementById("bottom-nav");
+      nav.innerHTML = "";
       const inner = document.createElement("div");
       inner.className = "bottom-nav-inner";
 
       const tabs = [
-        { id: "home", label: "Home", icon: "house" },
-        { id: "workout", label: "Workouts", icon: "dumbbell" },
-        { id: "stats", label: "Progress", icon: "chart-column" },
-        { id: "settings", label: "Settings", icon: "settings-2" },
+        { id: "home", label: t("nav.home"), icon: "house" },
+        { id: "workout", label: t("nav.workout"), icon: "dumbbell" },
+        { id: "stats", label: t("nav.stats"), icon: "chart-column" },
+        { id: "settings", label: t("nav.settings"), icon: "settings-2" },
       ];
 
       tabs.forEach(tab => {
@@ -4209,12 +5456,26 @@ ${(state.data.workoutTemplates || []).map(template => `
       nav.appendChild(inner);
       lucide.createIcons();
 
-      window.addEventListener("gym:route-changed", (e) => {
-        const route = e.detail.route;
-        inner.querySelectorAll(".bottom-nav-item").forEach(el => {
-          el.classList.toggle("bottom-nav-item--active", el.dataset.route === route);
+      if (!bottomNavRouteListenerBound) {
+        bottomNavRouteListenerBound = true;
+        window.addEventListener("gym:route-changed", (e) => {
+          const route = e.detail.route;
+          document.querySelectorAll("#bottom-nav .bottom-nav-item").forEach((el) => {
+            el.classList.toggle("bottom-nav-item--active", el.dataset.route === route);
+          });
         });
+      }
+
+      inner.querySelectorAll(".bottom-nav-item").forEach((el) => {
+        el.classList.toggle("bottom-nav-item--active", el.dataset.route === currentRoute);
       });
+
+      requestAnimationFrame(updateBottomSafeAreaFromNav);
+
+      if (!bottomNavResizeListenerBound) {
+        bottomNavResizeListenerBound = true;
+        window.addEventListener("resize", updateBottomSafeAreaFromNav, { passive: true });
+      }
     }
 
     // =========================
@@ -4224,28 +5485,30 @@ ${(state.data.workoutTemplates || []).map(template => `
       const hero = document.createElement("section");
       hero.className = "hero-card";
       hero.innerHTML = `
+        ${createMediaImageMarkup(IMAGE_ASSETS.hero, "hero-media", { loading: "eager", fetchpriority: "high" })}
+        <div class="hero-media-overlay"></div>
         <div class="hero-image"></div>
         <div class="hero-inner">
           <div class="hero-header">
             <div>
-              <div class="hero-title">Ready to reach your goals?</div>
+              <div class="hero-title">${t("hero.ready")}</div>
               <div class="hero-subtitle">${data.dayLabel}</div>
             </div>
             <button class="hero-streak">
-              🔥 ${data.streakCurrent} Day Streak
+              🔥 ${data.streakCurrent} ${t("hero.dayStreak")}
             </button>
           </div>
           <div class="stat-row">
             <div class="stat-chip">
-              <div class="stat-chip-label">Workout Streak</div>
+              <div class="stat-chip-label">${t("hero.workoutStreak")}</div>
               <div class="stat-chip-value">${data.streakCurrent}</div>
             </div>
             <div class="stat-chip">
-              <div class="stat-chip-label">Weekly Volume</div>
-              <div class="stat-chip-value">${data.weeklyVolume.toLocaleString("de-DE")} kg</div>
+              <div class="stat-chip-label">${t("hero.weeklyVolume")}</div>
+              <div class="stat-chip-value">${data.weeklyVolume.toLocaleString(getNumberLocale())} kg</div>
             </div>
             <div class="stat-chip">
-              <div class="stat-chip-label">Progress</div>
+              <div class="stat-chip-label">${t("hero.progress")}</div>
               <div class="stat-chip-value">${data.progressPercent}%</div>
             </div>
           </div>
@@ -4286,8 +5549,8 @@ ${(state.data.workoutTemplates || []).map(template => `
       root.innerHTML = `
         <div class="home-topbar">
           <div class="home-greeting">
-            <div class="home-greeting-eyebrow">Good Morning, Leon 👋</div>
-            <div class="home-greeting-title">Train Smarter.<br/>Be Stronger.</div>
+            <div class="home-greeting-eyebrow">${t("home.greeting")}</div>
+            <div class="home-greeting-title">${t("home.title")}</div>
           </div>
           <div class="home-topbar-actions">
             <button class="icon-button" data-home-action="notifications" aria-label="Notifications">
@@ -4301,50 +5564,52 @@ ${(state.data.workoutTemplates || []).map(template => `
 
         <section class="section-block">
           <header class="section-header">
-            <h2 class="section-title">Next Workout</h2>
-            <button class="section-link" data-action="open-workout">Open</button>
+            <h2 class="section-title">${t("home.nextWorkout")}</h2>
+            <button class="section-link" data-action="open-workout">${t("values.open")}</button>
           </header>
           <div data-home-next></div>
         </section>
 
         <section class="section-block">
           <header class="section-header">
-            <h2 class="section-title">Quick Access</h2>
+            <h2 class="section-title">${t("home.quickAccess")}</h2>
           </header>
           <div class="quick-grid">
             <button class="quick-tile" data-home-action="training-plan">
-              <i data-lucide="clipboard-list"></i>
-              <span class="quick-tile-label">Training Plan</span>
+              <span class="quick-tile-icon" data-fallback="📋"><i data-lucide="clipboard-list"></i></span>
+              <span class="quick-tile-label">${t("home.trainingPlan")}</span>
             </button>
             <button class="quick-tile" data-home-action="exercises">
-              <i data-lucide="dumbbell"></i>
-              <span class="quick-tile-label">Exercises</span>
+              <span class="quick-tile-icon" data-fallback="🏋️"><i data-lucide="dumbbell"></i></span>
+              <span class="quick-tile-label">${t("home.exercises")}</span>
             </button>
             <button class="quick-tile" data-home-action="progress">
-              <i data-lucide="line-chart"></i>
-              <span class="quick-tile-label">Progress</span>
+              <span class="quick-tile-icon" data-fallback="📈"><i data-lucide="chart-column"></i></span>
+              <span class="quick-tile-label">${t("home.progress")}</span>
             </button>
             <button class="quick-tile" data-home-action="nutrition">
-              <i data-lucide="apple"></i>
-              <span class="quick-tile-label">Nutrition</span>
+              <span class="quick-tile-icon" data-fallback="🍎"><i data-lucide="apple"></i></span>
+              <span class="quick-tile-label">${t("home.nutrition")}</span>
             </button>
             <button class="quick-tile" data-home-action="recovery">
-              <i data-lucide="heart-pulse"></i>
-              <span class="quick-tile-label">Recovery</span>
+              <span class="quick-tile-icon" data-fallback="💚"><i data-lucide="heart-pulse"></i></span>
+              <span class="quick-tile-label">${t("home.recovery")}</span>
             </button>
             <button class="quick-tile" data-home-action="calendar">
-              <i data-lucide="calendar-days"></i>
-              <span class="quick-tile-label">Calendar</span>
+              <span class="quick-tile-icon" data-fallback="🗓️"><i data-lucide="calendar-days"></i></span>
+              <span class="quick-tile-label">${t("home.calendar")}</span>
             </button>
           </div>
         </section>
 
         <section class="section-block">
           <header class="section-header">
-            <h2 class="section-title">Motivation</h2>
+            <h2 class="section-title">${t("home.motivation")}</h2>
           </header>
           <div class="motivation-card">
-            <p class="motivation-quote">Today is a good day to become stronger than yesterday.</p>
+            ${createMediaImageMarkup(IMAGE_ASSETS.motivation, "motivation-media")}
+            <div class="motivation-overlay"></div>
+            <p class="motivation-quote">${t("home.motivationQuote")}</p>
           </div>
         </section>
       `;
@@ -4354,12 +5619,14 @@ ${(state.data.workoutTemplates || []).map(template => `
         const card = document.createElement("section");
         card.className = "section-block";
         card.innerHTML = `
-          <div class="exercise-card">
+          <div class="exercise-card recovery-card">
+            ${createMediaImageMarkup(IMAGE_ASSETS.recovery, "recovery-media")}
+            <div class="recovery-overlay"></div>
             <div class="exercise-main">
-              <div class="exercise-name">Recovery</div>
+              <div class="exercise-name">${t("home.recovery")}</div>
               <div class="exercise-meta">${recoverySuggestion.message}</div>
             </div>
-            <span class="exercise-tag">Recovery</span>
+            <span class="exercise-tag">${t("home.recovery")}</span>
           </div>
         `;
         root.appendChild(card);
@@ -4369,7 +5636,7 @@ ${(state.data.workoutTemplates || []).map(template => `
       const weeklyVolume = Math.round(calcWeeklyVolume());
 
       renderHeroCard(root, {
-        dayLabel: today.label || "Push Day",
+        dayLabel: today.label || t("workout.pushDay"),
         streakCurrent: streak.current || 0,
         progressPercent: setProgress.percent,
         weeklyVolume,
@@ -4416,7 +5683,7 @@ ${(state.data.workoutTemplates || []).map(template => `
           if (action === "notifications") {
             await requestNotificationPermission();
             const permission = ("Notification" in window) ? Notification.permission : "n/a";
-            showToast(`Notifications: ${permission}`);
+            showToast(t("toast.notifications", { value: permission }));
             return;
           }
           if (action === "nutrition") {
@@ -4434,15 +5701,25 @@ ${(state.data.workoutTemplates || []).map(template => `
       });
 
       lucide.createIcons();
+
+      root.querySelectorAll(".quick-tile-icon").forEach((iconEl) => {
+        if (!iconEl.querySelector("svg")) {
+          iconEl.textContent = iconEl.dataset.fallback || "•";
+        }
+      });
     }
 
     function renderNextWorkoutPreview(today) {
+      const workoutImage = getWorkoutCardImage(today?.type || today?.label || "push");
+
       if (!today.exercises.length) {
         return `
           <article class="next-workout-card">
-            <div class="next-workout-title">Push Day</div>
-            <div class="next-workout-meta">No exercises yet. Build your next session with one tap.</div>
-            <button class="primary-btn" data-action="start-next-workout">Create Workout</button>
+            ${createMediaImageMarkup(workoutImage, "workout-card-media")}
+            <div class="workout-card-overlay"></div>
+            <div class="next-workout-title">${t("workout.pushDay")}</div>
+            <div class="next-workout-meta">${t("workout.none")}</div>
+            <button class="primary-btn" data-action="start-next-workout">${t("workout.create")}</button>
           </article>
         `;
       }
@@ -4454,14 +5731,16 @@ ${(state.data.workoutTemplates || []).map(template => `
 
       return `
         <article class="next-workout-card">
-          <div class="next-workout-title">${today.label || "Push Day"}</div>
+          ${createMediaImageMarkup(workoutImage, "workout-card-media")}
+          <div class="workout-card-overlay"></div>
+          <div class="next-workout-title">${today.label || t("workout.pushDay")}</div>
           <div class="next-workout-meta">${groupLabel}</div>
           <div class="next-workout-info">
-            <div class="next-workout-pill">${today.exercises.length} Exercises</div>
-            <div class="next-workout-pill">${getExerciseSets(first)} Sets</div>
-            <div class="next-workout-pill">${volumeKg.toLocaleString("de-DE")} kg</div>
+            <div class="next-workout-pill">${today.exercises.length} ${t("workout.exercises")}</div>
+            <div class="next-workout-pill">${getExerciseSets(first)} ${t("workout.sets")}</div>
+            <div class="next-workout-pill">${volumeKg.toLocaleString(getNumberLocale())} kg</div>
           </div>
-          <button class="primary-btn" data-action="start-next-workout">Start Workout</button>
+          <button class="primary-btn" data-action="start-next-workout">${t("workout.start")}</button>
         </article>
       `;
     }
@@ -5454,6 +6733,11 @@ ${(state.data.workoutTemplates || []).map(template => `
         : `<p class="text-muted">Start your first workout to unlock insights.</p>`;
 
       content.innerHTML = `
+        <div class="exercise-detail-hero">
+          ${createMediaImageMarkup(getExerciseHeroImage(exerciseName), "exercise-detail-hero-media")}
+          <div class="exercise-detail-hero-overlay"></div>
+          <div class="exercise-detail-hero-label">${exerciseName}</div>
+        </div>
         <div class="exercise-detail-tabs">
           <button class="is-active" type="button">Overview</button>
           <button type="button">History</button>
@@ -5511,6 +6795,12 @@ ${(state.data.workoutTemplates || []).map(template => `
       const monthlyTrend = getMonthlyTrendLabel();
       const streak = state.data.streak || { current: 0, best: 0 };
       const prHistory = (state.data.prs || []).slice(-4).reverse();
+      const muscleGroupItems = getMuscleGroupDistribution();
+      const muscleGroupExerciseHighlights = getMuscleGroupExerciseHighlights();
+
+      if (!muscleGroupItems.some((item) => item.key === selectedMuscleGroupKey)) {
+        selectedMuscleGroupKey = muscleGroupItems[0]?.key || "Chest";
+      }
 
       const recoveryEntries = Object.entries(state.data.recovery?.byMuscle || {})
         .slice(0, 4)
@@ -5533,6 +6823,14 @@ ${(state.data.workoutTemplates || []).map(template => `
           <div class="page-subtitle">Apple Health inspired analytics</div>
         </div>
 
+        <section class="progress-hero">
+          ${createMediaImageMarkup(IMAGE_ASSETS.progress, "progress-hero-media", { loading: "eager" })}
+          <div class="progress-hero-overlay"></div>
+          <div class="progress-hero-kicker">Progress</div>
+          <div class="progress-hero-title">Track Every Lift</div>
+          <div class="progress-hero-copy">Deep insights across volume, recovery and consistency.</div>
+        </section>
+
         <section class="section-block">
           <div class="segmented" role="tablist" aria-label="Progress range">
             <button data-range="week" class="${statsRange === "week" ? "is-active" : ""}">Week</button>
@@ -5540,11 +6838,11 @@ ${(state.data.workoutTemplates || []).map(template => `
             <button data-range="year" class="${statsRange === "year" ? "is-active" : ""}">Year</button>
             <button data-range="all" class="${statsRange === "all" ? "is-active" : ""}">All</button>
           </div>
-        </div>
+        </section>
 
         <section class="section-block">
           <header class="section-header">
-            <h2 class="section-title">Training Volume</h2>
+            <h2 class="section-title">Training Score</h2>
           </header>
           <div class="chart-card">
             <div class="chart-canvas-wrapper chart-canvas-wrap is-skeleton">
@@ -5565,6 +6863,15 @@ ${(state.data.workoutTemplates || []).map(template => `
                 <span
                   class="stat-chip-value"
                   data-stat="weekly-sessions"
+                >
+                  0
+                </span>
+              </div>
+              <div class="stat-chip">
+                Score
+                <span
+                  class="stat-chip-value"
+                  data-stat="weekly-score"
                 >
                   0
                 </span>
@@ -5607,6 +6914,8 @@ ${(state.data.workoutTemplates || []).map(template => `
           </div>
         </section>
 
+        ${renderMuscleGroupsCard(muscleGroupItems, muscleGroupExerciseHighlights)}
+
         <section class="section-block">
           <header class="section-header">
             <h2 class="section-title">Health Insights</h2>
@@ -5622,7 +6931,9 @@ ${(state.data.workoutTemplates || []).map(template => `
               `).join("") : `<div class="text-muted">Start your first workout to unlock insights</div>`}
             </article>
 
-            <article class="health-card">
+            <article class="health-card health-card-recovery">
+              ${createMediaImageMarkup(IMAGE_ASSETS.recovery, "health-card-media")}
+              <div class="health-card-overlay"></div>
               <div class="health-title">Muscle Recovery</div>
               ${recoveryEntries.length ? recoveryEntries.map((entry) => `
                 <div class="recovery-item">
@@ -5659,6 +6970,13 @@ ${(state.data.workoutTemplates || []).map(template => `
         });
       });
 
+      root.querySelectorAll("[data-muscle-key]").forEach((button) => {
+        button.addEventListener("click", () => {
+          selectedMuscleGroupKey = button.dataset.muscleKey || selectedMuscleGroupKey;
+          renderStatsPage(root);
+        });
+      });
+
       requestAnimationFrame(() => {
         initWeeklyChart();
         initMonthlyChart();
@@ -5671,9 +6989,14 @@ ${(state.data.workoutTemplates || []).map(template => `
       });
     }
 
+    function formatVolume(v) {
+      if (v >= 1000) return (v / 1000).toFixed(1) + "k";
+      return v + " kg";
+    }
+
     function initStatsNumbers() {
-      const weeklyVolume =
-        state.data.stats?.weeklyVolumeKg || 0;
+      const weeklyVolumeRawKg = Math.round((state.data.stats?.weeklyVolumeKg || 0) * 1000);
+      const weeklyVolume = weeklyVolumeRawKg;
 
       const weeklySessions =
         state.data.stats?.weeklySessions || 0;
@@ -5681,14 +7004,17 @@ ${(state.data.workoutTemplates || []).map(template => `
       const prs =
         state.data.stats?.weeklyPRs || countPRs();
 
-      animateCount(
-        document.querySelector("[data-stat='weekly-volume']"),
-        weeklyVolume,
-        {
-          suffix: "k",
-          decimals: 1,
+      const weeklyScore =
+        state.data.stats?.weeklyScore || 0;
+
+      const volEl = document.querySelector("[data-stat='weekly-volume']");
+      if (volEl) {
+        if (weeklyVolume >= 1000) {
+          animateCount(volEl, +(weeklyVolume / 1000).toFixed(1), { suffix: "k", decimals: 1 });
+        } else {
+          animateCount(volEl, weeklyVolume, { suffix: " kg" });
         }
-      );
+      }
 
       animateCount(
         document.querySelector("[data-stat='weekly-sessions']"),
@@ -5699,6 +7025,59 @@ ${(state.data.workoutTemplates || []).map(template => `
         document.querySelector("[data-stat='weekly-prs']"),
         prs
       );
+
+      animateCount(
+        document.querySelector("[data-stat='weekly-score']"),
+        weeklyScore >= 1000 ? +(weeklyScore / 1000).toFixed(1) : weeklyScore,
+        weeklyScore >= 1000 ? { suffix: "k", decimals: 1 } : {}
+      );
+    }
+
+    function getScoreSeriesForRange(range = "month") {
+      if (range === "week") {
+        const series = state.data.stats?.weeklyScoreSeries;
+        return {
+          labels: ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"],
+          data: Array.isArray(series) && series.length === 7
+            ? series
+            : buildWeeklyScoreSeries(state.data.workouts || []),
+        };
+      }
+
+      if (range === "year") {
+        const labels = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
+        const buckets = Array.from({ length: 12 }, () => 0);
+        (state.data.workouts || []).forEach((workout) => {
+          const date = new Date(workout.date);
+          if (!Number.isNaN(date.getTime())) {
+            buckets[date.getMonth()] += (workout.score ?? calcWorkoutScore(workout));
+          }
+        });
+        return { labels, data: buckets };
+      }
+
+      if (range === "all") {
+        const years = new Map();
+        (state.data.workouts || []).forEach((workout) => {
+          const date = new Date(workout.date);
+          if (Number.isNaN(date.getTime())) return;
+          const year = String(date.getFullYear());
+          years.set(year, (years.get(year) || 0) + (workout.score ?? calcWorkoutScore(workout)));
+        });
+        const labels = Array.from(years.keys()).sort();
+        const data = labels.map((year) => years.get(year));
+        return {
+          labels: labels.length ? labels : [String(new Date().getFullYear())],
+          data: data.length ? data : [0],
+        };
+      }
+
+      const monthly = state.data.stats?.monthlyScoreSeries;
+      const monthData = Array.isArray(monthly) && monthly.length
+        ? monthly
+        : buildMonthlyScoreSeries(state.data.workouts || []);
+      const labels = monthData.map((_, index) => `${index + 1}`);
+      return { labels, data: monthData };
     }
 
     function getVolumeSeriesForRange(range = "month") {
@@ -5745,6 +7124,18 @@ ${(state.data.workoutTemplates || []).map(template => `
       return { labels, data: monthData };
     }
 
+    function getWeeklyDistribution() {
+      const days = [0, 0, 0, 0, 0, 0, 0]; // Mon=0 … Sun=6
+      (state.data.workouts || []).forEach(w => {
+        if (!w.completed) return;
+        const d = new Date(w.date);
+        if (Number.isNaN(d.getTime())) return;
+        const day = (d.getDay() + 6) % 7; // Sunday(0)→6, Monday(1)→0
+        days[day]++;
+      });
+      return days;
+    }
+
     function getFrequencySeriesForRange(range = "month") {
       const volumeSeries = getVolumeSeriesForRange(range);
       return {
@@ -5765,10 +7156,10 @@ ${(state.data.workoutTemplates || []).map(template => `
       weeklyChartInstance = new Chart(ctx, {
         type: "line",
         data: {
-          labels: getVolumeSeriesForRange(statsRange).labels,
+          labels: getScoreSeriesForRange(statsRange).labels,
 
           datasets: [{
-            data: getVolumeSeriesForRange(statsRange).data,
+            data: getScoreSeriesForRange(statsRange).data,
 
             borderColor: "rgba(110,231,183,0.96)",
 
@@ -5832,6 +7223,11 @@ ${(state.data.workoutTemplates || []).map(template => `
           plugins: {
             legend: {
               display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => ` Score: ${Math.round(ctx.parsed.y).toLocaleString()} pts`
+              }
             }
           },
 
@@ -5852,7 +7248,8 @@ ${(state.data.workoutTemplates || []).map(template => `
               },
 
               ticks: {
-                color: "rgba(255,255,255,0.3)"
+                color: "rgba(255,255,255,0.3)",
+                callback: (v) => v >= 1000 ? `${(v/1000).toFixed(1)}k` : v
               }
             }
           }
@@ -5869,21 +7266,22 @@ ${(state.data.workoutTemplates || []).map(template => `
         monthlyChartInstance.destroy();
       }
 
-      const frequencySeries = getFrequencySeriesForRange(statsRange);
+      const distData = getWeeklyDistribution();
+      const distLabels = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
       monthlyChartInstance = new Chart(ctx, {
         type: "bar",
 
         data: {
-          labels: frequencySeries.labels,
+          labels: distLabels,
 
           datasets: [{
-            data: frequencySeries.data,
+            data: distData,
 
             borderRadius: 16,
             borderSkipped: false,
 
-            backgroundColor: frequencySeries.data.map((value) => {
+            backgroundColor: distData.map((value) => {
               const alpha = value > 0 ? 0.85 : 0.2;
               return `rgba(52,211,153,${alpha})`;
             })
@@ -5964,17 +7362,241 @@ ${(state.data.workoutTemplates || []).map(template => `
     }
 
     function calcMonthlySessions() {
-      const fromStats = state.data.stats?.monthlySeries;
-      if (Array.isArray(fromStats) && fromStats.length) {
-        return fromStats.filter((v) => v > 0).length;
-      }
-
       const today = new Date();
       const start = new Date(today.getFullYear(), today.getMonth(), 1);
-      return state.data.workouts.filter(w => {
-        const d = new Date(w.date);
-        return d >= start && d <= today && w.completed;
-      }).length;
+      const uniqueDates = new Set(
+        (state.data.workouts || []).filter(w => {
+          if (!w.completed) return false;
+          const d = new Date(w.date);
+          return d >= start && d <= today;
+        }).map(w => w.date)
+      );
+      return uniqueDates.size;
+    }
+
+    function getExerciseMuscleProfile(exercise = {}) {
+      const exerciseName = String(exercise?.name || "").toLowerCase();
+      const dbEntry = (state.data.exerciseDatabase || []).find((entry) => entry.name === exercise?.name);
+      const profile = {
+        Chest: 0,
+        Back: 0,
+        Legs: 0,
+        Shoulders: 0,
+        Arms: 0,
+      };
+
+      function addMuscle(label, amount) {
+        if (profile[label] !== undefined) {
+          profile[label] += amount;
+        }
+      }
+
+      if (dbEntry?.muscleGroup === "Chest") addMuscle("Chest", 1);
+      if (dbEntry?.muscleGroup === "Back") addMuscle("Back", 1);
+      if (dbEntry?.muscleGroup === "Legs") addMuscle("Legs", 1);
+
+      (dbEntry?.secondaryMuscles || []).forEach((muscle) => {
+        const normalized = String(muscle).toLowerCase();
+        if (normalized.includes("shoulder") || normalized.includes("delt")) addMuscle("Shoulders", 0.45);
+        if (normalized.includes("tricep") || normalized.includes("bicep")) addMuscle("Arms", 0.45);
+      });
+
+      if (!Object.values(profile).some(Boolean)) {
+        if (exerciseName.includes("bench") || exerciseName.includes("press") || exerciseName.includes("fly")) addMuscle("Chest", 1);
+        if (exerciseName.includes("row") || exerciseName.includes("pulldown") || exerciseName.includes("pull")) addMuscle("Back", 1);
+        if (exerciseName.includes("squat") || exerciseName.includes("leg") || exerciseName.includes("deadlift") || exerciseName.includes("calf")) addMuscle("Legs", 1);
+        if (exerciseName.includes("shoulder") || exerciseName.includes("lateral") || exerciseName.includes("delt")) addMuscle("Shoulders", 1);
+        if (exerciseName.includes("curl") || exerciseName.includes("tricep") || exerciseName.includes("bicep") || exerciseName.includes("pushdown")) addMuscle("Arms", 1);
+      }
+
+      if (!Object.values(profile).some(Boolean)) {
+        addMuscle("Chest", 0.28);
+        addMuscle("Back", 0.25);
+        addMuscle("Legs", 0.22);
+        addMuscle("Shoulders", 0.15);
+        addMuscle("Arms", 0.1);
+      }
+
+      return profile;
+    }
+
+    function getMuscleGroupDistribution() {
+      const totals = {
+        Chest: 0,
+        Back: 0,
+        Legs: 0,
+        Shoulders: 0,
+        Arms: 0,
+      };
+
+      const workouts = [
+        ...(state.data.workouts || []).filter((workout) => Array.isArray(workout?.exercises) && workout.exercises.length),
+        ...(state.today?.exercises?.length ? [{ exercises: state.today.exercises }] : []),
+      ];
+
+      workouts.forEach((workout) => {
+        (workout.exercises || []).forEach((exercise) => {
+          const reps = Math.max(1, Number(getExerciseReps(exercise)) || 0);
+          const weight = Math.max(1, Number(getExerciseWeight(exercise)) || 0);
+          const sets = Math.max(1, Number(getExerciseSets(exercise)) || 0);
+          const load = Math.max(0.01, Math.sqrt(sets * reps * weight));
+          const profile = getExerciseMuscleProfile(exercise);
+          Object.entries(profile).forEach(([muscle, value]) => {
+            totals[muscle] += load * value;
+          });
+        });
+      });
+
+      const totalLoad = Object.values(totals).reduce((sum, value) => sum + value, 0);
+      const fallback = { Chest: 28, Back: 25, Legs: 22, Shoulders: 15, Arms: 10 };
+      if (!totalLoad) {
+        return Object.entries(fallback).map(([key, value]) => ({ key, label: ({ Chest: "Brust", Back: "Ruecken", Legs: "Beine", Shoulders: "Schultern", Arms: "Arme" })[key], percent: value }));
+      }
+
+      const labelMap = { Chest: "Brust", Back: "Rücken", Legs: "Beine", Shoulders: "Schultern", Arms: "Arme" };
+      const rawItems = Object.entries(totals)
+        .map(([key, value]) => ({ key, label: labelMap[key], pct: (value / totalLoad) * 100 }))
+        .sort((a, b) => b.pct - a.pct);
+
+      // Largest-remainder rounding so total always sums to 100
+      const floored = rawItems.map(x => ({ ...x, percent: Math.floor(x.pct) }));
+      let remainder = 100 - floored.reduce((s, x) => s + x.percent, 0);
+      const withFrac = floored
+        .map((x, i) => ({ ...x, frac: rawItems[i].pct - x.percent }))
+        .sort((a, b) => b.frac - a.frac);
+      withFrac.forEach((x, i) => { if (i < remainder) x.percent += 1; });
+      return withFrac.sort((a, b) => b.percent - a.percent);
+    }
+
+    function getMuscleGroupExerciseHighlights(limit = 3) {
+      const defaults = {
+        Chest: ["Bench Press", "Incline Press", "Push-ups"],
+        Back: ["Pull-ups", "Barbell Row", "Lat Pulldown"],
+        Legs: ["Squat", "Romanian Deadlift", "Leg Press"],
+        Shoulders: ["Overhead Press", "Lateral Raise", "Arnold Press"],
+        Arms: ["Bicep Curl", "Tricep Pushdown", "Hammer Curl"],
+      };
+
+      const totals = {
+        Chest: new Map(),
+        Back: new Map(),
+        Legs: new Map(),
+        Shoulders: new Map(),
+        Arms: new Map(),
+      };
+
+      const workouts = [
+        ...(state.data.workouts || []).filter((workout) => Array.isArray(workout?.exercises) && workout.exercises.length),
+        ...(state.today?.exercises?.length ? [{ exercises: state.today.exercises }] : []),
+      ];
+
+      workouts.forEach((workout) => {
+        (workout.exercises || []).forEach((exercise) => {
+          const exerciseName = String(exercise?.name || "").trim();
+          if (!exerciseName) return;
+
+          const reps = Math.max(1, Number(getExerciseReps(exercise)) || 0);
+          const weight = Math.max(1, Number(getExerciseWeight(exercise)) || 0);
+          const sets = Math.max(1, Number(getExerciseSets(exercise)) || 0);
+          const load = Math.max(0.01, Math.sqrt(sets * reps * weight));
+          const profile = getExerciseMuscleProfile(exercise);
+
+          Object.entries(profile).forEach(([muscle, ratio]) => {
+            if (!ratio || !totals[muscle]) return;
+            totals[muscle].set(exerciseName, (totals[muscle].get(exerciseName) || 0) + (load * ratio));
+          });
+        });
+      });
+
+      return Object.fromEntries(
+        Object.entries(totals).map(([muscle, muscleMap]) => {
+          const highlights = [...muscleMap.entries()]
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, limit)
+            .map(([exerciseName]) => exerciseName);
+          return [muscle, highlights.length ? highlights : defaults[muscle]];
+        })
+      );
+    }
+
+    function renderMuscleGroupsCard(items, exerciseHighlights) {
+      const percentMap = Object.fromEntries(items.map((item) => [item.key, item.percent]));
+      const alphaFor = (key, base = 0.2) => (base + Math.min(0.55, (percentMap[key] || 0) / 120)).toFixed(2);
+      const activeKey = items.some((item) => item.key === selectedMuscleGroupKey)
+        ? selectedMuscleGroupKey
+        : (items[0]?.key || "Chest");
+      const activeItem = items.find((item) => item.key === activeKey) || items[0] || { label: "Brust", percent: 0 };
+      const activeExercises = exerciseHighlights[activeKey] || [];
+      return `
+        <section class="section-block">
+          <header class="section-header">
+            <h2 class="section-title">Muskelgruppen</h2>
+          </header>
+          <article class="muscle-groups-card health-card">
+            <div class="muscle-groups-copy">${t("stats.muscleGroupsSubtitle")}</div>
+            <div class="muscle-groups-layout">
+              <div class="muscle-groups-figure" aria-hidden="true">
+                <svg viewBox="0 0 240 360" role="presentation">
+                  <defs>
+                    <linearGradient id="bodyGradient" x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0%" stop-color="rgba(255,255,255,0.15)"></stop>
+                      <stop offset="38%" stop-color="rgba(255,255,255,0.07)"></stop>
+                      <stop offset="100%" stop-color="rgba(255,255,255,0.028)"></stop>
+                    </linearGradient>
+                    <linearGradient id="muscleGradientPrimary" x1="0" x2="1" y1="0" y2="1">
+                      <stop offset="0%" stop-color="#d1fae5"></stop>
+                      <stop offset="58%" stop-color="#6ee7b7"></stop>
+                      <stop offset="100%" stop-color="#22c55e"></stop>
+                    </linearGradient>
+                    <linearGradient id="muscleGradientSecondary" x1="0" x2="1" y1="0" y2="1">
+                      <stop offset="0%" stop-color="#ecfdf5"></stop>
+                      <stop offset="100%" stop-color="#86efac"></stop>
+                    </linearGradient>
+                  </defs>
+                  <ellipse class="body-silhouette" cx="120" cy="45" rx="21" ry="23"></ellipse>
+                  <path class="body-silhouette" d="M102 74c-14 7-25 19-32 34-6 12-9 25-9 39v35c0 12 4 23 11 31 5 6 11 10 17 14l6 5-5 85c-1 14 7 23 20 23h12c10 0 16-7 16-17v-78h4v78c0 10 6 17 16 17h12c13 0 21-9 20-23l-5-85 6-5c6-4 12-8 17-14 7-8 11-19 11-31v-35c0-14-3-27-9-39-7-15-18-27-32-34-10-5-21-8-32-8s-22 3-32 8Z"></path>
+                  <path class="body-detail" d="M120 80v70"></path>
+                  <path class="body-detail" d="M98 101c7 9 14 16 22 20"></path>
+                  <path class="body-detail" d="M142 101c-7 9-14 16-22 20"></path>
+                  <path class="body-detail" d="M90 128c9 9 19 16 30 21"></path>
+                  <path class="body-detail" d="M150 128c-9 9-19 16-30 21"></path>
+                  <path class="body-detail" d="M102 154c5 17 10 31 18 44"></path>
+                  <path class="body-detail" d="M138 154c-5 17-10 31-18 44"></path>
+                  <path class="body-detail" d="M109 228v92"></path>
+                  <path class="body-detail" d="M131 228v92"></path>
+                  <path class="body-detail" d="M104 84c5-3 10-5 16-5 6 0 11 2 16 5"></path>
+                  <path class="muscle-highlight is-secondary" style="--muscle-alpha:${alphaFor("Shoulders", 0.18)}" d="M74 102c6-10 16-16 30-18 4 7 6 15 5 24-6 8-13 13-23 17-9-4-15-10-19-19 1-1 3-3 7-4Z"></path>
+                  <path class="muscle-highlight is-secondary" style="--muscle-alpha:${alphaFor("Shoulders", 0.18)}" d="M166 102c-6-10-16-16-30-18-4 7-6 15-5 24 6 8 13 13 23 17 9-4 15-10 19-19-1-1-3-3-7-4Z"></path>
+                  <path class="muscle-highlight" style="--muscle-alpha:${alphaFor("Chest")}" d="M89 113c10-10 21-15 31-15v54c-11-2-20-6-27-14-7-8-12-16-14-26 2-5 5-9 10-13Z"></path>
+                  <path class="muscle-highlight" style="--muscle-alpha:${alphaFor("Chest")}" d="M151 113c-10-10-21-15-31-15v54c11-2 20-6 27-14 7-8 12-16 14-26-2-5-5-9-10-13Z"></path>
+                  <path class="muscle-highlight" style="--muscle-alpha:${alphaFor("Arms", 0.16)}" d="M63 132c7 1 13 6 18 14 6 11 9 24 9 40 0 14-2 28-6 41-4 12-9 21-17 27-5 3-10 4-14 1-5-3-7-9-7-15 0-13 4-27 8-43 4-18 6-43 9-65Z"></path>
+                  <path class="muscle-highlight" style="--muscle-alpha:${alphaFor("Arms", 0.16)}" d="M177 132c-7 1-13 6-18 14-6 11-9 24-9 40 0 14 2 28 6 41 4 12 9 21 17 27 5 3 10 4 14 1 5-3 7-9 7-15 0-13-4-27-8-43-4-18-6-43-9-65Z"></path>
+                  <path class="muscle-highlight is-secondary" style="--muscle-alpha:${alphaFor("Back", 0.16)}" d="M100 150c6-7 13-11 20-13 7 2 14 6 20 13 8 8 13 18 13 31 0 12-4 23-11 32-6 9-14 17-22 23-8-6-16-14-22-23-7-9-11-20-11-32 0-13 5-23 13-31Z"></path>
+                  <path class="muscle-highlight" style="--muscle-alpha:${alphaFor("Legs", 0.18)}" d="M96 227c9 0 16 6 18 16l3 73c0 11-7 19-18 19-10 0-17-8-17-19l-1-73c1-10 7-16 15-16Z"></path>
+                  <path class="muscle-highlight" style="--muscle-alpha:${alphaFor("Legs", 0.18)}" d="M144 227c-9 0-16 6-18 16l-3 73c0 11 7 19 18 19 10 0 17-8 17-19l1-73c-1-10-7-16-15-16Z"></path>
+                </svg>
+              </div>
+              <div class="muscle-groups-bars">
+                ${items.map((item) => `
+                  <button type="button" class="muscle-row ${item.key === activeKey ? "is-active" : ""}" data-muscle-key="${item.key}" aria-pressed="${item.key === activeKey ? "true" : "false"}">
+                    <div class="muscle-label">${item.label}</div>
+                    <div class="muscle-track"><div class="muscle-fill" style="width:${item.percent}%"></div></div>
+                    <div class="muscle-value">${item.percent}%</div>
+                  </button>
+                `).join("")}
+                <div class="muscle-focus" aria-live="polite">
+                  <div class="muscle-focus-top">
+                    <div class="muscle-focus-name">${activeItem.label}</div>
+                    <div class="muscle-focus-percent">${activeItem.percent}%</div>
+                  </div>
+                  <div class="muscle-focus-label">${t("stats.muscleGroupsExercises")}</div>
+                  <div class="muscle-focus-exercises">${activeExercises.join(" • ")}</div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </section>
+      `;
     }
 
     function getMonthlyWeeklyBuckets() {
@@ -5992,19 +7614,17 @@ ${(state.data.workoutTemplates || []).map(template => `
     }
 
     function getMonthlyTrendLabel() {
+      const history = (state.data.stats?.monthlySeries || []).filter(v => v > 0);
+      if (history.length < 2) return "–";
+
       const buckets = getMonthlyWeeklyBuckets();
       const firstHalf = buckets[0] + buckets[1];
       const secondHalf = buckets[2] + buckets[3];
 
-      if (!firstHalf && !secondHalf) {
-        return "→ stabil";
-      }
-      if (secondHalf > firstHalf * 1.05) {
-        return "↗ steigt";
-      }
-      if (secondHalf < firstHalf * 0.95) {
-        return "↘ sinkt";
-      }
+      if (!firstHalf && !secondHalf) return "–";
+      if (!firstHalf) return "–"; // can't compare to nothing
+      if (secondHalf > firstHalf * 1.05) return "↗ steigt";
+      if (secondHalf < firstHalf * 0.95) return "↘ sinkt";
       return "→ stabil";
     }
 
@@ -6016,34 +7636,34 @@ ${(state.data.workoutTemplates || []).map(template => `
 
       root.innerHTML = `
         <div class="page-header">
-          <div class="page-title">Settings</div>
-          <div class="page-subtitle">iPhone style control center for your training app</div>
+          <div class="page-title">${t("settings.title")}</div>
+          <div class="page-subtitle">${t("settings.subtitle")}</div>
         </div>
 
         <section class="section-block">
           <div class="settings-group">
-            <div class="settings-item">
-              <span class="settings-label">Appearance</span>
-              <button class="settings-control" data-setting="theme">${prefs.theme === "dark" ? "Dark" : "Light"}</button>
+            <div class="settings-item" data-setting-row="theme" role="button" tabindex="0" aria-label="${t("settings.appearance")}">
+              <span class="settings-label">${t("settings.appearance")}</span>
+              <button class="settings-control" data-setting="theme">${prefs.theme === "dark" ? t("values.dark") : t("values.light")}</button>
             </div>
-            <div class="settings-item">
-              <span class="settings-label">Language</span>
+            <div class="settings-item" data-setting-row="language" role="button" tabindex="0" aria-label="${t("settings.language")}">
+              <span class="settings-label">${t("settings.language")}</span>
               <button class="settings-control" data-setting="language">${prefs.language.toUpperCase()}</button>
             </div>
-            <div class="settings-item">
-              <span class="settings-label">Haptics</span>
-              <button class="settings-control" data-setting="haptics">${prefs.haptics ? "On" : "Off"}</button>
+            <div class="settings-item" data-setting-row="haptics" role="button" tabindex="0" aria-label="${t("settings.haptics")}">
+              <span class="settings-label">${t("settings.haptics")}</span>
+              <button class="settings-control" data-setting="haptics">${prefs.haptics ? t("values.on") : t("values.off")}</button>
             </div>
-            <div class="settings-item">
-              <span class="settings-label">Sound</span>
-              <button class="settings-control" data-setting="sound">${prefs.sound ? "On" : "Off"}</button>
+            <div class="settings-item" data-setting-row="sound" role="button" tabindex="0" aria-label="${t("settings.sound")}">
+              <span class="settings-label">${t("settings.sound")}</span>
+              <button class="settings-control" data-setting="sound">${prefs.sound ? t("values.on") : t("values.off")}</button>
             </div>
-            <div class="settings-item">
-              <span class="settings-label">Notifications</span>
-              <button class="settings-control" data-setting="notifications">${("Notification" in window) ? Notification.permission : "n/a"}</button>
+            <div class="settings-item" data-setting-row="notifications" role="button" tabindex="0" aria-label="${t("settings.notifications")}">
+              <span class="settings-label">${t("settings.notifications")}</span>
+              <button class="settings-control" data-setting="notifications">${prefs.notifications}</button>
             </div>
-            <div class="settings-item">
-              <span class="settings-label">Default Rest Timer</span>
+            <div class="settings-item" data-setting-row="default-rest" role="button" tabindex="0" aria-label="${t("settings.defaultRest")}">
+              <span class="settings-label">${t("settings.defaultRest")}</span>
               <button class="settings-control" data-setting="default-rest">${prefs.defaultRestSeconds}s</button>
             </div>
           </div>
@@ -6051,38 +7671,65 @@ ${(state.data.workoutTemplates || []).map(template => `
 
         <section class="section-block">
           <div class="settings-group">
-            <div class="settings-item">
-              <span class="settings-label">Data Export</span>
+            <div class="settings-item" data-setting-row="export" role="button" tabindex="0" aria-label="${t("settings.dataExport")}">
+              <span class="settings-label">${t("settings.dataExport")}</span>
               <button class="settings-control" data-setting="export">JSON</button>
             </div>
-            <div class="settings-item">
-              <span class="settings-label">Backup</span>
-              <button class="settings-control" data-setting="backup">Create</button>
+            <div class="settings-item" data-setting-row="backup" role="button" tabindex="0" aria-label="${t("settings.backup")}">
+              <span class="settings-label">${t("settings.backup")}</span>
+              <button class="settings-control" data-setting="backup">${t("values.create")}</button>
             </div>
-            <div class="settings-item">
-              <span class="settings-label">Import Backup</span>
-              <button class="settings-control" data-setting="import">Restore</button>
+            <div class="settings-item" data-setting-row="import" role="button" tabindex="0" aria-label="${t("settings.importBackup")}">
+              <span class="settings-label">${t("settings.importBackup")}</span>
+              <button class="settings-control" data-setting="import">${t("values.restore")}</button>
             </div>
           </div>
         </section>
 
         <section class="section-block">
           <div class="settings-group">
-            <div class="settings-item">
-              <span class="settings-label">About</span>
+            <div class="settings-item" data-setting-row="about" role="button" tabindex="0" aria-label="${t("settings.about")}">
+              <span class="settings-label">${t("settings.about")}</span>
               <button class="settings-control" data-setting="about">Emerald Gym</button>
             </div>
-            <div class="settings-item">
-              <span class="settings-label">Reset Data</span>
-              <button class="settings-control" data-setting="reset">Alles löschen</button>
+            <div class="settings-item" data-setting-row="reset" role="button" tabindex="0" aria-label="${t("settings.reset")}">
+              <span class="settings-label">${t("settings.reset")}</span>
+              <button class="settings-control" data-setting="reset">${t("settings.deleteAll")}</button>
             </div>
           </div>
         </section>
       `;
 
       root.querySelectorAll("[data-setting]").forEach(btn => {
-        btn.addEventListener("click", () => handleSettingClick(btn.dataset.setting));
+        btn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          handleSettingClick(btn.dataset.setting);
+        });
       });
+
+      root.querySelectorAll("[data-setting-row]").forEach((row) => {
+        const key = row.dataset.settingRow;
+        row.addEventListener("click", (event) => {
+          if (event.target.closest("[data-setting]")) return;
+          handleSettingClick(key);
+        });
+        row.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            handleSettingClick(key);
+          }
+        });
+      });
+    }
+
+    function applyTheme(theme = "dark") {
+      const isDark = theme === "dark";
+      document.documentElement.classList.toggle("theme-dark", isDark);
+      document.documentElement.classList.toggle("theme-light", !isDark);
+      const themeMeta = document.querySelector("meta[name='theme-color']");
+      if (themeMeta) {
+        themeMeta.setAttribute("content", isDark ? "#050608" : "#eef4f2");
+      }
     }
 
     function handleSettingClick(key) {
@@ -6090,25 +7737,34 @@ ${(state.data.workoutTemplates || []).map(template => `
       switch (key) {
         case "theme":
           prefs.theme = prefs.theme === "dark" ? "light" : "dark";
-          document.documentElement.classList.toggle("theme-dark", prefs.theme === "dark");
-          showToast(`Appearance: ${prefs.theme === "dark" ? "Dark" : "Light"}`);
+          applyTheme(prefs.theme);
+          showToast(t("toast.appearance", { value: prefs.theme === "dark" ? t("values.dark") : t("values.light") }));
           break;
         case "language":
           prefs.language = prefs.language === "de" ? "en" : "de";
-          showToast(`Sprache: ${prefs.language.toUpperCase()}`);
-          break;
+          applyLanguage(prefs.language);
+          initBottomNav();
+          showToast(t("toast.language", { value: prefs.language.toUpperCase() }));
+          navigateTo(currentRoute);
+          saveState();
+          return;
         case "haptics":
           prefs.haptics = !prefs.haptics;
-          showToast(`Haptics: ${prefs.haptics ? "Ein" : "Aus"}`);
+          showToast(t("toast.haptics", { value: prefs.haptics ? t("values.on") : t("values.off") }));
           break;
         case "sound":
           prefs.sound = !prefs.sound;
-          showToast(`Sound: ${prefs.sound ? "Ein" : "Aus"}`);
+          showToast(t("toast.sound", { value: prefs.sound ? t("values.on") : t("values.off") }));
           break;
         case "notifications":
           requestNotificationPermission().then(() => {
             const permission = ("Notification" in window) ? Notification.permission : "n/a";
-            showToast(`Notifications: ${permission}`);
+            prefs.notifications = ["default", "granted", "denied"].includes(permission) ? permission : "default";
+            showToast(t("toast.notifications", { value: permission }));
+            saveState();
+            if (currentRoute === "settings") {
+              renderSettingsPage(document.querySelector("#app-page .page[data-route='settings']") || document.getElementById("app-page"));
+            }
           });
           break;
         case "default-rest":
@@ -6210,8 +7866,8 @@ ${(state.data.workoutTemplates || []).map(template => `
       loadState();
       ensureTodayWorkout();
       decayRecovery();
-      requestNotificationPermission();
-      document.documentElement.classList.toggle("theme-dark", state.data.preferences.theme === "dark");
+      applyLanguage(state.data.preferences.language);
+      applyTheme(state.data.preferences.theme);
       initBottomNav();
       initMotionInteractions();
       initRouter();
