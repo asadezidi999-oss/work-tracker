@@ -25,6 +25,14 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0"></script>
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.3/Sortable.min.js"></script>
+  <script src="./eventBus.js"></script>
+  <script src="./store.js"></script>
+  <script src="./storage.js"></script>
+  <script src="./ui.js"></script>
+  <script src="./jobs.js"></script>
+  <script src="./branches.js"></script>
+  <script src="./charts.js"></script>
+  <script src="./timer.js"></script>
 
   <style>
     :root {
@@ -839,11 +847,11 @@
       display: none;
     }
 
-    .status-badge {
+    .status-chip {
       display: inline-block;
-      padding: 8px 14px;
-      border-radius: 12px;
-      font-size: 14px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
       font-weight: 600;
       color: #fff;
       border: 1px solid transparent;
@@ -1119,9 +1127,9 @@
 
       .week-bar {
         display: flex;
-        gap: 10px;
-        margin-bottom: 6px;
-        margin-top: 4px;
+        gap: 12px;
+        margin-bottom: 12px;
+        margin-top: 8px;
         scroll-snap-type: x proximity;
         scroll-behavior: smooth;
         scroll-padding-inline: 20px;
@@ -1142,26 +1150,31 @@
       }
 
       .week-day {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-sm);
-        padding: 8px;
-        flex: 0 0 80px;
-        min-width: 80px;
-        font-size: 11px;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+        border: 1.5px solid rgba(122, 167, 255, 0.25);
+        border-radius: 16px;
+        padding: 12px 10px;
+        flex: 0 0 95px;
+        min-width: 95px;
+        font-size: 12px;
         text-align: center;
         cursor: pointer;
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 6px;
         align-items: center;
         justify-content: center;
         scroll-snap-align: center;
-        transition: 0.2s ease;
+        transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        position: relative;
       }
 
       .week-day:hover {
-        background: rgba(255, 255, 255, 0.08);
+        background: linear-gradient(135deg, rgba(122, 167, 255, 0.15), rgba(59, 130, 246, 0.08));
+        border-color: rgba(122, 167, 255, 0.45);
+        box-shadow: 0 6px 20px rgba(122, 167, 255, 0.2);
+        transform: translateY(-2px);
       }
 
       .week-day span.label {
@@ -1174,41 +1187,140 @@
       }
 
       .week-day-label {
+        font-weight: 700;
+        font-size: 13px;
+        letter-spacing: 0.5px;
+      }
+
+      .week-day-date {
+        font-size: 14px;
+        color: #7aa7ff;
+        margin: 0;
         font-weight: 600;
+        letter-spacing: 0.3px;
       }
 
       .week-day-hours {
-        font-size: 10px;
-        color: var(--text-soft);
+        font-size: 13px;
+        color: var(--text);
+        font-weight: 600;
+        letter-spacing: 0.3px;
       }
 
       .week-progress-mini {
         width: 100%;
-        height: 5px;
+        height: 8px;
         border-radius: 999px;
-        background: rgba(15, 23, 42, 0.6);
+        background: rgba(15, 23, 42, 0.5);
         overflow: hidden;
+        margin-top: 2px;
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
       }
 
       .week-progress-mini-inner {
         height: 100%;
         width: 0%;
         border-radius: inherit;
-        background: linear-gradient(90deg, #22c55e, #3b82f6);
+        background: linear-gradient(90deg, #22c55e 0%, #3b82f6 100%);
+        transition: width 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+        box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
       }
 
       .week-day.active {
-        background: rgba(59, 130, 246, 0.22);
-        border-color: var(--accent);
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(59, 130, 246, 0.12));
+        border-color: rgba(59, 130, 246, 0.6);
+        box-shadow: 0 6px 24px rgba(59, 130, 246, 0.25);
       }
 
       .week-day.today {
-        box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.7);
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.08));
+        border-color: rgba(34, 197, 94, 0.7);
+        box-shadow: 0 0 20px rgba(34, 197, 94, 0.35), inset 0 0 12px rgba(34, 197, 94, 0.1);
+      }
+
+      .week-day.worked {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.06));
+        border-color: rgba(34, 197, 94, 0.5);
       }
 
       .week-day.strong-day {
-        background: rgba(34, 197, 94, 0.22);
-        border-color: var(--accent-2);
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(34, 197, 94, 0.15));
+        border-color: rgba(34, 197, 94, 0.8);
+        box-shadow: 0 6px 20px rgba(34, 197, 94, 0.2);
+      }
+
+      /* 📱 Mobile Optimization für iPhone */
+      @media (max-width: 600px) {
+        .week-bar {
+          gap: 10px;
+          margin-bottom: 10px;
+          margin-top: 6px;
+          padding-bottom: 2px;
+        }
+
+        .week-day {
+          padding: 10px 8px;
+          flex: 0 0 82px;
+          min-width: 82px;
+          gap: 5px;
+          border-radius: 14px;
+          box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .week-day:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 5px 16px rgba(122, 167, 255, 0.18);
+        }
+
+        .week-day-label {
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.3px;
+        }
+
+        .week-day-date {
+          font-size: 13px;
+          font-weight: 600;
+          letter-spacing: 0.2px;
+        }
+
+        .week-day-hours {
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.2px;
+        }
+
+        .week-progress-mini {
+          height: 7px;
+          margin-top: 1px;
+        }
+      }
+
+      /* 📱 Extra small devices */
+      @media (max-width: 380px) {
+        .week-day {
+          flex: 0 0 75px;
+          min-width: 75px;
+          padding: 9px 6px;
+          gap: 4px;
+          border-radius: 12px;
+        }
+
+        .week-day-label {
+          font-size: 11px;
+        }
+
+        .week-day-date {
+          font-size: 12px;
+        }
+
+        .week-day-hours {
+          font-size: 11px;
+        }
+
+        .week-progress-mini {
+          height: 6px;
+        }
       }
 
     .log-location-link {
@@ -1294,6 +1406,26 @@
     @media (max-width: 720px) {
       .log-item {
         grid-template-columns: minmax(0, 1.6fr);
+        touch-action: pan-y;
+      }
+
+      .log-actions {
+        max-height: 0;
+        opacity: 0;
+        overflow: hidden;
+        margin-top: 0;
+        transition: max-height 0.2s ease, opacity 0.2s ease, margin-top 0.2s ease;
+      }
+
+      .log-item.show-actions .log-actions {
+        max-height: 52px;
+        opacity: 1;
+        margin-top: 6px;
+      }
+
+      .log-item.show-actions {
+        border-color: rgba(34, 197, 94, 0.5);
+        background: rgba(34, 197, 94, 0.08);
       }
     }
 
@@ -1432,6 +1564,12 @@
       font-weight: 600;
     }
 
+    .insight-main {
+      font-size: 15px;
+      font-weight: bold;
+      border: 2px solid #22c55e !important;
+    }
+
     /* 🏠 Home Layout */
     .home-layout {
       display: grid;
@@ -1487,6 +1625,12 @@
       background: #ff453a;
       color: #fff;
       box-shadow: 0 10px 22px rgba(255, 69, 58, 0.32);
+      transition: opacity 0.2s ease;
+    }
+
+    #btn-stop.stop-hidden {
+      opacity: 0;
+      pointer-events: none;
     }
 
     .timer-controls button:hover {
@@ -2753,7 +2897,7 @@ body.light .nav-btn.active {
 
 .fab {
   position: fixed;
-  bottom: 58px;
+  bottom: 80px;
   right: 30px;
   width: 46px;
   height: 46px;
@@ -2777,7 +2921,7 @@ body.light .nav-btn.active {
 
 .fab-container {
   position: fixed;
-  bottom: 96px;
+  bottom: 80px;
   left: 50%;
   right: auto;
   transform: translateX(-50%);
@@ -2941,10 +3085,135 @@ body.light .nav-btn.active {
 
 .empty-state {
   text-align: center;
-  color: #64748b;
-  padding: 30px;
+  color: #9ca3af;
+  padding: 20px;
   font-size: 14px;
   opacity: 0.7;
+}
+
+/* Home controls: fast, lightweight transitions */
+.action-btn {
+  width: 100%;
+  height: 56px;
+  border-radius: 14px;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #fff;
+  transition: all 0.2s ease;
+}
+
+.action-btn:active {
+  transform: scale(0.97);
+}
+
+.btn-start {
+  background: #22c55e;
+  color: #02140a;
+}
+
+.btn-pause {
+  background: #d4a100;
+  color: #1f1f1f;
+}
+
+.btn-resume {
+  background: #0ea5e9;
+}
+
+.btn-stop {
+  background: #ef4444;
+}
+
+.status-label {
+  font-size: 14px;
+  margin-bottom: 8px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.status-label.status-running {
+  color: #22c55e;
+  background: transparent;
+  border: none;
+}
+
+.status-label.status-paused {
+  color: #facc15;
+  background: transparent;
+  border: none;
+}
+
+.status-label.status-idle {
+  color: #9ca3af;
+  background: transparent;
+  border: none;
+}
+
+.timer {
+  font-size: 42px;
+  font-weight: 700;
+  text-align: center;
+  margin: 20px 0;
+  transition: color 0.3s ease;
+}
+
+.timer-run {
+  color: #22c55e;
+}
+
+.timer-pause {
+  color: #facc15;
+}
+
+.timer-stop {
+  color: #9ca3af;
+}
+
+.timer-running-anim {
+  animation: pulse 1.6s infinite ease-in-out;
+}
+
+.input-label {
+  font-size: 13px;
+  color: #9ca3af;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.job-input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #2c2c2e;
+  background: #0b1020;
+  color: #fff;
+  font-size: 15px;
+}
+
+.fab {
+  position: fixed;
+  right: 24px;
+  bottom: 80px;
+  width: 54px;
+  height: 54px;
+  border-radius: 999px;
+  background: #22c55e;
+  border: none;
+  color: #02140a;
+  font-size: 28px;
+  box-shadow: 0 14px 30px rgba(34,197,94,0.5);
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.fab:active {
+  transform: scale(0.92);
+}
+
+button:hover {
+  transform: translateY(-2px);
 }
 
 #main-branch-badge {
@@ -3408,88 +3677,87 @@ body.light .timer-controls button {
 }
 
 .job-chip {
-  padding: 14px 16px;
-  background: #1c1c1e;
+  padding: 10px 16px;
+  background: #111118;
   border-radius: 18px;
   border: 1px solid #2c2c2e;
-  color: #f2f2f7;
+  color: #f5f5ff;
   font-size: 15px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  gap: 10px;
+  transition: 0.15s ease;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
-  cursor: default;
-}
-
-.job-drag-handle {
-  font-size: 20px;
-  opacity: 0.35;
   cursor: grab;
-  padding: 4px 6px;
-  border-radius: 8px;
-  flex-shrink: 0;
-  touch-action: none;
-  line-height: 1;
 }
 
-.job-drag-handle:hover {
-  opacity: 0.7;
-}
-
-.job-drag-handle:active {
-  cursor: grabbing;
-  opacity: 0.9;
-  background: rgba(255,255,255,0.1);
-}
-
-.job-chip-name {
-  flex: 1;
-  cursor: pointer;
-  font-weight: 500;
+.job-chip.active {
+  outline: 2px solid #22c55e;
 }
 
 .job-chip:hover {
   transform: translateY(-2px);
-  background: #2a2a2d;
 }
 
 .job-chip:active {
-  transform: scale(0.96);
+  transform: scale(0.94);
 }
 
-.job-chip.active {
-  background: #ff9f0a;
-  border-color: #ff9f0a;
-  color: #000;
-  font-weight: 600;
+.drag-handle,
+.job-drag-handle {
+  font-size: 18px;
+  opacity: 0.55;
+  cursor: grab;
+  touch-action: none;
 }
 
-.job-chip.active .job-drag-handle {
-  opacity: 0.5;
+.drag-handle:hover,
+.job-drag-handle:hover {
+  opacity: 0.9;
 }
 
-.job-chip.active .job-menu-btn {
-  color: #000;
+.job-name,
+.job-chip-name {
+  flex: 1;
+}
+
+.job-menu,
+.job-menu-btn {
+  margin-left: auto;
+  font-size: 18px;
+  opacity: 0.55;
+  cursor: pointer;
+}
+
+.job-menu:hover,
+.job-menu-btn:hover {
+  opacity: 0.9;
+}
+
+.job-dot {
+  font-size: 14px;
+  opacity: 0.6;
 }
 
 .job-chip.job-chip-spring {
   animation: jobChipSpring 380ms cubic-bezier(0.18, 0.9, 0.22, 1.2);
 }
 
+.job-chip[data-color="green"] { border-color:#22c55e55; background:#022c2233; }
+.job-chip[data-color="orange"] { border-color:#f9731655; background:#451a0333; }
+.job-chip[data-color="blue"] { border-color:#0ea5e955; background:#082f4933; }
+.job-chip[data-color="purple"] { border-color:#a855f755; background:#3b076433; }
+
 .drag-chosen {
   transform: scale(1.03);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.45);
 }
 
 .drag-ghost {
   opacity: 0.4;
+  transform: scale(0.95);
   filter: blur(1px);
-}
-
-.drag-dragging {
-  opacity: 0.85;
 }
 
 @keyframes jobChipSpring {
@@ -3685,6 +3953,35 @@ body.light .timer-controls button {
   font-weight: 700;
   color: var(--text);
 }
+
+.kpi-bar {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0 20px 0;
+}
+
+.kpi-pill {
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  padding: 8px 10px;
+}
+
+.kpi-pill .kpi-label {
+  font-size: 11px;
+  opacity: 0.78;
+}
+
+.kpi-pill .kpi-value {
+  margin-top: 3px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.job-badge {
+  border: 1px solid #22c55e;
+  box-shadow: 0 0 12px #22c55e33;
+}
 </style>
 </head>
 <body>
@@ -3720,17 +4017,30 @@ body.light .timer-controls button {
 
             <!-- 🟢 Timer Core -->
             <section class="card timer-core hero-timer-card">
-              <div id="timer-display" class="timer-display hero-timer-display timer">00:00:00</div>
+              <div class="kpi-bar">
+                <div class="kpi-pill">
+                  <div class="kpi-label">Heute</div>
+                  <div class="kpi-value" id="kpi-today">0h</div>
+                </div>
+                <div class="kpi-pill">
+                  <div class="kpi-label">Woche</div>
+                  <div class="kpi-value" id="kpi-week">0h</div>
+                </div>
+                <div class="kpi-pill">
+                  <div class="kpi-label">Ø</div>
+                  <div class="kpi-value" id="kpi-avg">0h</div>
+                </div>
+              </div>
+              <div id="status-label" class="status-label status-idle">Status: Beendet</div>
+              <div id="timer-display" class="timer-display hero-timer-display timer timer-stop">00:00:00</div>
               <div id="status-box" class="status-box">
                 <span id="status-dot" class="status-dot status-stopped-dot"></span>
-                <span id="status-text" class="status-stopped status-badge status-end">Beendet</span>
+                <span id="status-text" class="status-stopped status-chip status-end">Beendet</span>
               </div>
 
               <div class="timer-controls">
-                <button id="btn-start" class="action-btn start">▶ Start</button>
-                <button id="btn-pause" class="action-btn pause">⏸ Pause</button>
-                <button id="btn-resume" class="action-btn resume">▶ Resume</button>
-                <button id="btn-stop" class="action-btn stop">⏹ Stop</button>
+                <button id="btn-main" class="action-btn btn-start">Start</button>
+                <button id="btn-stop" class="action-btn btn-stop">⏹ Stop</button>
               </div>
             </section>
 
@@ -3738,10 +4048,12 @@ body.light .timer-controls button {
             <section class="card branch-selector">
               <div class="job-section">
                 <div class="job-header">
+                  <label class="input-label" for="job-input">Job Name</label>
                   <input id="job-input" class="job-input" placeholder="Arbeitsname eingeben" />
                   <button id="job-add-btn" class="add-job-btn">➕ Job hinzufügen</button>
                 </div>
                 <div id="job-list" class="job-list"></div>
+                <div id="empty-state" class="empty-state">👋 Starte deine erste Arbeitszeit!</div>
               </div>
 
               <div id="branch-list" class="branch-list"></div>
@@ -3768,7 +4080,7 @@ body.light .timer-controls button {
                 <div class="card-subtitle" id="stats-main-subtitle">Stats für: -</div>
               </div>
               <div style="display:flex; gap:8px; align-items:center;">
-                <span class="pill" id="job-badge-stats">🧩 Job: -</span>
+                <span class="pill job-badge" id="job-badge-stats">🧩 Job: -</span>
                 <span class="pill">📊 Stats</span>
               </div>
             </div>
@@ -3858,7 +4170,7 @@ body.light .timer-controls button {
               Deine Woche im Überblick · -
             </div>
           </div>
-          <span class="pill" id="job-badge-week-chart">🧩 Job: -</span>
+          <span class="pill job-badge" id="job-badge-week-chart">🧩 Job: -</span>
         </div>
         <div class="chart-wrapper">
           <canvas id="weekChart"></canvas>
@@ -3877,7 +4189,7 @@ body.light .timer-controls button {
             </div>
           </div>
           <div style="display:flex; gap:8px; align-items:center;">
-            <span class="pill" id="job-badge-global-chart">🧩 Job: -</span>
+            <span class="pill job-badge" id="job-badge-global-chart">🧩 Job: -</span>
             <span class="pill">🌍 ALL</span>
           </div>
         </div>
@@ -4348,38 +4660,7 @@ body.light .timer-controls button {
 
 
       function playUiSound(type) {
-        const isMobile = /iphone|android/i.test(navigator.userAgent);
-
-        // 📱 موبايل → vibration فقط
-        if (isMobile) {
-          navigator.vibrate?.(15);
-          return;
-        }
-
-        // 💻 كمبيوتر → kurzer Ton ohne externe Datei
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!AudioCtx) return;
-
-        try {
-          const ctx = new AudioCtx();
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          const tones = { start: 880, stop: 300, success: 720, error: 220, tap: 520 };
-
-          osc.type = "sine";
-          osc.frequency.value = tones[type] || tones.tap;
-          gain.gain.value = 0.02;
-
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-
-          osc.start();
-          osc.stop(ctx.currentTime + 0.06);
-          osc.onended = () => {
-            ctx.close().catch(() => {});
-          };
-        } catch (error) {
-        }
+        playSound(type);
       }
 
       function applyTheme(name) {
@@ -4503,225 +4784,81 @@ body.light .timer-controls button {
       function renderJobs() {
         const container = document.getElementById("job-list");
         if (!container) return;
+        const emptyState = document.getElementById("empty-state");
 
         container.innerHTML = "";
 
         state.jobs.forEach(job => {
-          const isActive = job.id === state.selectedJobId;
-          const jobColor = getJobColor(job);
-
           const el = document.createElement("div");
-          el.className = "job-chip" + (isActive ? " active" : "");
-          if (isActive && _jobSwitchAnimationTarget === job.id) {
-            el.classList.add("job-chip-spring");
-            _jobSwitchAnimationTarget = null;
-          }
+          el.className = "job-chip " + (job.id === state.selectedJobId ? "active" : "");
           el.dataset.id = job.id;
-          el.style.borderColor = hexToRgba(jobColor, 0.7);
-          if (isActive) el.style.boxShadow = `0 0 16px ${hexToRgba(jobColor, 0.28)}`;
+          el.dataset.color = job.color || "green";
 
-          // Drag handle
-          const handle = document.createElement("span");
-          handle.className = "job-drag-handle";
-          handle.setAttribute("aria-label", "Sortieren");
-          handle.textContent = "≡";
+          el.innerHTML = `
+            <span class="drag-handle">≡</span>
+            <span class="job-name">${escapeHtml(job.name)}</span>
+            <span class="job-dot" style="width:8px;height:8px;border-radius:50%;background:${getJobColor(job.color)};display:inline-block;"></span>
+            <span class="job-menu">⋯</span>
+          `;
 
-          // Job name
-          const nameEl = document.createElement("span");
-          nameEl.className = "job-chip-name";
-          nameEl.textContent = job.name;
-
-          // Color picker
-          const colorInput = document.createElement("input");
-          colorInput.className = "job-color-picker";
-          colorInput.type = "color";
-          colorInput.value = jobColor;
-          colorInput.title = "Job-Farbe";
-          colorInput.setAttribute("aria-label", "Job-Farbe");
-
-          // Menu button
-          const menuBtn = document.createElement("button");
-          menuBtn.className = "job-menu-btn";
-          menuBtn.setAttribute("aria-label", "Job-Optionen");
-          menuBtn.title = "Optionen";
-          menuBtn.textContent = "⋯";
-
-          el.appendChild(handle);
-          el.appendChild(nameEl);
-          el.appendChild(colorInput);
-          el.appendChild(menuBtn);
-
-          // Color picker
-          colorInput.addEventListener("click", (e) => e.stopPropagation());
-          colorInput.addEventListener("input", (e) => {
-            e.stopPropagation();
-            job.color = normalizeHexColor(e.target.value, jobColor);
-            saveState();
-            renderJobs();
-            renderCurrentJobBadges();
-            renderChart();
-            renderMonthChart();
-            renderGlobalChart();
-          });
-
-          // Tap chip → select job
+          // SELECT JOB
           el.addEventListener("click", (e) => {
-            if (e.target.closest(".job-menu-btn") || e.target.closest(".job-color-picker") || e.target.closest(".job-drag-handle")) return;
-            _jobSwitchAnimationTarget = job.id;
+            if (e.target.classList.contains("job-menu")) return;
             state.selectedJobId = job.id;
             ensureBranchSelected();
             markLogIndexDirty();
             saveState();
             renderJobs();
-            updateUI();
+            if (typeof renderHome === "function") {
+              renderHome();
+            } else {
+              updateUI();
+            }
             renderLogs();
           });
 
-          // Menu button → action sheet
-          menuBtn.addEventListener("click", (e) => {
+          // MENU
+          el.querySelector(".job-menu")?.addEventListener("click", (e) => {
             e.stopPropagation();
             showJobActionSheet(job.id);
           });
 
-          // Long-press → action sheet (iOS)
-          let longPressTimer = null;
-          el.addEventListener("touchstart", (e) => {
-            if (e.target.closest(".job-drag-handle") || e.target.closest(".job-menu-btn") || e.target.closest(".job-color-picker")) return;
-            longPressTimer = setTimeout(() => {
-              longPressTimer = null;
-              showJobActionSheet(job.id);
-            }, 500);
-          }, { passive: true });
-          el.addEventListener("touchend", () => { if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; } });
-          el.addEventListener("touchmove", () => { if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; } });
-
           container.appendChild(el);
         });
+
+        if (emptyState) {
+          const hasAnyLog = (state.branches || []).some((branch) => Array.isArray(branch.logs) && branch.logs.length > 0);
+          emptyState.style.display = hasAnyLog ? "none" : "block";
+        }
       }
 
       // 🍏 iOS-style Job Action Sheet
-      let _jobActionSheetTarget = null;
-      let _jobSwitchAnimationTarget = null;
-
       function showJobActionSheet(jobId) {
-        const sheet = document.getElementById("job-action-sheet");
-        const title = document.getElementById("job-action-sheet-title");
-        if (!sheet) return;
-        const job = state.jobs.find(j => j.id === jobId);
-        if (!job) return;
-        _jobActionSheetTarget = jobId;
-        if (title) title.textContent = job.name;
-        sheet.classList.add("open");
-        navigator.vibrate?.(10);
+        return jobsController.showJobActionSheet(jobId);
       }
 
       function closeJobActionSheet() {
-        const sheet = document.getElementById("job-action-sheet");
-        sheet?.classList.remove("open");
-        _jobActionSheetTarget = null;
-        // Reset to default buttons view
-        const buttons = document.getElementById("job-action-buttons");
-        const form = document.getElementById("job-rename-form");
-        if (buttons) buttons.style.display = "block";
-        if (form) form.style.display = "none";
+        return jobsController.closeJobActionSheet();
+      }
+
+      function openJobRenameForm(jobId) {
+        return jobsController.openJobRenameForm(jobId);
       }
 
       function renameJob(jobId, newName) {
-        const job = state.jobs.find(j => j.id === jobId);
-        if (!job) return;
-        const trimmed = newName.trim();
-        if (!trimmed) return;
-        job.name = trimmed;
-        saveState();
-        renderJobs();
-        renderCurrentJobBadges();
+        return jobsController.renameJob(jobId, newName);
       }
 
       function duplicateJob(jobId) {
-        const job = state.jobs.find(j => j.id === jobId);
-        if (!job) return;
-        const newJob = {
-          id: "job_" + Date.now(),
-          name: job.name + " (Kopie)",
-          color: job.color,
-          branches: JSON.parse(JSON.stringify(job.branches))
-        };
-        const idx = state.jobs.findIndex(j => j.id === jobId);
-        state.jobs.splice(idx + 1, 0, newJob);
-        saveState();
-        renderJobs();
+        return jobsController.duplicateJob(jobId);
       }
 
       function initJobActionSheet() {
-        const sheet = document.getElementById("job-action-sheet");
-        if (!sheet) return;
-
-        document.getElementById("job-action-cancel")?.addEventListener("click", closeJobActionSheet);
-        sheet.addEventListener("click", (e) => {
-          if (e.target === sheet) closeJobActionSheet();
-        });
-
-        document.getElementById("job-action-rename")?.addEventListener("click", () => {
-          const jobId = _jobActionSheetTarget;
-          const job = state.jobs.find(j => j.id === jobId);
-          if (!job) return;
-          // Show inline rename form
-          const buttons = document.getElementById("job-action-buttons");
-          const form = document.getElementById("job-rename-form");
-          const input = document.getElementById("job-rename-input");
-          if (!form || !input || !buttons) return;
-          buttons.style.display = "none";
-          form.style.display = "block";
-          input.value = job.name;
-          setTimeout(() => { input.focus(); input.select(); }, 80);
-        });
-
-        function confirmRename() {
-          const jobId = _jobActionSheetTarget;
-          const input = document.getElementById("job-rename-input");
-          if (!input) return;
-          renameJob(jobId, input.value);
-          closeJobActionSheet();
-        }
-
-        document.getElementById("job-rename-confirm")?.addEventListener("click", confirmRename);
-        document.getElementById("job-rename-input")?.addEventListener("keydown", (e) => {
-          if (e.key === "Enter") { e.preventDefault(); confirmRename(); }
-          if (e.key === "Escape") closeJobActionSheet();
-        });
-        document.getElementById("job-rename-cancel")?.addEventListener("click", closeJobActionSheet);
-
-        document.getElementById("job-action-duplicate")?.addEventListener("click", () => {
-          const jobId = _jobActionSheetTarget;
-          closeJobActionSheet();
-          duplicateJob(jobId);
-        });
-
-        document.getElementById("job-action-delete")?.addEventListener("click", () => {
-          const jobId = _jobActionSheetTarget;
-          closeJobActionSheet();
-          deleteJob(jobId);
-        });
+        return jobsController.initJobActionSheet();
       }
 
       function deleteJob(jobId) {
-        if (state.jobs.length === 1) {
-          alert("Mindestens ein Job muss bleiben!");
-          return;
-        }
-
-        state.jobs = state.jobs.filter(j => j.id !== jobId);
-
-        if (state.selectedJobId === jobId) {
-          state.selectedJobId = state.jobs[0].id;
-        }
-
-        ensureBranchSelected();
-        markLogIndexDirty();
-        saveState();
-        renderJobs();
-        updateUI();
-        renderLogs();
+        return jobsController.deleteJob(jobId);
       }
 
       window.addEventListener("load", () => {
@@ -4913,6 +5050,67 @@ body.light .timer-controls button {
         return branches.find(b => b.id === state.selectedBranchId) || null;
       }
 
+      const AppStorage = window.WorkTrackerStorage.createStorageService(window.localStorage);
+
+      // 🚌 Global Event Bus – decouples state mutations from UI reactions
+      const AppEvents = window.WorkTrackerEvents.createEventBus();
+
+      // 🏪 Reactive Store – wraps existing state; use setState() for tracked mutations
+      const AppStore = window.WorkTrackerStore.createStore(state, AppEvents);
+
+      const { runAfterFrames, debounce, fadeIn, createUIService, createRenderScheduler, createTabController } = window.WorkTrackerUI;
+      const {
+        createChart,
+        createLineChart,
+        createOrUpdateChart,
+        createChartXAxis,
+        createDurationYAxis,
+        createChartTooltip,
+        setChartEmptyState,
+        setChartInsightLayer
+      } = window.WorkTrackerCharts;
+
+      const BranchService = window.WorkTrackerBranches.createBranchService({
+        getBranches,
+        getSelectedBranch,
+        ensureBranchSelected,
+        state,
+        uuid
+      });
+
+      const LogService = window.WorkTrackerBranches.createLogService({
+        getCurrentLog,
+        getSelectedBranch,
+        getActiveWeekDurations,
+        computeWeekAllBranches
+      });
+
+      const importExportController = window.WorkTrackerStorage.createImportExportController({
+        state,
+        storage: AppStorage,
+        IMPORT_SCHEMA_VERSION,
+        getBranches,
+        computeLogDuration,
+        formatTime,
+        updateJsonImportAssist,
+        showToast,
+        setJsonImportFeedback,
+        buildPersistedStateSnapshot,
+        migrateImportedState,
+        validateImportedState,
+        applyPersistedState,
+        resetBranchChart: () => resetBranchChart(),
+        renderAll: () => renderAll(),
+        saveState: () => saveState()
+      });
+
+      const UIService = createUIService({
+        updateTimer: (...args) => updateTimer(...args),
+        queueRender: (flags) => queueRender(flags),
+        updateAfterLogChange: (options) => updateAfterLogChange(options),
+        updateUI: () => updateUI()
+      });
+
       Object.defineProperty(state, "branches", {
         configurable: true,
         get() {
@@ -4924,7 +5122,6 @@ body.light .timer-controls button {
       });
       state.hourlyRate = state.hourlyRate ?? null;
       let lastStreakCelebrationWeek = null;
-      let monthChart;
       const logIndexByDate = new Map();
       let logIndexDirty = true;
 
@@ -5036,28 +5233,48 @@ function getLocation() {
         }
       }
 
-      function fadeIn(el) {
-        if (!el) return;
-        el.classList.add("fade-enter");
-        setTimeout(() => el.classList.add("fade-enter-active"), 10);
-        setTimeout(() => el.classList.remove("fade-enter", "fade-enter-active"), 300);
-      }
+      function playSound(type) {
+        try {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return;
 
-      function playSound() {
-        const audio = document.getElementById("app-sound");
-        if (!audio) return;
+          const ctx = new AudioCtx();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
 
-        audio.currentTime = 0;
-        audio.play().catch(() => {});
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+
+          if (type === "start") osc.frequency.value = 600;
+          else if (type === "pause") osc.frequency.value = 300;
+          else if (type === "resume") osc.frequency.value = 700;
+          else if (type === "stop") osc.frequency.value = 150;
+          else osc.frequency.value = 480;
+
+          osc.type = "sine";
+          gain.gain.setValueAtTime(0.1, ctx.currentTime);
+
+          osc.start();
+          osc.stop(ctx.currentTime + 0.1);
+          osc.onended = () => {
+            ctx.close().catch(() => {});
+          };
+        } catch (e) {
+          console.warn("Sound blocked");
+        }
       }
 
       function playAppSound() {
-        playSound();
+        playSound("tap");
       }
 
       document.addEventListener("click", (e) => {
-        if (e.target.closest("button")) {
-          playSound();
+        const button = e.target.closest("button");
+        if (!button) return;
+        if (button.closest(".timer-controls")) return;
+        if (button.id === "btn-start" || button.id === "btn-pause" || button.id === "btn-resume" || button.id === "btn-stop" || button.id === "btn-main") return;
+        {
+          playSound("tap");
         }
       });
 
@@ -5091,6 +5308,19 @@ function getLocation() {
         return `${hours}:${String(minutes).padStart(2, "0")} h`;
       }
 
+
+      function formatHours(minutes) {
+        const safeMinutes = Math.max(0, Number(minutes) || 0);
+        const h = Math.floor(safeMinutes / 60);
+        const m = safeMinutes % 60;
+        return `${h}h ${m}m`;
+      }
+
+      function calculateAverage(totalMinutes, days) {
+        if (days === 0) return "0h";
+        const avg = totalMinutes / days;
+        return formatHours(Math.round(avg));
+      }
       function formatDurationHM(ms) {
         if (!ms || ms <= 0) return "0h";
         const totalMinutes = Math.round(ms / 60000);
@@ -5656,10 +5886,53 @@ function getLocation() {
         return JOB_COLOR_PALETTE[hashString(seed) % JOB_COLOR_PALETTE.length];
       }
 
-      function getJobColor(job) {
-        if (!job) return "#22c55e";
-        const fallback = getPaletteColorForSeed(job.id || job.name || "default");
-        return normalizeHexColor(job.color, fallback);
+      function getJobColor(color) {
+        if (color && typeof color === "object") {
+          const fallback = getPaletteColorForSeed(color.id || color.name || "default");
+          return normalizeHexColor(color.color, fallback);
+        }
+
+        const token = String(color || "green").trim().toLowerCase();
+        if (token.startsWith("#")) {
+          return normalizeHexColor(token, "#22c55e");
+        }
+
+        switch (token) {
+          case "orange":
+            return "#f97316";
+          case "blue":
+            return "#0ea5e9";
+          case "purple":
+            return "#a855f7";
+          default:
+            return "#22c55e";
+        }
+      }
+
+      function getJobColorToken(job) {
+        const hex = getJobColor(job);
+        const palette = {
+          green: "#22c55e",
+          orange: "#f59e0b",
+          blue: "#3b82f6",
+          purple: "#a855f7"
+        };
+        let closest = "green";
+        let best = Number.POSITIVE_INFINITY;
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        Object.entries(palette).forEach(([token, pHex]) => {
+          const pr = parseInt(pHex.slice(1, 3), 16);
+          const pg = parseInt(pHex.slice(3, 5), 16);
+          const pb = parseInt(pHex.slice(5, 7), 16);
+          const dist = (r - pr) ** 2 + (g - pg) ** 2 + (b - pb) ** 2;
+          if (dist < best) {
+            best = dist;
+            closest = token;
+          }
+        });
+        return closest;
       }
 
       function hexToRgba(hex, alpha) {
@@ -5706,34 +5979,11 @@ function getLocation() {
       }
 
       function buildExportData() {
-        return {
-          schemaVersion: IMPORT_SCHEMA_VERSION,
-          jobs: state.jobs,
-          selectedJobId: state.selectedJobId,
-          selectedBranchId: state.selectedBranchId,
-          viewMode: state.viewMode,
-          selectedDay: state.selectedDay,
-          selectedWeekStart: state.selectedWeekStart,
-          selectedMonth: state.selectedMonth,
-          weekGoal: state.weekGoal,
-          hourlyRate: state.hourlyRate,
-          autoStopHours: state.autoStopHours,
-          goalReached: state.goalReached,
-          celebrated: state.celebrated
-        };
+        return importExportController.buildExportData();
       }
 
       function buildBackupFileName(extension) {
-        const nowDate = new Date();
-        const stamp = [
-          nowDate.getFullYear(),
-          String(nowDate.getMonth() + 1).padStart(2, "0"),
-          String(nowDate.getDate()).padStart(2, "0"),
-          "-",
-          String(nowDate.getHours()).padStart(2, "0"),
-          String(nowDate.getMinutes()).padStart(2, "0")
-        ].join("");
-        return `arbeitszeit-backup-${stamp}.${extension}`;
+        return importExportController.buildBackupFileName(extension);
       }
 
       function countStateSummary(data) {
@@ -6996,64 +7246,23 @@ function getLocation() {
         return computeWeekTotal(getSelectedBranch(), new Date(state.selectedWeekStart));
       }
 
-      const renderQueueDefaults = {
-        includeLogs: false,
-        includeStats: false,
-        includeWeekBar: false,
-        includeMonth: false,
-        includeCharts: false,
-        includeInsights: false
-      };
-
-      let pendingRenderQueue = null;
-      let renderFrameQueued = false;
-
-      function flushRenderQueue() {
-        if (!pendingRenderQueue) {
-          renderFrameQueued = false;
-          return;
-        }
-
-        const queue = pendingRenderQueue;
-        pendingRenderQueue = null;
-        renderFrameQueued = false;
-
-        if (queue.includeLogs) renderLogs();
-        if (queue.includeStats) renderStats();
-        if (queue.includeWeekBar) renderWeekBar();
-        if (queue.includeMonth) renderMonth();
-
-        if (queue.includeCharts) {
-          renderChart();
-          renderMonthChart();
-          renderGlobalChart();
-        }
-
-        if (queue.includeInsights) {
-          renderInsight();
-          renderInsights();
-        }
-
-        const activePage = document.querySelector(".tab-page.active");
-        fadeIn(activePage);
+      function getActiveTabName() {
+        return document.querySelector(".nav-btn.active")?.dataset.tab || AppStorage.getLocal(TAB_KEY, "home") || "home";
       }
 
-      function queueRender(flags = {}) {
-        if (!pendingRenderQueue) {
-          pendingRenderQueue = { ...renderQueueDefaults };
-        }
-
-        Object.keys(renderQueueDefaults).forEach((key) => {
-          if (flags[key]) {
-            pendingRenderQueue[key] = true;
-          }
-        });
-
-        if (!renderFrameQueued) {
-          renderFrameQueued = true;
-          requestAnimationFrame(flushRenderQueue);
-        }
-      }
+      const { queueRender, flushRenderQueue } = createRenderScheduler({
+        getActiveTabName,
+        renderLogs: () => renderLogs(),
+        renderStats: () => renderStats(),
+        renderWeekBar: () => renderWeekBar(),
+        renderMonth: () => renderMonth(),
+        renderChart: () => renderChart(),
+        renderMonthChart: () => renderMonthChart(),
+        renderGlobalChart: () => renderGlobalChart(),
+        renderInsight: () => renderInsight(),
+        renderInsights: () => renderInsights(),
+        getActivePage: () => document.querySelector(".tab-page.active")
+      });
 
       function updateAfterLogChange(options = {}) {
         const {
@@ -7100,6 +7309,7 @@ function getLocation() {
         updateModeToggle();
         renderBranchToggle();
         updateTimer();
+        renderMainControls();
         const hourlyRateInput = document.getElementById("hourly-rate-input");
         if (hourlyRateInput && document.activeElement !== hourlyRateInput) {
           hourlyRateInput.value = state.hourlyRate != null ? String(state.hourlyRate) : "";
@@ -7113,12 +7323,7 @@ function getLocation() {
 
       function renderAll() {
         updateUI();
-        renderLogs();
-        renderStats();
-        renderInsights();
-        renderChart();
-        renderMonthChart();
-        renderGlobalChart();
+        syncTabView(getActiveTabName());
       }
 
       function renderStopUpdates() {
@@ -7161,6 +7366,7 @@ function getLocation() {
         saveState();
         updateUI();
         showToast("success", "Filiale", `Filiale "${name}" hinzugefügt.`);
+        AppEvents.emit("branch:created", { branch });
       }
 
       function ensureConfirmModal() {
@@ -7325,6 +7531,17 @@ function getLocation() {
         return null;
       }
 
+      function getTimerState() {
+        const branch = getSelectedBranch();
+        if (!branch) return "stop";
+
+        const log = getCurrentLog(branch);
+        if (!log || log.end) return "stop";
+
+        const hasOpenPause = Array.isArray(log.pauses) && log.pauses.some((pause) => !pause.end);
+        return hasOpenPause ? "pause" : "run";
+      }
+
       function validateStart(branch) {
         const open = getCurrentLog(branch);
         if (open) {
@@ -7402,16 +7619,125 @@ function getLocation() {
       }
 
       function updateTimerUI(timerState) {
-        const btnStart = document.getElementById("btn-start");
-        const btnPauseStart = document.getElementById("btn-pause") || document.getElementById("btn-pause-start");
-        const btnPauseEnd = document.getElementById("btn-resume") || document.getElementById("btn-pause-end");
-        const btnEnd = document.getElementById("btn-stop") || document.getElementById("btn-end");
-        if (!btnStart) return;
+        renderMainControls(timerState);
+      }
 
-        btnStart.style.display      = timerState === "idle"    ? "inline-block" : "none";
-        if (btnPauseStart) btnPauseStart.style.display = timerState === "running" ? "inline-block" : "none";
-        if (btnPauseEnd) btnPauseEnd.style.display = timerState === "paused" ? "inline-block" : "none";
-        if (btnEnd) btnEnd.style.display = timerState !== "idle" ? "inline-block" : "none";
+      function renderMainControls(forcedState) {
+        const btnMain = document.getElementById("btn-main");
+        const timerDisplay = document.getElementById("timer-display");
+        applyMainButtonUI();
+        if (!btnMain) return;
+
+        const state = forcedState || getTimerState();
+
+        if (state === "stop" || state === "idle") {
+          btnMain.textContent = "Start";
+          btnMain.className = "action-btn btn-start";
+        } else if (state === "run" || state === "running") {
+          btnMain.textContent = "Pause";
+          btnMain.className = "action-btn btn-pause";
+        } else {
+          btnMain.textContent = "Resume";
+          btnMain.className = "action-btn btn-resume";
+        }
+
+        if (state === "run" || state === "running") {
+          setStatus("run");
+          updateTimerColor("run");
+        } else if (state === "pause" || state === "paused") {
+          setStatus("pause");
+          updateTimerColor("pause");
+        } else {
+          setStatus("stop");
+          updateTimerColor("stop");
+        }
+
+        const isRunning = state === "run" || state === "running";
+        const isPaused = state === "pause" || state === "paused";
+        const isStop = state === "stop" || state === "idle";
+
+        animateTimer(isRunning);
+        updateStopVisibility(state);
+
+        if (timerDisplay) {
+          timerDisplay.classList.toggle("timer-run", isRunning);
+          timerDisplay.classList.toggle("timer-pause", isPaused);
+          timerDisplay.classList.toggle("timer-stop", isStop);
+          timerDisplay.classList.toggle("timer-running-anim", isRunning);
+        }
+      }
+
+      function updateStopVisibility(timerState) {
+        const btnStop = document.getElementById("btn-stop") || document.getElementById("btn-end");
+        if (!btnStop) return;
+
+        const currentState = timerState || getTimerState();
+        const shouldShow =
+          currentState === "running" ||
+          currentState === "paused" ||
+          currentState === "run" ||
+          currentState === "pause";
+        btnStop.classList.toggle("stop-hidden", !shouldShow);
+        btnStop.disabled = !shouldShow;
+      }
+
+      function setStatus(stateName) {
+        const el = document.getElementById("status-label");
+        if (!el) return;
+
+        if (stateName === "run") {
+          el.textContent = "Status: Aktiv";
+          el.className = "status-label status-running";
+        } else if (stateName === "pause") {
+          el.textContent = "Status: Pause";
+          el.className = "status-label status-paused";
+        } else {
+          el.textContent = "Status: Beendet";
+          el.className = "status-label status-idle";
+        }
+      }
+
+      function updateTimerColor(stateName) {
+        const t = document.getElementById("timer-display");
+        if (!t) return;
+        t.classList.remove("timer-run", "timer-pause", "timer-stop");
+        if (stateName === "run") t.classList.add("timer-run");
+        else if (stateName === "pause") t.classList.add("timer-pause");
+        else t.classList.add("timer-stop");
+      }
+
+      function animateTimer(run) {
+        const t = document.getElementById("timer-display");
+        if (!t) return;
+        t.classList.toggle("timer-running-anim", !!run);
+      }
+
+      function applyMainButtonUI() {
+        const start = document.getElementById("btn-start");
+        const pause = document.getElementById("btn-pause");
+        const resume = document.getElementById("btn-resume");
+        const btnMain = document.getElementById("btn-main");
+
+        if (start) start.style.display = "none";
+        if (pause) pause.style.display = "none";
+        if (resume) resume.style.display = "none";
+        if (btnMain) btnMain.style.display = "inline-block";
+      }
+
+      function startTimer() {
+        startWork();
+      }
+
+      function pauseTimer() {
+        startPause();
+      }
+
+      function resumeTimer() {
+        endPause();
+      }
+
+      function stopTimer() {
+        endWork();
       }
 
       function updateTimerHero(isRunning) {
@@ -7500,7 +7826,7 @@ function getLocation() {
 
         if (!branch || !validateStart(branch)) return;
 
-        playSound();
+        playSound("start");
         haptic();
 
         const log = {
@@ -7523,8 +7849,12 @@ function getLocation() {
         saveState();
         updateTimer();
         updateStatusUI("status-running");
+        setStatus("run");
+        updateTimerColor("run");
+        animateTimer(true);
         updateTimerHero(true);
         updateTimerUI("running");
+          AppEvents.emit("log:started", { log, branchId: branch.id });
         updateAfterLogChange({ includeWeekBar: true, includeCharts: true, includeMonth: true });
 
         if (location) {
@@ -7575,9 +7905,13 @@ function getLocation() {
           end: null
         });
         log.status = "paused";
+        playSound("pause");
         saveState();
         updateTimer();
         updateStatusUI("status-paused");
+        setStatus("pause");
+        updateTimerColor("pause");
+        animateTimer(false);
         updateTimerHero(false);
         updateTimerUI("paused");
         updateAfterTimerStateChange();
@@ -7595,9 +7929,13 @@ function getLocation() {
         const pause = getCurrentPause(log);
         pause.end = now().getTime();
         log.status = "running";
+        playSound("resume");
         saveState();
         updateTimer();
         updateStatusUI("status-running");
+        setStatus("run");
+        updateTimerColor("run");
+        animateTimer(true);
         updateTimerHero(true);
         updateTimerUI("running");
         updateAfterTimerStateChange();
@@ -7612,15 +7950,20 @@ function getLocation() {
         }
         const log = getCurrentLog(branch);
         if (!validateEnd(branch, log)) return;
+        playSound("stop");
         log.end = now().getTime();
         log.status = "ended";
         saveState();
         updateTimer();
         updateStatusUI("status-stopped");
+        setStatus("stop");
+        updateTimerColor("stop");
+        animateTimer(false);
         updateTimerHero(false);
         updateTimerUI("idle");
         renderStopUpdates();
         showToast("success", "Ende", "Sitzung beendet.");
+        AppEvents.emit("log:ended", { log, branchId: branch.id });
       }
 
       function computeLogDuration(log, upToNow) {
@@ -8046,84 +8389,11 @@ function getLocation() {
       }
 
       function renderMonthChart() {
-        const canvas = document.getElementById("monthChart");
-        if (!canvas) return;
-
-        const ctx = canvas.getContext("2d");
-        const jobColor = getJobColor(getSelectedJob());
-        const monthDate = new Date(state.selectedMonth);
-        const year = monthDate.getFullYear();
-        const month = monthDate.getMonth();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-
-        const data = days.map(day => {
-          const d = new Date(year, month, day);
-          const dateStr = toDateOnlyString(d);
-          return computeDayDurationAllBranches(dateStr) / 3600000;
-        });
-
-        if (!monthChart) {
-          monthChart = new Chart(ctx, {
-            type: "line",
-            data: {
-              labels: days,
-              datasets: [{
-                data,
-                borderColor: jobColor,
-                backgroundColor: hexToRgba(jobColor, 0.14),
-                tension: 0.35,
-                fill: true
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                legend: { display: false }
-              },
-              scales: {
-                x: {
-                  ticks: { color: "#94a3b8" },
-                  grid: { display: false }
-                },
-                y: {
-                  ticks: { color: "#94a3b8" },
-                  grid: { color: "rgba(255,255,255,0.05)" }
-                }
-              }
-            }
-          });
-        } else {
-          monthChart.data.labels = days;
-          monthChart.data.datasets[0].data = data;
-          monthChart.data.datasets[0].borderColor = jobColor;
-          monthChart.data.datasets[0].backgroundColor = hexToRgba(jobColor, 0.14);
-          monthChart.update("none");
-        }
+        return chartsController.renderMonthChart();
       }
 
       function destroyCharts() {
-        if (branchHideTimeout) {
-          clearTimeout(branchHideTimeout);
-          branchHideTimeout = null;
-        }
-        if (chart) {
-          chart.destroy();
-          chart = null;
-        }
-        if (monthChart) {
-          monthChart.destroy();
-          monthChart = null;
-        }
-        if (globalChart) {
-          globalChart.destroy();
-          globalChart = null;
-        }
-        if (branchChart) {
-          branchChart.destroy();
-          branchChart = null;
-        }
+        return chartsController.destroyCharts();
       }
 
       function snapToClosestBranch() {
@@ -8349,22 +8619,35 @@ function getLocation() {
       }
 
       function updateStatusUI(timerState) {
+        const label = document.getElementById("status-label");
         const text = document.getElementById("status-text");
         const dot = document.getElementById("status-dot");
         if (!text || !dot) return;
 
         const stateClass = timerState || getTimerSnapshot().statusClass;
         if (stateClass === "status-running") {
+          if (label) {
+            label.textContent = "Status: Laufend";
+            label.className = "status-label status-running";
+          }
           text.textContent = "Laufend";
-          text.className = "status-running status-badge status-run";
+          text.className = "status-running status-chip status-run";
           dot.className = "status-dot status-running-dot";
         } else if (stateClass === "status-paused") {
+          if (label) {
+            label.textContent = "Status: Pause";
+            label.className = "status-label status-paused";
+          }
           text.textContent = "Pause";
-          text.className = "status-paused status-badge status-pause";
+          text.className = "status-paused status-chip status-pause";
           dot.className = "status-dot status-paused-dot";
         } else {
+          if (label) {
+            label.textContent = "Status: Beendet";
+            label.className = "status-label status-idle";
+          }
           text.textContent = "Beendet";
-          text.className = "status-stopped status-badge status-end";
+          text.className = "status-stopped status-chip status-end";
           dot.className = "status-dot status-stopped-dot";
         }
       }
@@ -8383,8 +8666,8 @@ function getLocation() {
           const el = document.getElementById(id);
           if (el) {
             el.textContent = `🧩 Job: ${jobName}`;
-            el.style.borderColor = hexToRgba(jobColor, 0.7);
-            el.style.boxShadow = `0 0 14px ${hexToRgba(jobColor, 0.22)}`;
+            el.style.borderColor = "#22c55e";
+            el.style.boxShadow = "0 0 12px #22c55e33";
           }
         });
 
@@ -8458,13 +8741,19 @@ function getLocation() {
         document.getElementById("summary-total-all").textContent =
           formatDuration(totalAll);
 
-        const workedDays = weekDurations.filter((value) => value > 0).length;
-        const avgHours = workedDays > 0 ? (weekMs / 3600000) / workedDays : 0;
+        const workingDays = weekDurations.filter((value) => value > 0).length;
+        const totalMinutes = Math.round(weekMs / 60000);
+        const avgDisplay = calculateAverage(totalMinutes, workingDays);
+        updateKPIs(
+          formatDurationHM(todayMs),
+          formatDuration(weekMs),
+          avgDisplay
+        );
         const branchesUsed = getBranches().filter((item) => Array.isArray(item.logs) && item.logs.length > 0).length;
         const kpiWorkedDays = document.getElementById("kpi-worked-days");
-        if (kpiWorkedDays) kpiWorkedDays.textContent = String(workedDays);
+        if (kpiWorkedDays) kpiWorkedDays.textContent = String(workingDays);
         const kpiAvgDay = document.getElementById("kpi-avg-day");
-        if (kpiAvgDay) kpiAvgDay.textContent = `${avgHours.toFixed(1)} h`;
+        if (kpiAvgDay) kpiAvgDay.textContent = avgDisplay;
         const kpiStreak = document.getElementById("kpi-streak");
         if (kpiStreak) kpiStreak.textContent = String(getStreak());
         const kpiBranches = document.getElementById("kpi-branches-used");
@@ -8506,6 +8795,8 @@ function getLocation() {
         }));
         renderWeekBars(demoWeek);
         renderStatsInsights();
+        renderInsight();
+        renderInsights();
         renderBranchSection();
         checkStreak();
         if (aiAccentEnabled) {
@@ -8576,8 +8867,14 @@ function getLocation() {
             dayEl.classList.add("active");
           }
 
+          const dateFormatted = dayDate.toLocaleDateString("de-DE", {
+            day: "2-digit",
+            month: "2-digit"
+          });
+
           dayEl.innerHTML = `
             <span class="week-day-label">${label}</span>
+            <span class="week-day-date">${dateFormatted}</span>
             <span class="week-day-hours">${formatDurationHM(duration)}</span>
             <div class="week-progress-mini">
               <div class="week-progress-mini-inner" style="width:${percent.toFixed(1)}%"></div>
@@ -8782,16 +9079,54 @@ function getLocation() {
           item.appendChild(main);
           item.appendChild(status);
           item.appendChild(actions);
+
+          let startX = 0;
+          let currentX = 0;
+          item.addEventListener("touchstart", (e) => {
+            startX = e.touches[0]?.clientX || 0;
+            currentX = 0;
+            item.style.transition = "none";
+          }, { passive: true });
+          item.addEventListener("touchmove", (e) => {
+            const moveX = e.touches[0]?.clientX || 0;
+            const delta = moveX - startX;
+            const clamped = Math.max(-72, Math.min(72, delta));
+            currentX = clamped;
+            item.style.transform = `translateX(${clamped}px)`;
+          }, { passive: true });
+          item.addEventListener("touchend", (e) => {
+            const endX = e.changedTouches[0]?.clientX || 0;
+            item.style.transition = "transform 0.2s ease";
+            item.style.transform = "translateX(0)";
+            if (startX - endX > 50 || currentX < -50) item.classList.add("show-actions");
+            if (endX - startX > 50 || currentX > 50) item.classList.remove("show-actions");
+          }, { passive: true });
+          item.addEventListener("touchcancel", () => {
+            item.style.transition = "transform 0.2s ease";
+            item.style.transform = "translateX(0)";
+          }, { passive: true });
+
           list.appendChild(item);
         });
       }
 
+      function updateKPIs(today, week, avg) {
+        const todayEl = document.getElementById("kpi-today");
+        const weekEl = document.getElementById("kpi-week");
+        const avgEl = document.getElementById("kpi-avg");
+        if (todayEl) todayEl.textContent = today;
+        if (weekEl) weekEl.textContent = week;
+        if (avgEl) avgEl.textContent = avg;
+      }
+
       function predictWeekHours(durations) {
-        const workDays = durations.slice(0, 5).filter(d => d > 0);
-        if (workDays.length === 0) return 0;
-        const avg = workDays.reduce((a, b) => a + b, 0) / workDays.length;
-        const trendBoost = durations[0] > durations[4] ? 1.05 : 0.95;
-        return avg * 5 * trendBoost;
+        const workedDays = durations.filter(d => d > 0).length;
+        if (workedDays === 0) return 0;
+        const totalMinutes = Math.round(durations.reduce((sum, value) => sum + value, 0) / 60000);
+        const avgPerDay = totalMinutes / workedDays;
+        const remainingDays = 7 - workedDays;
+        const prediction = totalMinutes + (avgPerDay * remainingDays);
+        return prediction;
       }
 
       function getLastWeekTotal() {
@@ -8924,30 +9259,34 @@ function getLocation() {
           }];
         }
 
-        const avg = activeDays >= 2 ? total / activeDays : 0;
+        const avg = activeDays >= 1 ? total / activeDays : 0;
+        const avgHours = avg / 3600000;
 
         const longDays = durations.filter(d => d > 9 * 3600000).length;
         const extremeWorkload = max > 10 * 3600000;
-        const veryIntenseWeek = longDays >= 3 || total > 50 * 3600000 || avg > 8 * 3600000 || extremeWorkload;
+        const veryIntenseWeek = avgHours > 10 || longDays >= 3 || extremeWorkload;
 
         // 1) Primary insight
         if (veryIntenseWeek) {
+          const overAveragePercent = activeDays > 1 && avg > 0
+            ? Math.max(0, Math.round(((max - avg) / avg) * 100))
+            : Math.max(0, Math.round(((avgHours - 10) / 10) * 100));
           pushUnique(primaryInsights, {
             type: "warning",
             icon: "⚠️",
-            text: "Sehr intensive Woche – achte auf Erholung."
+            text: `⚠️ +${overAveragePercent}% über deinem Durchschnitt`
           });
-        } else if (avg < 3 * 3600000) {
-          pushUnique(primaryInsights, {
-            type: "warning",
-            icon: "📉",
-            text: "Sehr geringe Aktivität diese Woche"
-          });
-        } else if (activeDays >= 5) {
+        } else if (avgHours > 6) {
           pushUnique(primaryInsights, {
             type: "good",
-            icon: "✅",
-            text: "Stabile Woche mit guter Belastungsbalance"
+            icon: "👍",
+            text: "👍 Gute Balance in dieser Woche"
+          });
+        } else {
+          pushUnique(primaryInsights, {
+            type: "warning",
+            icon: "❗",
+            text: "❗ Wenig gearbeitet diese Woche"
           });
         }
 
@@ -9026,24 +9365,23 @@ function getLocation() {
         }
 
         // 4) Additional analysis
-        if (avg > 8 * 3600000) {
-          pushUnique(analysisInsights, { type: "good", icon: "🎯", text: "Sehr starke konstante Leistung" });
-        }
-
         let deviation = 0;
         for (const d of durations) deviation += Math.abs(d - avg);
         deviation /= Math.max(1, activeDays);
 
-        if (deviation > 3 * 3600000) {
-          pushUnique(analysisInsights, { type: "neutral", icon: "📊", text: "Unregelmäßiger Arbeitsrhythmus" });
+        if (activeDays <= 1) {
+          pushUnique(analysisInsights, { type: "warning", icon: "🗓️", text: "Bisher nur an einem Tag gearbeitet – noch kein klarer Rhythmus erkennbar" });
+        } else if (deviation > 3 * 3600000) {
+          pushUnique(analysisInsights, { type: "warning", icon: "⚠️", text: "Du arbeitest unregelmäßig – versuche feste Zeiten einzuhalten" });
         } else {
           pushUnique(analysisInsights, { type: "good", icon: "📊", text: "Konstanter Arbeitsrhythmus" });
         }
 
         // 5) Prediction last
-        if (activeDays >= 2) {
+        if (activeDays >= 1) {
           const predicted = predictWeekHours(durations);
-          pushUnique(predictionInsights, { type: "neutral", icon: "🔮", text: `Wenn du so weitermachst: ~${formatDurationHM(predicted)} diese Woche` });
+          const predictedHours = Math.round(predicted / 60);
+          pushUnique(predictionInsights, { type: "neutral", icon: "🔮", text: `Wenn du so weitermachst: ~${predictedHours}h diese Woche` });
         }
 
         if (maxIndex === 0) {
@@ -9496,7 +9834,7 @@ function getLocation() {
       async function deleteLogsForSelectedDayAndBranch() {
         const branchId = document.getElementById("delete-branch-select").value;
         const dateStr = document.getElementById("delete-date-input").value;
-        const branch = getBranches().find((entry) => entry.id === branchId);
+        const branch = BranchService.findById(branchId);
 
         if (!branch) {
           showToast("error", "Löschen", "Bitte eine Filiale auswählen.");
@@ -9526,19 +9864,18 @@ function getLocation() {
           return;
         }
 
-        branch.logs = branch.logs.filter((log) => log.date !== dateStr);
-        state.selectedBranchId = branch.id;
+        LogService.removeByDate(branch, dateStr);
+        BranchService.setSelected(branch.id);
         state.selectedDay = dateStr;
         saveState();
-        updateTimer();
-        updateAfterLogChange({ includeWeekBar: true, includeCharts: true, includeMonth: true });
+        UIService.handleLogMutation();
         closeDeleteModal();
         showToast("info", "Löschen", `Arbeitszeiten vom ${dateStr} in "${branch.name}" wurden gelöscht.`);
       }
 
       async function deleteAllLogsForSelectedBranch() {
         const branchId = document.getElementById("delete-branch-select").value;
-        const branch = getBranches().find((entry) => entry.id === branchId);
+        const branch = BranchService.findById(branchId);
 
         if (!branch) {
           showToast("error", "Löschen", "Bitte eine Filiale auswählen.");
@@ -9561,11 +9898,10 @@ function getLocation() {
           return;
         }
 
-        branch.logs = [];
-        state.selectedBranchId = branch.id;
+        LogService.clearBranch(branch);
+        BranchService.setSelected(branch.id);
         saveState();
-        updateTimer();
-        updateAfterLogChange({ includeWeekBar: true, includeCharts: true, includeMonth: true });
+        UIService.handleLogMutation();
         closeDeleteModal();
         showToast("info", "Löschen", `Alle Arbeitszeiten von "${branch.name}" wurden gelöscht.`);
       }
@@ -9575,7 +9911,7 @@ function getLocation() {
       }
 
       async function deleteLog(branchId, logId) {
-        const branch = getBranches().find((b) => b.id === branchId);
+        const branch = BranchService.findById(branchId);
         if (!branch) return;
         const log = branch.logs.find((l) => l.id === logId);
         if (!log) return;
@@ -9585,10 +9921,9 @@ function getLocation() {
           acceptLabel: "Löschen"
         });
         if (!accepted) return;
-        branch.logs = branch.logs.filter((l) => l.id !== logId);
+        LogService.removeById(branch, logId);
         saveState();
-        updateTimer();
-        updateAfterLogChange({ includeWeekBar: true, includeCharts: true, includeMonth: true });
+        UIService.handleLogMutation();
         showToast("info", "Log", "Log gelöscht.");
       }
 
@@ -9653,116 +9988,19 @@ function getLocation() {
       }
 
       function exportCSV() {
-        const escapeCSV = (value) => {
-          const normalized = String(value ?? "").replace(/\r?\n/g, " ");
-          return '"' + normalized.replace(/"/g, '""') + '"';
-        };
-
-        const rows = ["Date,Branch,Start,End,Duration(h),Note,Attachments"];
-
-        getBranches().forEach((branch) => {
-          branch.logs.forEach((log) => {
-            const start = new Date(log.start);
-            const end = log.end ? new Date(log.end) : null;
-            const durationHours = (computeLogDuration(log, true) / 3600000).toFixed(2);
-
-            rows.push([
-              log.date || "",
-              escapeCSV(branch.name),
-              formatTime(start),
-              formatTime(end),
-              durationHours,
-              escapeCSV(log.note || ""),
-              escapeCSV(Array.isArray(log.attachments) ? log.attachments.map((attachment) => attachment.name).join(" | ") : "")
-            ].join(","));
-          });
-        });
-
-        const blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-
-        document.body.appendChild(link);
-        link.href = url;
-        link.download = buildBackupFileName("csv");
-        link.click();
-
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        return importExportController.exportCSV();
       }
 
       function exportJSON() {
-        const data = buildExportData();
-        const json = JSON.stringify(data, null, 2);
-        const area = document.getElementById("json-area");
-        area.value = json;
-        area.select();
-        updateJsonImportAssist();
-        showToast("success", "Export", "JSON wurde in das Textfeld geschrieben.");
+        return importExportController.exportJSON();
       }
 
       function downloadJSONBackup() {
-        const data = buildExportData();
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-
-        document.body.appendChild(link);
-        link.href = url;
-        link.download = buildBackupFileName("json");
-        link.click();
-
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        showToast("success", "Backup", "JSON-Backup wurde als Datei heruntergeladen.");
+        return importExportController.downloadJSONBackup();
       }
 
       function importJSON() {
-        const area = document.getElementById("json-area");
-        const text = area.value.trim();
-        if (!text) {
-          setJsonImportFeedback("error", "Bitte JSON in das Textfeld einfuegen.");
-          showToast("error", "Import", "Bitte JSON in das Textfeld einfügen.");
-          return;
-        }
-
-        // 🔒 Backup vor Import – bei Fehler wird der alte Stand wiederhergestellt
-        const stateBackup = buildPersistedStateSnapshot();
-
-        try {
-          const parsed = JSON.parse(text);
-          const migrated = migrateImportedState(parsed);
-          const importedData = validateImportedState(migrated);
-
-          if (branchChart) {
-            branchChart.destroy();
-            branchChart = null;
-          }
-
-          // state ist const, daher Daten per Object.assign statt Reassignment.
-          Object.assign(state, importedData);
-
-          // Quick-fix: Persist in legacy key too.
-          localStorage.setItem("app-data", JSON.stringify(state));
-
-          // Filter reset after import.
-          state.activeBranch = "all";
-          state.viewMode = "all";
-          state.selectedBranchId = null;
-          state.selectedDay = null;
-
-          renderAll();
-          saveState();
-          updateJsonImportAssist();
-          showToast("success", "Import", "JSON erfolgreich importiert.");
-        } catch (e) {
-          // ♻️ Alten Stand wiederherstellen
-          try {
-            applyPersistedState(stateBackup);
-          } catch (_) {}
-          setJsonImportFeedback("error", `Importfehler: ${e.message}`);
-          showToast("error", "Import", "JSON ungültig: " + e.message + " – Daten wurden wiederhergestellt.");
-        }
+        return importExportController.importJSON();
       }
 
       function openManualModal() {
@@ -9859,49 +10097,47 @@ function getLocation() {
           pause = { start: ps.getTime(), end: pe.getTime() };
         }
 
-        let branch = null;
-        if (branchNameInput) {
-          branch = getBranches().find(
-            (b) => b.name.toLowerCase() === branchNameInput.toLowerCase()
-          );
-          if (!branch) {
-            branch = {
-              id: uuid(),
-              name: branchNameInput,
-              logs: []
-            };
-            getBranches().push(branch);
+        try {
+          let branch = null;
+          if (branchNameInput) {
+            branch = BranchService.findByName(branchNameInput);
+            if (!branch) {
+              branch = BranchService.create(branchNameInput);
+            }
+          } else {
+            branch = BranchService.selected();
+            if (!branch) {
+              showToast(
+                "error",
+                "Manuelle Eingabe",
+                "Bitte eine Filiale angeben oder auswählen."
+              );
+              return;
+            }
           }
-        } else {
-          branch = getSelectedBranch();
-          if (!branch) {
-            showToast(
-              "error",
-              "Manuelle Eingabe",
-              "Bitte eine Filiale angeben oder auswählen."
-            );
-            return;
-          }
-        }
 
-        const log = {
-          id: uuid(),
-          date: dateStr,
-          start: startDate.getTime(),
-          end: endDate.getTime(),
-          pauses: pause ? [pause] : [],
-          status: "ended",
-          note: noteText,
-          attachments: clone(manualDraftAttachments),
-          file: manualFileBase64,
-          fileName: manualFileName
-        };
-        branch.logs.push(log);
-        state.selectedBranchId = branch.id;
-        saveState();
-        updateUI();
-        closeManualModal();
-        showToast("success", "Manuelle Eingabe", "Log wurde angelegt.");
+          const log = {
+            id: uuid(),
+            date: dateStr,
+            start: startDate.getTime(),
+            end: endDate.getTime(),
+            pauses: pause ? [pause] : [],
+            status: "ended",
+            note: noteText,
+            attachments: clone(manualDraftAttachments),
+            file: manualFileBase64,
+            fileName: manualFileName
+          };
+          LogService.append(branch, log);
+          BranchService.setSelected(branch.id);
+          saveState();
+          UIService.refreshApp();
+          closeManualModal();
+          showToast("success", "Manuelle Eingabe", "Log wurde angelegt.");
+        } catch (error) {
+          console.error("saveManualEntry failed", error);
+          showToast("error", "Manuelle Eingabe", "Eintrag konnte nicht gespeichert werden.");
+        }
       }
 
       function showSettingsTab(tab) {
@@ -9924,7 +10160,7 @@ function getLocation() {
       window.showSettingsTab = showSettingsTab;
 
       function applyThemeFromStorage() {
-        const theme = localStorage.getItem(THEME_KEY);
+        const theme = AppStorage.getLocal(THEME_KEY);
 
         if (theme === "dark") {
           document.body.classList.add("dark");
@@ -9946,7 +10182,7 @@ function getLocation() {
           applyTheme(savedTheme);
         }
 
-        const savedAccent = localStorage.getItem(ACCENT_KEY);
+        const savedAccent = AppStorage.getLocal(ACCENT_KEY);
         if (savedAccent) {
           setAccent(savedAccent);
         }
@@ -9960,11 +10196,11 @@ function getLocation() {
         if (isDark) {
           document.body.classList.remove("dark");
           document.body.classList.add("light");
-          localStorage.setItem(THEME_KEY, "light");
+          AppStorage.setLocal(THEME_KEY, "light");
         } else {
           document.body.classList.remove("light");
           document.body.classList.add("dark");
-          localStorage.setItem(THEME_KEY, "dark");
+          AppStorage.setLocal(THEME_KEY, "dark");
         }
       }
 
@@ -10047,254 +10283,15 @@ function getLocation() {
         }
       }
 
-      function startTimerLoop() {
-        if (state.mainLoopInterval) {
-          clearInterval(state.mainLoopInterval);
-        }
-
-        state.mainLoopTick = 0;
-
-        state.mainLoopInterval = setInterval(() => {
-          state.mainLoopTick += 1;
-
-          const branch = getSelectedBranch();
-          const log = getCurrentLog(branch);
-
-          if (!log) {
-            updateTimer(0);
-          } else {
-            guardAutoStop(log);
-
-            if (log.end) {
-              updateTimer(0);
-            } else {
-              const currentTime = Date.now();
-              let elapsed = currentTime - log.start;
-
-              if (Array.isArray(log.pauses)) {
-                log.pauses.forEach((pause) => {
-                  if (!pause.start) return;
-                  const pauseEnd = pause.end || currentTime;
-                  elapsed -= Math.max(0, pauseEnd - pause.start);
-                });
-              }
-
-              updateTimer(Math.max(0, elapsed));
-            }
-          }
-
-          if (state.mainLoopTick % 5 === 0) {
-            queueRender({
-              includeStats: true,
-              includeInsights: true
-            });
-          }
-
-          if (state.mainLoopTick % 60 === 0) {
-            checkForgotEnd();
-            checkLongSessionNotifications();
-          }
-        }, 1000);
-      }
-
-      // 🔥 Premium Chart Engine
-      let chart;
-      Chart.defaults.animation.duration = 300;
-      Chart.defaults.font.family = "system-ui";
-
-      function setChartEmptyState(canvasId, isEmpty) {
-        const canvas = document.getElementById(canvasId);
-        const wrapper = canvas?.closest(".chart-wrapper");
-        if (!canvas || !wrapper) return;
-
-        let stateEl = wrapper.querySelector(".chart-empty-state");
-        if (!stateEl) {
-          stateEl = document.createElement("div");
-          stateEl.className = "chart-empty-state hidden";
-          stateEl.innerHTML = "<div>📭 Keine ausreichenden Daten</div><div>Starte mit deinem ersten Eintrag.</div>";
-          wrapper.appendChild(stateEl);
-        }
-
-        stateEl.classList.toggle("hidden", !isEmpty);
-        canvas.style.opacity = isEmpty ? "0.25" : "1";
-      }
-
-      function setChartInsightLayer(canvasId, text, hidden = false) {
-        const canvas = document.getElementById(canvasId);
-        const wrapper = canvas?.closest(".chart-wrapper");
-        if (!canvas || !wrapper) return;
-
-        let insightEl = wrapper.querySelector(".chart-insight-layer");
-        if (!insightEl) {
-          insightEl = document.createElement("div");
-          insightEl.className = "chart-insight-layer hidden";
-          wrapper.appendChild(insightEl);
-        }
-
-        insightEl.textContent = text || "";
-        insightEl.classList.toggle("hidden", hidden || !text);
-      }
-
-      function renderChart() {
-        const canvas = document.getElementById("weekChart");
-        if (!canvas) return;
-
-        const ctx = canvas.getContext("2d");
-        const jobColor = getJobColor(getSelectedJob());
-        const durations = getActiveWeekDurations();
-
-        const rawHours = durations.map((d) => +(d / 3600000).toFixed(2));
-        const totalHours = rawHours.reduce((sum, value) => sum + value, 0);
-        const visualMax = Math.max(...rawHours, 8);
-        const minVisual = 0.4;
-        const displayHours = rawHours.map((h) => (h === 0 ? minVisual : h));
-        const smoothedTrend = rawHours.map((value, index, arr) => {
-          const prev = arr[index - 1] ?? value;
-          const next = arr[index + 1] ?? value;
-          return +((prev + value + next) / 3).toFixed(2);
-        });
-        const labels = ["Mo","Di","Mi","Do","Fr","Sa","So"];
-        const dayNames = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
-        const bestValue = Math.max(...rawHours);
-        const bestIndex = rawHours.indexOf(bestValue);
-        const avg = totalHours / 7;
-
-        setChartEmptyState("weekChart", totalHours === 0);
-        setChartInsightLayer(
-          "weekChart",
-          totalHours === 0
-            ? ""
-            : `Stärkster Tag: ${dayNames[bestIndex]} (${formatDurationHM(bestValue * 3600000)}) | Ø Woche: ${formatDurationHM(avg * 3600000)}`,
-          totalHours === 0
-        );
-
-        const data = {
-          labels,
-          datasets: [
-            {
-              type: "bar",
-              label: "Stunden",
-              data: displayHours,
-              backgroundColor: rawHours.map((v) => {
-                if (v >= 10) return "rgba(239,68,68,0.7)";
-                if (v >= 6)  return hexToRgba(jobColor, 0.72);
-                if (v > 0)   return hexToRgba(jobColor, 0.48);
-                return "rgba(100,116,139,0.2)";
-              }),
-              borderColor: hexToRgba(jobColor, 0.95),
-              borderWidth: 1,
-              borderRadius: 10,
-              hoverBackgroundColor: hexToRgba(jobColor, 0.82)
-            },
-            {
-              type: "line",
-              label: "Trend",
-              data: smoothedTrend,
-              borderColor: jobColor,
-              backgroundColor: hexToRgba(jobColor, 0.2),
-              tension: 0.35,
-              fill: true,
-              pointRadius: 4,
-              pointHoverRadius: 5,
-              pointBackgroundColor: jobColor
-            },
-            {
-              type: "line",
-              label: "Goal",
-              data: Array(7).fill(8),
-              borderColor: "rgba(250,204,21,0.8)",
-              borderDash: [6, 6],
-              borderWidth: 1.5,
-              pointRadius: 0,
-              fill: false,
-              tension: 0
-            }
-          ]
-        };
-
-        if (!chart) {
-          chart = new Chart(ctx, {
-            type: "bar",
-            data,
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              animation: { duration: 300 },
-              onClick: (evt, elements) => {
-                if (!elements.length) return;
-                const index = elements[0].index;
-                const weekStart = new Date(state.selectedWeekStart);
-                const clicked = new Date(weekStart);
-                clicked.setDate(weekStart.getDate() + index);
-                filterByDay(toDateOnlyString(clicked));
-              },
-              plugins: {
-                legend: { display: false },
-                tooltip: {
-                  backgroundColor: "rgba(15,23,42,0.95)",
-                  titleColor: "#ffffff",
-                  bodyColor: "#e2e8f0",
-                  borderColor: hexToRgba(jobColor, 0.45),
-                  borderWidth: 1,
-                  padding: 12,
-                  cornerRadius: 12,
-                  displayColors: false,
-                  callbacks: {
-                    title: function(context) {
-                      return "📅 " + context[0].label;
-                    },
-                    label: function(context) {
-                      if (context.datasetIndex === 2) return "🎯 Tagesziel: 8h";
-                      const value = rawHours[context.dataIndex] || 0;
-                      if (value === 0) return "Kein Eintrag";
-                      return "⏱ " + formatDurationHM(value * 3600000);
-                    }
-                  }
-                }
-              },
-              scales: {
-                x: {
-                  ticks: { color: "#94a3b8" },
-                  grid: { display: false }
-                },
-                y: {
-                  min: 0,
-                  suggestedMax: Math.max(12, Math.ceil(visualMax)),
-                  ticks: {
-                    color: "#94a3b8",
-                    callback: function(value) {
-                      if (value === 0) return "0h";
-                      if (value < 1) return Math.round(value * 60) + "m";
-                      return Math.round(value) + "h";
-                    }
-                  },
-                  grid: {
-                    color: "rgba(255,255,255,0.06)",
-                    drawBorder: false,
-                    tickLength: 6
-                  }
-                }
-              }
-            }
-          });
-        } else {
-          chart.data.labels = labels;
-          chart.data.datasets[0].data = displayHours;
-          chart.data.datasets[0].backgroundColor = rawHours.map((v) => {
-            if (v >= 10) return "rgba(239,68,68,0.7)";
-            if (v >= 6)  return hexToRgba(jobColor, 0.72);
-            if (v > 0)   return hexToRgba(jobColor, 0.48);
-            return "rgba(100,116,139,0.2)";
-          });
-          chart.data.datasets[0].borderColor = hexToRgba(jobColor, 0.95);
-          chart.data.datasets[0].hoverBackgroundColor = hexToRgba(jobColor, 0.82);
-          chart.data.datasets[1].data = smoothedTrend;
-          chart.data.datasets[1].borderColor = jobColor;
-          chart.data.datasets[1].backgroundColor = hexToRgba(jobColor, 0.2);
-          chart.data.datasets[1].pointBackgroundColor = jobColor;
-          chart.update("none");
-        }
-      }
+      const startTimerLoop = window.WorkTrackerTimer.createTimerLoop({
+        state,
+        BranchService,
+        LogService,
+        UIService,
+        guardAutoStop,
+        checkForgotEnd,
+        checkLongSessionNotifications
+      });
 
       // 🔔 Push Notifications – PRO MAX
       async function requestNotificationPermission() {
@@ -10322,6 +10319,8 @@ function getLocation() {
           } else if ("Notification" in window && document.hasFocus()) {
             new Notification(title, { body });
           }
+        }).catch((error) => {
+          console.error("sendNotification failed", error);
         });
       }
 
@@ -10341,405 +10340,88 @@ function getLocation() {
         }, Array(7).fill(0));
       }
 
-      // 📊 Global Chart Engine (PRO)
-      let globalChart;
-      let branchChart = null;
-      let branchHideTimeout = null;
+      const chartsController = window.WorkTrackerCharts.createChartsController({
+        state,
+        LogService,
+        saveState,
+        queueRender,
+        getSelectedJob,
+        getJobColor,
+        toDateOnlyString,
+        computeDayDurationAllBranches,
+        computeWeekAllBranches,
+        hexToRgba,
+        formatDurationHM,
+        getBranchDistribution,
+        getTopBranch,
+        hasMonthData,
+        generateSmartInsights,
+        getActiveWeekDurations,
+        getWeekInsight,
+        getActiveWeekTotal
+      });
 
-      function renderGlobalChart() {
-        const canvas = document.getElementById("globalChart");
-        if (!canvas) return;
+      const {
+        renderChart,
+        renderGlobalChart,
+        renderBranchPieChart,
+        renderMainBranchBadge,
+        renderBranchSection,
+        renderInsight,
+        filterByDay,
+        renderInsights,
+        resizeCharts,
+        resetBranchChart
+      } = chartsController;
 
-        const ctx = canvas.getContext("2d");
-        const jobColor = getJobColor(getSelectedJob());
-        const monday = new Date(state.selectedWeekStart);
+      const tabController = createTabController({
+        persistTab: (tab) => AppStorage.setLocal(TAB_KEY, tab),
+        safe,
+        renderStats,
+        renderWeekBar,
+        renderMonth,
+        renderChart,
+        renderMonthChart,
+        renderGlobalChart,
+        renderInsight,
+        renderInsights,
+        renderLogs,
+        updateModeToggle,
+        updateTimer,
+        renderBranchToggle,
+        scrollToActiveDay,
+        resizeCharts,
+        destroyCharts
+      });
 
-        const durations = computeWeekAllBranches(monday);
-        const hours = durations.map((d) => +(d / 3600000).toFixed(2));
-        const totalHours = hours.reduce((sum, value) => sum + value, 0);
-        const smoothed = hours.map((value, index, arr) => {
-          const prev = arr[index - 1] ?? value;
-          const next = arr[index + 1] ?? value;
-          return +((prev + value + next) / 3).toFixed(2);
-        });
-        setChartEmptyState("globalChart", totalHours === 0);
-
-        const labels = ["Mo","Di","Mi","Do","Fr","Sa","So"];
-        const dayNames = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
-        const bestValue = Math.max(...hours);
-        const bestIndex = hours.indexOf(bestValue);
-        const avg = totalHours / 7;
-        setChartInsightLayer(
-          "globalChart",
-          totalHours === 0
-            ? ""
-            : `Stärkster Tag: ${dayNames[bestIndex]} (${formatDurationHM(bestValue * 3600000)}) | Ø Woche: ${formatDurationHM(avg * 3600000)}`,
-          totalHours === 0
-        );
-
-        // 🔥 Premium Gradient
-        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.offsetHeight);
-        gradient.addColorStop(0, hexToRgba(jobColor, 0.98));
-        gradient.addColorStop(0.45, hexToRgba(jobColor, 0.62));
-        gradient.addColorStop(1, hexToRgba(jobColor, 0.16));
-
-        const data = {
-          labels,
-          datasets: [{
-            label: "Gesamtstunden",
-            data: smoothed,
-            backgroundColor: gradient,
-            borderColor: jobColor,
-            tension: 0.35,
-            fill: true,
-            pointRadius: hours.map((v) => (v > 0 ? 4 : 2)),
-            pointHoverRadius: 5
-          }]
-        };
-
-        const options = {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: {
-            duration: 800,
-            easing: "easeOutCubic"
-          },
-          transitions: {
-            active: {
-              animation: { duration: 400 }
-            }
-          },
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              backgroundColor: "rgba(15,23,42,0.94)",
-              titleColor: "#ffffff",
-              bodyColor: "#dbeafe",
-              borderColor: hexToRgba(jobColor, 0.7),
-              borderWidth: 1,
-              padding: 12,
-              cornerRadius: 14,
-              displayColors: false,
-              callbacks: {
-                title: function(context) {
-                  return "📅 " + context[0].label;
-                },
-                label: function(context) {
-                  const value = hours[context.dataIndex] || 0;
-                  if (value === 0) return "Kein Eintrag";
-                  return "⏱ " + formatDurationHM(value * 3600000);
-                }
-              }
-            }
-          },
-          scales: {
-            x: {
-              ticks: {
-                color: "#cbd5f5",
-                font: { size: 13, weight: "500" }
-              },
-              grid: { display: false }
-            },
-            y: {
-              ticks: {
-                color: "#9ca3af",
-                font: { size: 11 },
-                callback: function(value) {
-                  if (value === 0) return "0h";
-                  if (value < 1) return Math.round(value * 60) + "m";
-                  return Math.round(value) + "h";
-                }
-              },
-              grid: {
-                color: "rgba(255,255,255,0.08)",
-                drawBorder: false,
-                tickLength: 6
-              }
-            }
-          }
-        };
-
-        if (!globalChart) {
-          globalChart = new Chart(ctx, {
-            type: "line",
-            data,
-            options
-          });
-        } else {
-          globalChart.data.labels = labels;
-          globalChart.data.datasets[0].data = smoothed;
-          globalChart.data.datasets[0].backgroundColor = gradient;
-          globalChart.data.datasets[0].borderColor = jobColor;
-          globalChart.data.datasets[0].pointRadius = hours.map((v) => (v > 0 ? 4 : 2));
-          globalChart.update("none");
-        }
-      }
-
-      function renderBranchPieChart() {
-        const raw = getBranchDistribution(state.selectedMonth);
-        const data = raw.filter((d) => d.total > 0);
-        const ctx = document.getElementById("branch-pie");
-        if (!ctx) return;
-
-        console.log("BRANCH DATA:", raw);
-
-        if (!data.length) {
-          console.log("No branch data");
-          if (branchChart) {
-            branchChart.destroy();
-            branchChart = null;
-          }
-          return;
-        }
-
-        const labels = data.map((d) => d.name);
-        const values = data.map((d) => d.total / 3600000);
-
-        console.log("VALUES:", values);
-
-        if (!values.length) {
-          if (branchChart) {
-            branchChart.destroy();
-            branchChart = null;
-          }
-          return;
-        }
-
-        if (branchChart) {
-          branchChart.data.labels = labels;
-          branchChart.data.datasets[0].data = values;
-          branchChart.update();
-          return;
-        }
-
-        branchChart = new Chart(ctx, {
-          type: "doughnut",
-          data: {
-            labels,
-            datasets: [{
-              data: values,
-              backgroundColor: [
-                "#22c55e",
-                "#3b82f6",
-                "#a855f7",
-                "#f97316",
-                "#ef4444"
-              ],
-              borderWidth: 0
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: {
-              duration: 400
-            },
-            plugins: {
-              legend: {
-                position: "bottom",
-                labels: { color: "#cbd5e1" }
-              },
-              tooltip: {
-                callbacks: {
-                  label: function(context) {
-                    const ms = (context.raw || 0) * 3600000;
-                    return formatDurationHM(ms);
-                  }
-                }
-              }
-            },
-            cutout: "60%"
-          }
-        });
-      }
-
-      function renderMainBranchBadge() {
-        const badge = document.getElementById("main-branch-badge");
-        if (!badge) return;
-
-        const top = getTopBranch(state.selectedMonth);
-
-        if (!top || !top.name || top.percent === 0) {
-          badge.innerHTML = "";
-          return;
-        }
-
-        badge.innerHTML = `
-          🏆 Hauptfiliale: <strong>${top.name}</strong> (${top.percent}%)
-        `;
-      }
-
-      function renderBranchSection() {
-        const section = document.getElementById("branch-section");
-        const empty = document.getElementById("branch-empty");
-        const canvas = document.getElementById("branch-pie");
-        const badge = document.getElementById("main-branch-badge");
-
-        if (!section || !empty || !canvas || !badge) return;
-
-        const hasData = hasMonthData(state.selectedMonth);
-
-        if (!hasData) {
-          if (branchHideTimeout) {
-            clearTimeout(branchHideTimeout);
-            branchHideTimeout = null;
-          }
-
-          canvas.style.display = "none";
-          badge.style.display = "none";
-          empty.style.display = "block";
-
-          if (branchChart) {
-            branchChart.destroy();
-            branchChart = null;
-          }
-
-          return;
-        }
-
-        if (branchHideTimeout) {
-          clearTimeout(branchHideTimeout);
-          branchHideTimeout = null;
-        }
-
-        section.style.display = "";
-        canvas.style.display = "block";
-        badge.style.display = "inline-block";
-        empty.style.display = "none";
-
-        renderBranchPieChart();
-        renderMainBranchBadge();
-      }
-
-      let lastInsightsHash = "";
-
-      function renderInsight() {
-        const insightBox = document.getElementById("insight-box");
-        if (!insightBox) return;
-
-        const summaryText = getWeekInsight(getActiveWeekTotal());
-        const smartInsights = generateSmartInsights(getActiveWeekDurations());
-        const isDuplicate = smartInsights.some((item) => item.text === summaryText);
-
-        if (isDuplicate) {
-          insightBox.textContent = "";
-          insightBox.style.display = "none";
-          return;
-        }
-
-        insightBox.style.display = "";
-        insightBox.textContent = summaryText;
-      }
-
-      function filterByDay(dateStr) {
-        if (!dateStr) return;
-        state.selectedDay = dateStr;
-        saveState();
-        queueRender({
-          includeLogs: true,
-          includeStats: true,
-          includeInsights: true,
-          includeWeekBar: true
-        });
-      }
-
-      function renderInsights() {
-        const container = document.getElementById("ai-insights");
-        if (!container) return;
-
-        const durations = getActiveWeekDurations();
-        const insights = generateSmartInsights(durations);
-        const hash = JSON.stringify(insights);
-
-        if (hash === lastInsightsHash) return;
-        lastInsightsHash = hash;
-
-        container.innerHTML = "";
-
-        const mainIndex = insights.findIndex(i => i.type === "warning");
-
-        insights.forEach((ins, index) => {
-          const el = document.createElement("div");
-          const isPrimary = index === mainIndex || (mainIndex === -1 && index === 0);
-          el.className = isPrimary
-            ? "insight-item insight insight-primary"
-            : "insight-item insight insight-secondary";
-          el.innerHTML = `
-            <span class="insight-icon">${ins.icon}</span>
-            <span class="insight-text">${ins.text}</span>
-          `;
-          container.appendChild(el);
-        });
-      }
+      const jobsController = window.WorkTrackerJobs.createJobsController({
+        state,
+        ensureBranchSelected,
+        markLogIndexDirty,
+        saveState,
+        renderJobs,
+        updateUI,
+        renderLogs,
+        renderCurrentJobBadges,
+        haptic,
+        queueRender,
+        getPaletteColorForSeed
+      });
 
       function activateTab(tab, direction = "left", options = {}) {
-        const { withHaptics = true, persist = true } = options;
-        const allowedTabs = ["home", "stats", "logs", "settings"];
-        const nextTab = allowedTabs.includes(tab) ? tab : "home";
-
-        if (withHaptics) {
-          navigator.vibrate?.(12);
-        }
-
-        if (persist) {
-          localStorage.setItem(TAB_KEY, nextTab);
-        }
-
-        const navButtons = document.querySelectorAll(".nav-btn");
-        const pages = document.querySelectorAll(".tab-page");
-
-        navButtons.forEach((button) => {
-          button.classList.toggle("active", button.dataset.tab === nextTab);
-        });
-
-        pages.forEach((page) => {
-          page.classList.remove("slide-left", "slide-right");
-
-          if (page.id === "tab-" + nextTab) {
-            page.classList.add(direction === "left" ? "slide-left" : "slide-right");
-            page.classList.add("active");
-          } else {
-            page.classList.remove("active");
-          }
-        });
-
-        applyStagger("tab-" + nextTab);
-
-        return nextTab;
+        return tabController.activateTab(tab, direction, options);
       }
 
       function setupStaggerTargets() {
-        document.querySelectorAll(".tab-page").forEach((page) => {
-          const directTargets = page.querySelectorAll(":scope > .card, :scope > .layout, :scope > .home-layout, :scope > .settings-tabs, :scope > .settings-section");
-          directTargets.forEach((el) => el.classList.add("stagger-item"));
-
-          const nestedCards = page.querySelectorAll(":scope > .home-layout > .card");
-          nestedCards.forEach((el) => el.classList.add("stagger-item"));
-        });
+        return tabController.setupStaggerTargets();
       }
 
       function applyStagger(pageId) {
-        const items = document.querySelectorAll(`#${pageId} .stagger-item`);
-        items.forEach((el) => {
-          el.classList.remove("visible");
-        });
-
-        items.forEach((el, i) => {
-          setTimeout(() => el.classList.add("visible"), i * 70);
-        });
+        return tabController.applyStagger(pageId);
       }
 
       function showPage(id) {
-        document.querySelectorAll(".page").forEach((p) => {
-          p.classList.toggle("active", p.id === id);
-        });
-
-        document.querySelectorAll(".nav-btn").forEach((btn) => {
-          const pageId = btn.dataset.page || (btn.dataset.tab ? `tab-${btn.dataset.tab}` : "");
-          btn.classList.toggle("active", pageId === id);
-        });
-
-        applyStagger(id);
+        return tabController.showPage(id);
       }
 
       function applyAITheme(hours = getActiveWeekTotal() / 3600000) {
@@ -10773,34 +10455,7 @@ function getLocation() {
       }
 
       function syncTabView(tab) {
-        if (tab === "stats") {
-          requestAnimationFrame(() => {
-            renderStats();
-            renderWeekBar();
-            renderMonth();
-            renderChart();
-            renderMonthChart();
-            renderGlobalChart();
-            renderInsight();
-            renderInsights();
-            scrollToActiveDay();
-            if (chart) chart.resize();
-            if (monthChart) monthChart.resize();
-            if (globalChart) globalChart.resize();
-          });
-        } else {
-          destroyCharts();
-        }
-
-        if (tab === "logs") {
-          renderLogs();
-        }
-
-        if (tab === "home") {
-          updateModeToggle();
-          updateTimer();
-          renderBranchToggle();
-        }
+        return tabController.syncTabView(tab);
       }
 
       function initEvents() {
@@ -10808,6 +10463,7 @@ function getLocation() {
         let pulling = false;
         let startY = 0;
         const navButtons = document.querySelectorAll(".nav-btn");
+        const debouncedRenderLogs = debounce(() => safe(renderLogs, "renderLogs[input]"), 300);
 
         function onMonthChange(newDate) {
           state.selectedMonth = newDate;
@@ -10938,7 +10594,7 @@ function getLocation() {
 
         document
           .getElementById("log-search")
-          .addEventListener("input", renderLogs);
+          .addEventListener("input", debouncedRenderLogs);
         document
           .getElementById("manual-note")
           .addEventListener("input", () => updateNotePreview("manual-note", "manual-note-preview"));
@@ -11002,27 +10658,32 @@ function getLocation() {
           });
         }
 
-        document
-          .getElementById("btn-start")
-          ?.addEventListener("click", () => {
-            startWork();
-            playUiSound("start");
+        const btnMain = document.getElementById("btn-main");
+        const btnStop = document.getElementById("btn-stop");
+        applyMainButtonUI();
+
+        if (btnMain) {
+          btnMain.addEventListener("click", () => {
+            const state = getTimerState();
+
+            if (state === "stop") {
+              startWork();
+            } else if (state === "run") {
+              startPause();
+            } else {
+              endPause();
+            }
+
+            setTimeout(renderMainControls, 50);
           });
-        document
-          .getElementById("btn-pause")
-          ?.addEventListener("click", () => {
-            startPause();
+        }
+
+        if (btnStop) {
+          btnStop.addEventListener("click", () => {
+            endWork();
+            setTimeout(renderMainControls, 50);
           });
-        document
-          .getElementById("btn-resume")
-          ?.addEventListener("click", () => {
-            endPause();
-            playUiSound("start");
-          });
-        document.getElementById("btn-stop")?.addEventListener("click", () => {
-          endWork();
-          playUiSound("stop");
-        });
+        }
         document
           .getElementById("btn-notifications")
           ?.addEventListener("click", requestNotificationPermission);
@@ -11230,6 +10891,7 @@ function getLocation() {
         let touchStartY = 0;
         let touchStartTime = 0;
         let swipeLocked = false;
+        let timerGestureArmed = false;
 
         const swipeArea = document.querySelector(".app-content");
 
@@ -11238,6 +10900,7 @@ function getLocation() {
 
           const target = e.target.closest(".app-content");
           if (!target) return;
+          if (!e.changedTouches || !e.changedTouches[0]) return;
 
           startY = e.changedTouches[0].clientY;
           pulling = true;
@@ -11341,8 +11004,12 @@ function getLocation() {
 
           swipeArea.addEventListener("touchstart", (e) => {
             const target = e.target.closest("input, textarea, select, button, a, canvas, .week-bar, .logs-list");
+            const currentTab = document.querySelector(".nav-btn.active")?.dataset.tab || "home";
+            const timerTarget = e.target.closest("#timer-display, #status-label, #status-box, .hero-timer-card");
+            timerGestureArmed = Boolean(timerTarget) && currentTab === "home";
             if (target || e.touches.length > 1 || document.querySelector(".modal-backdrop.active")) {
               swipeLocked = true;
+              timerGestureArmed = false;
               return;
             }
 
@@ -11355,7 +11022,48 @@ function getLocation() {
           swipeArea.addEventListener("touchend", (e) => {
             if (swipeLocked) {
               swipeLocked = false;
+              timerGestureArmed = false;
               return;
+            }
+
+            const gestureDx = e.changedTouches[0].screenX - touchStartX;
+            const gestureDy = e.changedTouches[0].screenY - touchStartY;
+
+            if (timerGestureArmed) {
+              const timerState = getTimerState();
+              let handledTimerGesture = false;
+
+              // Swipe right: start if stopped, resume if paused.
+              if (gestureDx > 80 && Math.abs(gestureDy) < 50) {
+                if (timerState === "stop") {
+                  startWork();
+                  handledTimerGesture = true;
+                } else if (timerState === "pause") {
+                  endPause();
+                  handledTimerGesture = true;
+                }
+              }
+
+              // Swipe left: pause if currently running.
+              if (gestureDx < -80 && Math.abs(gestureDy) < 50) {
+                if (timerState === "run") {
+                  startPause();
+                  handledTimerGesture = true;
+                }
+              }
+
+              // Swipe down: stop if session is active.
+              if (gestureDy > 80 && timerState !== "stop") {
+                endWork();
+                handledTimerGesture = true;
+              }
+
+              timerGestureArmed = false;
+
+              if (handledTimerGesture) {
+                setTimeout(renderMainControls, 50);
+                return;
+              }
             }
 
             const dx = touchStartX - e.changedTouches[0].screenX;
@@ -11386,6 +11094,11 @@ function getLocation() {
 
         window.addEventListener("touchend", e => {
           if (!pulling) return;
+          if (!e.changedTouches || !e.changedTouches[0]) {
+            pulling = false;
+            indicator.style.opacity = "0";
+            return;
+          }
 
           const diff = e.changedTouches[0].clientY - startY;
 
@@ -11400,6 +11113,7 @@ function getLocation() {
 
         window.addEventListener("touchmove", e => {
           if (!pulling) return;
+          if (!e.changedTouches || !e.changedTouches[0]) return;
 
           const diff = e.changedTouches[0].clientY - startY;
           indicator.style.opacity = diff > 30 ? "1" : "0";
@@ -11446,7 +11160,7 @@ function getLocation() {
         window.addEventListener("resize", () => {
           updateSlider();
           updateModeToggle();
-          if (monthChart) monthChart.resize();
+          resizeCharts();
         });
       }
 
@@ -11489,28 +11203,12 @@ function getLocation() {
         }, 3000);
       }
 
-      function scheduleMidnightUpdate() {
-        const nowDate = new Date();
-
-        const nextMidnight = new Date(
-          nowDate.getFullYear(),
-          nowDate.getMonth(),
-          nowDate.getDate() + 1,
-          0, 0, 1
-        );
-
-        const msUntilMidnight = nextMidnight - nowDate;
-
-        setTimeout(() => {
-          forceToday();
-          saveState();
-          updateUI();
-
-          showToast("info", "Neuer Tag 🌙", "Automatisch auf heute gewechselt");
-
-          scheduleMidnightUpdate();
-        }, msUntilMidnight);
-      }
+      const scheduleMidnightUpdate = window.WorkTrackerTimer.createMidnightScheduler({
+        forceToday,
+        saveState,
+        updateUI,
+        showToast
+      });
 
       async function init() {
         applyThemeFromStorage();
@@ -11524,14 +11222,14 @@ function getLocation() {
           showToast("error", "Start", "Gespeicherte Daten konnten nicht vollständig geladen werden.");
         }
 
-        const savedJobId = localStorage.getItem("selectedJobId");
+        const savedJobId = AppStorage.getLocal("selectedJobId");
         if (savedJobId && state.jobs.some((job) => job.id === savedJobId)) {
           state.selectedJobId = savedJobId;
           ensureBranchSelected();
           markLogIndexDirty();
         }
 
-        const savedBranch = localStorage.getItem("selectedBranch");
+        const savedBranch = AppStorage.getLocal("selectedBranch");
         if (savedBranch === "ALL") {
           state.viewMode = "all";
         } else if (savedBranch && state.branches.some((b) => b.id === savedBranch)) {
@@ -11545,20 +11243,12 @@ function getLocation() {
         }
 
         safe(renderJobs, "renderJobs");
-        safe(renderLogs, "renderLogs");
-        safe(renderStats, "renderStats");
-        safe(renderWeekBar, "renderWeekBar");
-        safe(renderMonth, "renderMonth");
-        safe(renderChart, "renderChart");
-        safe(renderMonthChart, "renderMonthChart");
-        safe(renderGlobalChart, "renderGlobalChart");
-        safe(renderInsight, "renderInsight");
         safe(updateEarningsVisibility, "updateEarningsVisibility");
         safe(renderEarnings, "renderEarnings");
         safe(updateUI, "updateUI");
         safe(() => showSettingsTab("data"), "showSettingsTab");
         safe(setupStaggerTargets, "setupStaggerTargets");
-        const savedTab = activateTab(localStorage.getItem(TAB_KEY) || "home", "left", {
+        const savedTab = activateTab(AppStorage.getLocal(TAB_KEY, "home") || "home", "left", {
           withHaptics: false,
           persist: false
         });
@@ -11669,303 +11359,32 @@ function renderMonth() {
 
 }
 
-      const undoDeleteModule = (() => {
-        let toastHideTimer = null;
-        const undoState = {
-          logs: []
-        };
-
-        function cloneDeletedLog(log, branchId, index) {
-          const snapshot = clone(log);
-          snapshot.branchId = branchId;
-          snapshot.restoreIndex = index;
-          return snapshot;
-        }
-
-        function setLastDeletedLogs(logs) {
-          undoState.logs = Array.isArray(logs) ? logs : [];
-        }
-
-        function getLastDeletedLogs() {
-          return Array.isArray(undoState.logs) ? undoState.logs : [];
-        }
-
-        function ensureUndoToast() {
-          let toast = document.getElementById("undo-toast");
-          if (toast) return toast;
-
-          toast = document.createElement("div");
-          toast.id = "undo-toast";
-          toast.className = "toast toast-info";
-          toast.style.display = "none";
-          toast.style.position = "fixed";
-          toast.style.left = "18px";
-          toast.style.bottom = "18px";
-          toast.style.right = "auto";
-          toast.style.zIndex = "10000";
-          toast.style.alignItems = "center";
-          toast.style.gap = "10px";
-
-          const icon = document.createElement("span");
-          icon.className = "toast-icon";
-          icon.textContent = "↩";
-
-          const content = document.createElement("div");
-          content.className = "toast-content";
-          content.textContent = "Löschung rückgängig machen?";
-
-          const button = document.createElement("button");
-          button.id = "undo-btn";
-          button.className = "btn btn-ghost";
-          button.type = "button";
-          button.textContent = "Rückgängig";
-          button.style.marginLeft = "8px";
-          button.addEventListener("click", undoDeleteLogs);
-
-          toast.appendChild(icon);
-          toast.appendChild(content);
-          toast.appendChild(button);
-          document.body.appendChild(toast);
-          return toast;
-        }
-
-        function showUndoToast() {
-          const toast = ensureUndoToast();
-          toast.style.display = "flex";
-
-          if (toastHideTimer) {
-            clearTimeout(toastHideTimer);
-          }
-
-          toastHideTimer = setTimeout(() => {
-            hideUndoToast();
-          }, 9000);
-        }
-
-        function hideUndoToast() {
-          const toast = document.getElementById("undo-toast");
-          if (toast) {
-            toast.style.display = "none";
-          }
-
-          if (toastHideTimer) {
-            clearTimeout(toastHideTimer);
-            toastHideTimer = null;
-          }
-        }
-
-        function restoreDeletedLogs(logs) {
-          logs.forEach((entry) => {
-            const branch = state.branches.find((item) => item.id === entry.branchId);
-            if (!branch) return;
-
-            const alreadyExists = branch.logs.some((log) => log.id === entry.id);
-            if (alreadyExists) return;
-
-            const restoredLog = clone(entry);
-            delete restoredLog.branchId;
-            const restoreIndex =
-              Number.isInteger(entry.restoreIndex) &&
-              entry.restoreIndex <= branch.logs.length
-                ? entry.restoreIndex
-                : branch.logs.length;
-            delete restoredLog.restoreIndex;
-
-            const targetIndex = Math.max(0, restoreIndex);
-            branch.logs.splice(targetIndex, 0, restoredLog);
-          });
-        }
-
-        function undoDeleteLogs() {
-          const deletedLogs = getLastDeletedLogs();
-          if (!deletedLogs.length) return;
-
-          restoreDeletedLogs(deletedLogs);
-          setLastDeletedLogs([]);
-          hideUndoToast();
-          saveState();
-
-          if (typeof updateTimer === "function") updateTimer();
-          if (typeof updateAfterLogChange === "function") {
-            updateAfterLogChange({ includeWeekBar: true, includeCharts: true, includeMonth: true });
-          } else if (typeof updateUI === "function") {
-            updateUI();
-          }
-
-          showToast("success", "Undo", "Löschung rückgängig gemacht.");
-        }
-
-        function wrapDeleteLog() {
-          if (typeof deleteLog !== "function" || deleteLog.__undoWrapped) return;
-
-          const originalDeleteLog = deleteLog;
-          const wrappedDeleteLog = async function(branchId, logId) {
-            const branch = state.branches.find((item) => item.id === branchId);
-            const logIndex = branch ? branch.logs.findIndex((item) => item.id === logId) : -1;
-            const log = logIndex >= 0 ? branch.logs[logIndex] : null;
-
-            await originalDeleteLog.apply(this, arguments);
-
-            const wasDeleted = branch && log && !branch.logs.some((item) => item.id === logId);
-            if (!wasDeleted) return;
-
-            setLastDeletedLogs([cloneDeletedLog(log, branchId, logIndex)]);
-            showUndoToast();
-          };
-
-          wrappedDeleteLog.__undoWrapped = true;
-          deleteLog = wrappedDeleteLog;
-        }
-
-        function wrapDeleteLogsForSelectedDayAndBranch() {
-          if (
-            typeof deleteLogsForSelectedDayAndBranch !== "function" ||
-            deleteLogsForSelectedDayAndBranch.__undoWrapped
-          ) return;
-
-          const originalDeleteLogsForSelectedDayAndBranch = deleteLogsForSelectedDayAndBranch;
-          const wrappedDeleteLogsForSelectedDayAndBranch = async function() {
-            const branchId = document.getElementById("delete-branch-select")?.value;
-            const dateStr = document.getElementById("delete-date-input")?.value;
-            const branch = state.branches.find((item) => item.id === branchId);
-            const deletedLogs = branch && dateStr
-              ? branch.logs
-                  .map((log, index) => ({ log, index }))
-                  .filter((entry) => entry.log.date === dateStr)
-                  .map((entry) => cloneDeletedLog(entry.log, branch.id, entry.index))
-              : [];
-
-            await originalDeleteLogsForSelectedDayAndBranch.apply(this, arguments);
-
-            const wasDeleted = branch && deletedLogs.length && deletedLogs.every((entry) => {
-              return !branch.logs.some((log) => log.id === entry.id);
-            });
-
-            if (!wasDeleted) return;
-
-            setLastDeletedLogs(deletedLogs);
-            showUndoToast();
-          };
-
-          wrappedDeleteLogsForSelectedDayAndBranch.__undoWrapped = true;
-          deleteLogsForSelectedDayAndBranch = wrappedDeleteLogsForSelectedDayAndBranch;
-        }
-
-        function wrapDeleteAllLogsForSelectedBranch() {
-          if (
-            typeof deleteAllLogsForSelectedBranch !== "function" ||
-            deleteAllLogsForSelectedBranch.__undoWrapped
-          ) return;
-
-          const originalDeleteAllLogsForSelectedBranch = deleteAllLogsForSelectedBranch;
-          const wrappedDeleteAllLogsForSelectedBranch = async function() {
-            const branchId = document.getElementById("delete-branch-select")?.value;
-            const branch = state.branches.find((item) => item.id === branchId);
-            const deletedLogs = branch
-              ? branch.logs.map((log, index) => cloneDeletedLog(log, branch.id, index))
-              : [];
-
-            await originalDeleteAllLogsForSelectedBranch.apply(this, arguments);
-
-            const wasDeleted = branch && deletedLogs.length && branch.logs.length === 0;
-            if (!wasDeleted) return;
-
-            setLastDeletedLogs(deletedLogs);
-            showUndoToast();
-          };
-
-          wrappedDeleteAllLogsForSelectedBranch.__undoWrapped = true;
-          deleteAllLogsForSelectedBranch = wrappedDeleteAllLogsForSelectedBranch;
-        }
-
-        function install() {
-          setLastDeletedLogs([]);
-          ensureUndoToast();
-          wrapDeleteLog();
-          wrapDeleteLogsForSelectedDayAndBranch();
-          wrapDeleteAllLogsForSelectedBranch();
-        }
-
-        return {
-          install,
-          undoDeleteLogs
-        };
-      })();
+      const undoDeleteModule = window.WorkTrackerJobs.createUndoDeleteModule({
+        state,
+        clone,
+        saveState,
+        updateTimer,
+        updateAfterLogChange,
+        updateUI,
+        showToast,
+        getDeleteLog: () => deleteLog,
+        setDeleteLog: (fn) => { deleteLog = fn; },
+        getDeleteLogsForSelectedDayAndBranch: () => deleteLogsForSelectedDayAndBranch,
+        setDeleteLogsForSelectedDayAndBranch: (fn) => { deleteLogsForSelectedDayAndBranch = fn; },
+        getDeleteAllLogsForSelectedBranch: () => deleteAllLogsForSelectedBranch,
+        setDeleteAllLogsForSelectedBranch: (fn) => { deleteAllLogsForSelectedBranch = fn; }
+      });
 
       function addJob(name) {
-        if (!name || !name.trim()) return;
-
-        const nextId = "job_" + Date.now();
-
-        const newJob = {
-          id: nextId,
-          name: name.trim(),
-          color: getPaletteColorForSeed(nextId),
-          branches: []
-        };
-
-        state.jobs.push(newJob);
-        state.selectedJobId = newJob.id;
-
-        ensureBranchSelected();
-        markLogIndexDirty();
-        saveState();
-        renderJobs();
-        updateUI();
-        renderLogs();
+        return jobsController.addJob(name);
       }
 
       function initJobSystem() {
-        const btn = document.getElementById("job-add-btn");
-        const input = document.getElementById("job-input");
-
-        if (!btn || !input) {
-          console.error("Job elements not found!");
-          return;
-        }
-
-        btn.addEventListener("click", () => {
-          if (!input.value.trim()) return;
-          console.log("CLICKED");
-          addJob(input.value);
-          input.value = "";
-        });
-
-        input.addEventListener("keydown", (e) => {
-          if (e.key === "Enter") btn.click();
-        });
+        return jobsController.initJobSystem();
       }
 
-      let _jobSortableInstance = null;
-
       function initJobSorting() {
-        const container = document.getElementById("job-list");
-        if (!container) return;
-        if (_jobSortableInstance && _jobSortableInstance.el === container) return;
-
-        if (typeof Sortable === "undefined") {
-          console.warn("SortableJS is not available; drag reorder disabled.");
-          return;
-        }
-
-        _jobSortableInstance = new Sortable(container, {
-          animation: 150,
-          ghostClass: "drag-ghost",
-          chosenClass: "drag-chosen",
-          dragClass: "drag-dragging",
-          handle: ".job-drag-handle",
-          draggable: ".job-chip",
-          onEnd: (event) => {
-            const ids = [...container.children].map(c => c.dataset.id);
-            state.jobs.sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id));
-            haptic();
-            saveState();
-            renderCurrentJobBadges();
-            renderChart();
-            renderMonthChart();
-            renderGlobalChart();
-          }
-        });
+        return jobsController.initJobSorting();
       }
 
       undoDeleteModule.install();
@@ -11975,6 +11394,7 @@ function renderMonth() {
         initJobSorting();
         initJobActionSheet();
         renderJobs();
+        updateStopVisibility();
 
         // 🍏 KPI tooltip: tap to toggle
         document.querySelectorAll(".kpi-card[data-kpi]").forEach(card => {
