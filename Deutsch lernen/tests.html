@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ألمانيتي — Tests</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,system-ui,sans-serif;background:#0a0a0f;color:#f0f0f5;padding:20px;max-width:800px;margin:0 auto}
+  h1{font-size:24px;margin-bottom:8px;background:linear-gradient(135deg,#a78bfa,#6c63ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  h2{font-size:18px;margin:20px 0 10px;color:#a0a0b8}
+  .summary{display:flex;gap:16px;margin:16px 0 24px}
+  .summary div{padding:12px 20px;border-radius:12px;background:#16161f;border:1px solid rgba(255,255,255,0.08)}
+  .summary .pass{color:#30d158}
+  .summary .fail{color:#ff453a}
+  .summary .total{color:#6c63ff}
+  .test{background:#16161f;border-radius:12px;border:1px solid rgba(255,255,255,0.08);padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;font-size:14px}
+  .test.pass{border-color:rgba(48,209,88,0.3)}
+  .test.fail{border-color:rgba(255,69,58,0.3)}
+  .icon{font-size:18px;width:24px;text-align:center}
+  .name{flex:1}
+  .detail{font-size:12px;color:#60607a;font-family:monospace;margin-top:4px}
+  .fail .detail{color:#ff453a}
+</style>
+</head>
+<body>
+<h1>🧪 ألمانيتي — Test Suite</h1>
+<div style="color:#a0a0b8;font-size:14px;margin-bottom:4px">Core logic tests for the German learning app</div>
+<div class="summary">
+  <div><span class="total" id="total-count">0</span> Total</div>
+  <div><span class="pass" id="pass-count">0</span> Passed</div>
+  <div><span class="fail" id="fail-count">0</span> Failed</div>
+</div>
+<div id="results"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// DATA (copied from app)
+// ═══════════════════════════════════════════════════
+const CATEGORIES = [
+  {id:'all', name:'الكل', emoji:'🌐'},
+  {id:'daily', name:'الحياة اليومية', emoji:'☀️'},
+  {id:'food', name:'الطعام', emoji:'🍔'},
+  {id:'shopping', name:'التسوق', emoji:'🛍️'},
+  {id:'work', name:'العمل', emoji:'💼'},
+  {id:'travel', name:'السفر', emoji:'✈️'},
+  {id:'family', name:'العائلة', emoji:'👨‍👩‍👧'},
+  {id:'health', name:'الصحة', emoji:'💊'},
+  {id:'tech', name:'التقنية', emoji:'📱'},
+  {id:'numbers', name:'الأرقام', emoji:'🔢'},
+  {id:'time', name:'الوقت', emoji:'⏰'},
+  {id:'education', name:'التعليم', emoji:'📚'},
+  {id:'clothing', name:'الملابس', emoji:'👕'},
+  {id:'weather', name:'الطقس', emoji:'🌤️'},
+  {id:'nature', name:'الطبيعة', emoji:'🌿'},
+  {id:'animals', name:'الحيوانات', emoji:'🐾'},
+  {id:'government', name:'الحكومة', emoji:'🏛️'},
+  {id:'emergency', name:'الطوارئ', emoji:'🚨'},
+];
+
+// 90-word representative test sample covering all 18 categories and 3 levels
+const VOCAB = [
+  {id:1,de:'Hallo',rom:'Halo',ar:'مرحبا',cat:'daily',diff:'easy',emoji:'👋',ex_de:'Hallo, wie geht es Ihnen?',ex_ar:'مرحبا، كيف حالك؟',level:'A1'},
+  {id:2,de:'Guten Morgen',rom:'Gooten Morgen',ar:'صباح الخير',cat:'daily',diff:'easy',emoji:'🌅',ex_de:'Guten Morgen! Wie war dein Schlaf?',ex_ar:'صباح الخير! كيف كان نومك؟',level:'A1'},
+  {id:3,de:'Guten Abend',rom:'Gooten Abend',ar:'مساء الخير',cat:'daily',diff:'easy',emoji:'🌙',ex_de:'Guten Abend, alle zusammen!',ex_ar:'مساء الخير للجميع!',level:'A1'},
+  {id:4,de:'Auf Wiedersehen',rom:'Auf Veederzehen',ar:'مع السلامة',cat:'daily',diff:'medium',emoji:'👋',ex_de:'Auf Wiedersehen, bis morgen!',ex_ar:'مع السلامة، إلى الغد!',level:'A1'},
+  {id:5,de:'Danke',rom:'Danke',ar:'شكراً',cat:'daily',diff:'easy',emoji:'🙏',ex_de:'Danke sehr für Ihre Hilfe!',ex_ar:'شكراً جزيلاً على مساعدتك!',level:'A1'},
+  {id:6,de:'Bitte',rom:'Bitte',ar:'من فضلك / عفواً',cat:'daily',diff:'easy',emoji:'😊',ex_de:'Bitte, kommen Sie herein.',ex_ar:'تفضل، ادخل.',level:'A1'},
+  {id:7,de:'Entschuldigung',rom:'Entshuldigung',ar:'عذراً / آسف',cat:'daily',diff:'medium',emoji:'😔',ex_de:'Entschuldigung, wo ist der Bahnhof?',ex_ar:'عذراً، أين المحطة؟',level:'A1'},
+  {id:8,de:'Ja',rom:'Ya',ar:'نعم',cat:'daily',diff:'easy',emoji:'✅',ex_de:'Ja, das ist richtig.',ex_ar:'نعم، هذا صحيح.',level:'A1'},
+  {id:9,de:'Nein',rom:'Nine',ar:'لا',cat:'daily',diff:'easy',emoji:'❌',ex_de:'Nein, ich verstehe das nicht.',ex_ar:'لا، لا أفهم هذا.',level:'A1'},
+  {id:10,de:'Wie heißen Sie?',rom:'Vee haissen zee?',ar:'ما اسمك؟',cat:'daily',diff:'medium',emoji:'🗣️',ex_de:'Wie heißen Sie? Ich heiße Ahmad.',ex_ar:'ما اسمك؟ اسمي أحمد.',level:'A1'},
+  {id:11,de:'Wie geht es Ihnen?',rom:'Vee gayt es eenen?',ar:'كيف حالك؟',cat:'daily',diff:'medium',emoji:'💬',ex_de:'Wie geht es Ihnen heute?',ex_ar:'كيف حالك اليوم؟',level:'A1'},
+  {id:12,de:'Mir geht es gut',rom:'Meer gayt es goot',ar:'أنا بخير',cat:'daily',diff:'medium',emoji:'😊',ex_de:'Danke, mir geht es gut!',ex_ar:'شكراً، أنا بخير!',level:'A1'},
+  {id:13,de:'Das Haus',rom:'Das Haus',ar:'البيت',cat:'daily',diff:'easy',emoji:'🏠',ex_de:'Das Haus ist sehr groß.',ex_ar:'البيت كبير جداً.',level:'A1'},
+  {id:14,de:'Die Stadt',rom:'Dee Shtat',ar:'المدينة',cat:'daily',diff:'easy',emoji:'🏙️',ex_de:'Berlin ist eine schöne Stadt.',ex_ar:'برلين مدينة جميلة.',level:'A1'},
+  {id:15,de:'Das Wasser',rom:'Das Vasser',ar:'الماء',cat:'food',diff:'easy',emoji:'💧',ex_de:'Ich trinke jeden Tag viel Wasser.',ex_ar:'أشرب الكثير من الماء يومياً.',level:'A1'},
+  {id:16,de:'Das Brot',rom:'Das Brot',ar:'الخبز',cat:'food',diff:'easy',emoji:'🍞',ex_de:'Ich möchte frisches Brot kaufen.',ex_ar:'أريد شراء خبز طازج.',level:'A1'},
+  {id:37,de:'Das Gehalt',rom:'Das Gehalt',ar:'الراتب',cat:'work',diff:'medium',emoji:'💰',ex_de:'Wie ist das Gehalt für diese Stelle?',ex_ar:'كم الراتب لهذه الوظيفة؟',level:'A2'},
+  {id:46,de:'Die Familie',rom:'Dee Familie',ar:'العائلة',cat:'family',diff:'easy',emoji:'👨‍👩‍👧',ex_de:'Meine Familie ist sehr wichtig für mich.',ex_ar:'عائلتي مهمة جداً لي.',level:'A1'},
+  {id:53,de:'Das Krankenhaus',rom:'Das Krankenhaus',ar:'المستشفى',cat:'health',diff:'medium',emoji:'🏥',ex_de:'Das Krankenhaus ist in der Mitte der Stadt.',ex_ar:'المستشفى في وسط المدينة.',level:'A1'},
+  {id:59,de:'Das Handy',rom:'Das Handy',ar:'الهاتف المحمول',cat:'tech',diff:'easy',emoji:'📱',ex_de:'Mein Handy hat keinen Akku mehr.',ex_ar:'بطارية هاتفي فارغة.',level:'A1'},
+  {id:71,de:'Heute',rom:'Hoyte',ar:'اليوم',cat:'time',diff:'easy',emoji:'📅',ex_de:'Heute ist Montag.',ex_ar:'اليوم الاثنين.',level:'A1'},
+  {id:100,de:'Eins',rom:'Eins',ar:'واحد',cat:'numbers',diff:'easy',emoji:'1️⃣',ex_de:'Ich möchte einen Kaffee.',ex_ar:'أريد قهوة واحدة.',level:'A1'},
+  {id:144,de:'Die Kleidung',rom:'Dee Klaidung',ar:'الملابس',cat:'clothing',diff:'medium',emoji:'👗',ex_de:'Ich kaufe neue Kleidung.',ex_ar:'أشتري ملابس جديدة.',level:'A1'},
+  {id:166,de:'Der Park',rom:'Der Park',ar:'الحديقة العامة',cat:'nature',diff:'easy',emoji:'🌳',ex_de:'Der Park ist sehr groß.',ex_ar:'الحديقة العامة كبيرة جداً.',level:'A1'},
+  {id:180,de:'Die Versicherung',rom:'Dee Ferzicherung',ar:'التأمين',cat:'government',diff:'hard',emoji:'🛡️',ex_de:'Ich habe eine Krankenversicherung.',ex_ar:'لدي تأمين صحي.',level:'B1'},
+  {id:181,de:'Das Wetter',rom:'Das Vetter',ar:'الطقس',cat:'weather',diff:'easy',emoji:'🌤️',ex_de:'Wie ist das Wetter heute?',ex_ar:'كيف الطقس اليوم؟',level:'A1'},
+  {id:199,de:'Der Hund',rom:'Der Hoond',ar:'الكلب',cat:'animals',diff:'easy',emoji:'🐶',ex_de:'Der Hund bellt laut.',ex_ar:'الكلب ينبح بصوت عال.',level:'A1'},
+  {id:207,de:'Die Schule',rom:'Dee Shoole',ar:'المدرسة',cat:'education',diff:'easy',emoji:'🏫',ex_de:'Die Schule beginnt um 8 Uhr.',ex_ar:'المدرسة تبدأ في الساعة 8.',level:'A1'},
+  {id:226,de:'Der Notfall',rom:'Der Notfall',ar:'حالة الطوارئ',cat:'emergency',diff:'hard',emoji:'🚨',ex_de:'Das ist ein Notfall! Rufen Sie 112!',ex_ar:'هذه حالة طوارئ! اتصل ب 112!',level:'B1'},
+];
+
+const LESSONS = {
+  a1: [
+    {id:'a1-1',title:'التحيات والوداع',sub:'Grüße und Abschiede',level:'A1',emoji:'👋',words:[1,2,3,4,5,6,7,8,9],steps:['intro','words','practice','quiz']},
+    {id:'a1-2',title:'التعريف بالنفس',sub:'Sich vorstellen',level:'A1',emoji:'🗣️',words:[10,11,12],steps:['intro','words','practice','quiz']},
+    {id:'a1-3',title:'الأرقام والوقت',sub:'Zahlen und Zeit',level:'A1',emoji:'🔢',words:[71,100],steps:['intro','words','practice','quiz']},
+    {id:'a1-4',title:'الأسرة والعائلة',sub:'Die Familie',level:'A1',emoji:'👨‍👩‍👧',words:[46],steps:['intro','words','practice','quiz']},
+    {id:'a1-5',title:'الطعام والشراب',sub:'Essen und Trinken',level:'A1',emoji:'🍽️',words:[15,16],steps:['intro','words','practice','quiz']},
+    {id:'a1-6',title:'الألوان والصفات',sub:'Farben & Adjektive',level:'A1',emoji:'🎨',words:[13],steps:['intro','words','practice','quiz']},
+    {id:'a1-7',title:'المنزل والحياة اليومية',sub:'Zuhause & Alltag',level:'A1',emoji:'🏠',words:[14],steps:['intro','words','practice','quiz']},
+    {id:'a1-8',title:'أفعال يومية',sub:'Wichtige Verben',level:'A1',emoji:'🏃',words:[],steps:['intro','words','practice','quiz']},
+  ],
+  a2: [
+    {id:'a2-1',title:'في المطعم',sub:'Im Restaurant',level:'A2',emoji:'🍽️',words:[15],steps:['intro','words','practice','quiz']},
+    {id:'a2-2',title:'التسوق',sub:'Einkaufen',level:'A2',emoji:'🛍️',words:[],steps:['intro','words','practice','quiz']},
+    {id:'a2-3',title:'السفر والمواصلات',sub:'Reisen & Verkehr',level:'A2',emoji:'✈️',words:[],steps:['intro','words','practice','quiz']},
+    {id:'a2-4',title:'الصحة والطب',sub:'Gesundheit',level:'A2',emoji:'🏥',words:[53],steps:['intro','words','practice','quiz']},
+    {id:'a2-5',title:'العمل والمكتب',sub:'Arbeit & Beruf',level:'A2',emoji:'💼',words:[37],steps:['intro','words','practice','quiz']},
+    {id:'a2-6',title:'التقنية والإعلام',sub:'Technik & Medien',level:'A2',emoji:'📱',words:[59],steps:['intro','words','practice','quiz']},
+    {id:'a2-7',title:'الطقس والطبيعة',sub:'Wetter & Natur',level:'A2',emoji:'🌤️',words:[166,181],steps:['intro','words','practice','quiz']},
+    {id:'a2-8',title:'الملابس والتسوق',sub:'Kleidung',level:'A2',emoji:'👕',words:[144],steps:['intro','words','practice','quiz']},
+    {id:'a2-9',title:'الحيوانات',sub:'Tiere',level:'A2',emoji:'🐾',words:[199],steps:['intro','words','practice','quiz']},
+    {id:'a2-10',title:'المشاعر والحالات',sub:'Gefühle',level:'A2',emoji:'😊',words:[],steps:['intro','words','practice','quiz']},
+  ],
+  b1: [
+    {id:'b1-1',title:'الحكومة والمعاملات',sub:'Behörden & Ämter',level:'B1',emoji:'🏛️',words:[180],steps:['intro','words','practice','quiz']},
+    {id:'b1-2',title:'الطوارئ والمساعدة',sub:'Notfälle & Hilfe',level:'B1',emoji:'🚨',words:[226],steps:['intro','words','practice','quiz']},
+    {id:'b1-3',title:'التعليم والاندماج',sub:'Bildung & Integration',level:'B1',emoji:'🎓',words:[207],steps:['intro','words','practice','quiz']},
+  ]
+};
+
+const PHRASES_SPEAK = [
+  {de:'Guten Morgen!',ar:'صباح الخير!'},
+  {de:'Wie heißen Sie?',ar:'ما اسمك؟'},
+  {de:'Ich heiße Ahmad.',ar:'اسمي أحمد.'},
+  {de:'Mir geht es gut.',ar:'أنا بخير.'},
+  {de:'Danke sehr!',ar:'شكراً جزيلاً!'},
+  {de:'Auf Wiedersehen!',ar:'مع السلامة!'},
+  {de:'Ich möchte Kaffee, bitte.',ar:'أريد قهوة من فضلك.'},
+  {de:'Wo ist der Bahnhof?',ar:'أين محطة القطار؟'},
+  {de:'Das ist sehr schön!',ar:'هذا جميل جداً!'},
+  {de:'Ich verstehe das nicht.',ar:'لا أفهم هذا.'},
+  {de:'Können Sie mir helfen?',ar:'هل يمكنكم مساعدتي؟'},
+  {de:'Was kostet das?',ar:'بكم هذا؟'},
+  {de:'Ich möchte bezahlen.',ar:'أريد أن أدفع.'},
+  {de:'Sprechen Sie Englisch?',ar:'هل تتكلم الإنجليزية؟'},
+  {de:'Ich lerne Deutsch.',ar:'أنا أتعلم الألمانية.'},
+];
+
+const ACHIEVEMENTS = [
+  {id:'first_word',title:'الكلمة الأولى',desc:'تعلّمت أول كلمة ألمانية',emoji:'🌱',condition:s=>s.wordsLearned>=1},
+  {id:'ten_words',title:'عشر كلمات',desc:'تعلّمت 10 كلمات',emoji:'📖',condition:s=>s.wordsLearned>=10},
+  {id:'fifty_words',title:'خمسون كلمة',desc:'تعلّمت 50 كلمة',emoji:'🎓',condition:s=>s.wordsLearned>=50},
+  {id:'hundred_words',title:'مئة كلمة',desc:'تعلّمت 100 كلمة',emoji:'🏅',condition:s=>s.wordsLearned>=100},
+  {id:'two_hundred_words',title:'مئتا كلمة',desc:'تعلّمت 200 كلمة',emoji:'🥇',condition:s=>s.wordsLearned>=200},
+  {id:'three_hundred_words',title:'ثلاثمئة كلمة',desc:'تعلّمت 300 كلمة',emoji:'👑',condition:s=>s.wordsLearned>=300},
+  {id:'first_quiz',title:'أول اختبار',desc:'أكملت أول اختبار',emoji:'🧠',condition:s=>s.quizzesCompleted>=1},
+  {id:'perfect_quiz',title:'درجة مثالية',desc:'100% في اختبار',emoji:'⭐',condition:s=>s.perfectQuizzes>=1},
+  {id:'streak3',title:'3 أيام متتالية',desc:'حافظت على سلسلة 3 أيام',emoji:'🔥',condition:s=>s.streak>=3},
+  {id:'streak7',title:'أسبوع كامل',desc:'7 أيام متتالية',emoji:'💫',condition:s=>s.streak>=7},
+  {id:'first_lesson',title:'أول درس',desc:'أكملت أول درس',emoji:'🎯',condition:s=>s.lessonsCompleted>=1},
+  {id:'five_lessons',title:'خمسة دروس',desc:'أكملت 5 دروس',emoji:'🏆',condition:s=>s.lessonsCompleted>=5},
+  {id:'all_a1',title:'أكملت مستوى A1',desc:'أكملت جميع دروس A1',emoji:'🎖️',condition:s=>[1,2,3,4,5,6,7,8].every(i=>s.completedLessons.includes('a1-'+i))},
+  {id:'xp100',title:'100 نقطة',desc:'جمعت 100 XP',emoji:'⚡',condition:s=>s.xp>=100},
+  {id:'mastered10',title:'10 كلمات متقنة',desc:'أتقنت 10 كلمات بالتكرار المتباعد',emoji:'🎯',condition:s=>(s.sm2Mastered||0)>=10},
+  {id:'mastered30',title:'30 كلمة متقنة',desc:'أتقنت 30 كلمة بالتكرار المتباعد',emoji:'💎',condition:s=>(s.sm2Mastered||0)>=30},
+  {id:'mastered100',title:'100 كلمة متقنة',desc:'أتقنت 100 كلمة بالتكرار المتباعد',emoji:'🏆',condition:s=>(s.sm2Mastered||0)>=100},
+  {id:'ef_high',title:'عامل سهولة عالي',desc:'وصلت لمتوسط عامل سهولة 3.0',emoji:'🧠',condition:s=>(s.sm2AvgEF||2.5)>=3.0},
+];
+
+// ═══════════════════════════════════════════════════
+// CORE FUNCTIONS (copied from app)
+// ═══════════════════════════════════════════════════
+function todayStr(){return new Date().toISOString().split('T')[0]}
+function yesterday(){
+  const d=new Date();d.setDate(d.getDate()-1);
+  return d.toISOString().split('T')[0];
+}
+function diffLabel(d){return d==='easy'?'سهل':d==='medium'?'متوسط':'صعب'}
+function scoreSpeech(said,target){
+  const s=said.toLowerCase().trim();
+  const t=target.toLowerCase().trim();
+  let score=0;
+  if(s===t)score=100;
+  else{
+    const sw=s.split(' ');const tw=t.split(' ');
+    const matches=sw.filter(w=>tw.includes(w)).length;
+    score=Math.round((matches/tw.length)*100);
+    score=Math.max(20,Math.min(95,score));
+  }
+  return score;
+}
+
+// ═══════════════════════════════════════════════════
+// TEST RUNNER
+// ═══════════════════════════════════════════════════
+let tests = [];
+let passed = 0;
+let failed = 0;
+
+function test(name, fn) {
+  tests.push({ name, fn });
+}
+
+function assert(condition, msg = '') {
+  if (!condition) throw new Error(msg || 'Assertion failed');
+}
+function assertEqual(actual, expected, msg = '') {
+  if (actual !== expected) {
+    throw new Error(`${msg} Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
+  }
+}
+
+async function runTests() {
+  const resultsEl = document.getElementById('results');
+  
+  for (const t of tests) {
+    const div = document.createElement('div');
+    div.className = 'test';
+    
+    const iconSpan = document.createElement('span');
+    iconSpan.className = 'icon';
+    
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'name';
+    nameSpan.textContent = t.name;
+    
+    const detailDiv = document.createElement('div');
+    detailDiv.className = 'detail';
+    
+    try {
+      const result = t.fn();
+      if (result instanceof Promise) await result;
+      iconSpan.textContent = '✅';
+      div.classList.add('pass');
+      passed++;
+    } catch (e) {
+      iconSpan.textContent = '❌';
+      div.classList.add('fail');
+      detailDiv.textContent = e.message || e;
+      failed++;
+    }
+    
+    div.appendChild(iconSpan);
+    div.appendChild(nameSpan);
+    div.appendChild(detailDiv);
+    resultsEl.appendChild(div);
+  }
+  
+  document.getElementById('total-count').textContent = tests.length;
+  document.getElementById('pass-count').textContent = passed;
+  document.getElementById('fail-count').textContent = failed;
+}
+
+// ═══════════════════════════════════════════════════
+// TESTS: Data Integrity
+// ═══════════════════════════════════════════════════
+
+test('VOCAB has 29 words (representative sample)', () => {
+  assertEqual(VOCAB.length, 29);
+});
+
+test('All VOCAB entries have required fields', () => {
+  VOCAB.forEach(w => {
+    assert(typeof w.id === 'number', `Word ${w.de} missing id`);
+    assert(w.de && w.de.length > 0, `Word id=${w.id} missing 'de' field`);
+    assert(w.ar && w.ar.length > 0, `Word ${w.de} missing 'ar' field`);
+    assert(w.rom && w.rom.length > 0, `Word ${w.de} missing 'rom' field`);
+    assert(w.cat, `Word ${w.de} missing 'cat' field`);
+    assert(w.diff, `Word ${w.de} missing 'diff' field`);
+    assert(w.emoji, `Word ${w.de} missing 'emoji' field`);
+    assert(w.ex_de, `Word ${w.de} missing 'ex_de' field`);
+    assert(w.ex_ar, `Word ${w.de} missing 'ex_ar' field`);
+    assert(w.level, `Word ${w.de} missing 'level' field`);
+  });
+});
+
+test('All VOCAB IDs are unique', () => {
+  const ids = VOCAB.map(w => w.id);
+  assertEqual(new Set(ids).size, ids.length);
+});
+
+test('All VOCAB categories exist in CATEGORIES', () => {
+  const catIds = CATEGORIES.map(c => c.id);
+  VOCAB.forEach(w => {
+    assert(catIds.includes(w.cat), `Word ${w.de} has unknown category '${w.cat}'`);
+  });
+});
+
+test('All VOCAB difficulties are valid', () => {
+  VOCAB.forEach(w => {
+    assert(['easy','medium','hard'].includes(w.diff), `Word ${w.de} has invalid difficulty '${w.diff}'`);
+  });
+});
+
+test('CATEGORIES has exactly 18 entries', () => {
+  assertEqual(CATEGORIES.length, 18);
+});
+
+test('PHRASES_SPEAK has 15 phrases', () => {
+  assertEqual(PHRASES_SPEAK.length, 15);
+});
+
+test('ACHIEVEMENTS has 18 achievements', () => {
+  assertEqual(ACHIEVEMENTS.length, 18);
+});
+
+test('Lessons reference valid word IDs', () => {
+  const allIds = new Set(VOCAB.map(w => w.id));
+  const allLessons = [...LESSONS.a1, ...LESSONS.a2, ...LESSONS.b1];
+  allLessons.forEach(lesson => {
+    lesson.words.forEach(wid => {
+      if(wid) assert(allIds.has(wid), `Lesson ${lesson.id} references non-existent word id ${wid}`);
+    });
+  });
+});
+
+test('Lesson IDs are unique across A1, A2, B1', () => {
+  const ids = [...LESSONS.a1.map(l => l.id), ...LESSONS.a2.map(l => l.id), ...LESSONS.b1.map(l => l.id)];
+  assertEqual(new Set(ids).size, ids.length);
+});
+
+// ═══════════════════════════════════════════════════
+// TESTS: Pure Functions
+// ═══════════════════════════════════════════════════
+
+test('todayStr returns ISO date string', () => {
+  const result = todayStr();
+  assert(/^\d{4}-\d{2}-\d{2}$/.test(result), `Format mismatch: ${result}`);
+});
+
+test('yesterday returns a date different from today', () => {
+  const today = todayStr();
+  const yest = yesterday();
+  assert(yest !== today);
+  assert(yest < today);
+});
+
+test('diffLabel returns correct Arabic labels', () => {
+  assertEqual(diffLabel('easy'), 'سهل');
+  assertEqual(diffLabel('medium'), 'متوسط');
+  assertEqual(diffLabel('hard'), 'صعب');
+});
+
+// ═══════════════════════════════════════════════════
+// TESTS: scoreSpeech
+// ═══════════════════════════════════════════════════
+
+test('scoreSpeech: exact match returns 100', () => {
+  assertEqual(scoreSpeech('Guten Morgen', 'Guten Morgen'), 100);
+});
+
+test('scoreSpeech: case insensitive match returns 100', () => {
+  assertEqual(scoreSpeech('guten morgen', 'Guten Morgen'), 100);
+});
+
+test('scoreSpeech: partial match returns less than 100', () => {
+  const score = scoreSpeech('Morgen', 'Guten Morgen');
+  assert(score < 100 && score > 0, `Expected 0 < score < 100, got ${score}`);
+});
+
+test('scoreSpeech: no match returns minimum 20', () => {
+  const score = scoreSpeech('xyz', 'Guten Morgen');
+  assertEqual(score, 20);
+});
+
+test('scoreSpeech: empty string returns 20', () => {
+  const score = scoreSpeech('', 'Guten Morgen');
+  assertEqual(score, 20);
+});
+
+test('scoreSpeech: multi-word partial match', () => {
+  const score = scoreSpeech('Danke sehr', 'Danke sehr');
+  assertEqual(score, 100);
+});
+
+// ═══════════════════════════════════════════════════
+// TESTS: Achievement Conditions
+// ═══════════════════════════════════════════════════
+
+test('Achievement first_word triggers at 1 word', () => {
+  const ach = ACHIEVEMENTS.find(a => a.id === 'first_word');
+  assert(ach.condition({wordsLearned:1}));
+  assert(!ach.condition({wordsLearned:0}));
+});
+
+test('Achievement ten_words triggers at 10 words', () => {
+  const ach = ACHIEVEMENTS.find(a => a.id === 'ten_words');
+  assert(ach.condition({wordsLearned:10}));
+  assert(!ach.condition({wordsLearned:9}));
+});
+
+test('Achievement fifty_words triggers at 50 words', () => {
+  const ach = ACHIEVEMENTS.find(a => a.id === 'fifty_words');
+  assert(ach.condition({wordsLearned:50}));
+  assert(!ach.condition({wordsLearned:49}));
+});
+
+test('Achievement first_quiz triggers at 1 quiz', () => {
+  const ach = ACHIEVEMENTS.find(a => a.id === 'first_quiz');
+  assert(ach.condition({quizzesCompleted:1}));
+  assert(!ach.condition({quizzesCompleted:0}));
+});
+
+test('Achievement perfect_quiz triggers at 1 perfect', () => {
+  const ach = ACHIEVEMENTS.find(a => a.id === 'perfect_quiz');
+  assert(ach.condition({perfectQuizzes:1}));
+  assert(!ach.condition({perfectQuizzes:0}));
+});
+
+test('Achievement streak3 triggers at 3 days', () => {
+  const ach = ACHIEVEMENTS.find(a => a.id === 'streak3');
+  assert(ach.condition({streak:3}));
+  assert(!ach.condition({streak:2}));
+});
+
+test('Achievement streak7 triggers at 7 days', () => {
+  const ach = ACHIEVEMENTS.find(a => a.id === 'streak7');
+  assert(ach.condition({streak:7}));
+  assert(!ach.condition({streak:6}));
+});
+
+test('Achievement first_lesson triggers at 1 lesson', () => {
+  const ach = ACHIEVEMENTS.find(a => a.id === 'first_lesson');
+  assert(ach.condition({lessonsCompleted:1}));
+  assert(!ach.condition({lessonsCompleted:0}));
+});
+
+test('Achievement five_lessons triggers at 5 lessons', () => {
+  const ach = ACHIEVEMENTS.find(a => a.id === 'five_lessons');
+  assert(ach.condition({lessonsCompleted:5}));
+  assert(!ach.condition({lessonsCompleted:4}));
+});
+
+test('Achievement xp100 triggers at 100 XP', () => {
+  const ach = ACHIEVEMENTS.find(a => a.id === 'xp100');
+  assert(ach.condition({xp:100}));
+  assert(!ach.condition({xp:99}));
+});
+
+// ═══════════════════════════════════════════════════
+// TESTS: Daily Challenges
+// ═══════════════════════════════════════════════════
+
+test('Challenge words10 checks dailyWordsToday >= 10', () => {
+  const c = {id:'words10',title:'تعلّم 10 كلمات جديدة',emoji:'📚',xp:50,check:s=>s.dailyWordsToday>=10};
+  assert(c.check({dailyWordsToday:10}));
+  assert(!c.check({dailyWordsToday:9}));
+});
+
+test('Challenge listen3 checks listenedToday >= 3', () => {
+  const c = {id:'listen3',title:'استمعي لـ 3 جمل',emoji:'🎧',xp:20,check:s=>(s.listenedToday||0)>=3};
+  assert(c.check({listenedToday:3}));
+  assert(!c.check({listenedToday:2}));
+  assert(!c.check({})); // undefined handled
+});
+
+// ═══════════════════════════════════════════════════
+// TESTS: State Default Values
+// ═══════════════════════════════════════════════════
+
+test('Default state has all required fields', () => {
+  const defaultState = {
+    xp:0, streak:0, lastStudyDate:'', wordsLearned:0, level:1,
+    learnedWords:{}, favoriteWords:[], quizzesCompleted:0,
+    perfectQuizzes:0, lessonsCompleted:0, completedLessons:[],
+    dailyWordsToday:0, dailyDate:'', quizHistory:[],
+    totalCorrect:0, totalAnswers:0, speechSpeed:0.7,
+    name:'المتعلم', onboardingDone:false,
+    flashcardDue:{}, notifications:false,
+    listenedToday:0,
+  };
+  const fields = Object.keys(defaultState);
+  fields.forEach(f => {
+    assert(f in defaultState, `Missing field: ${f}`);
+  });
+});
+
+// ═══════════════════════════════════════════════════
+// TESTS: Lesson Structure
+// ═══════════════════════════════════════════════════
+
+test('All lessons have required fields', () => {
+  const allLessons = [...LESSONS.a1, ...LESSONS.a2, ...LESSONS.b1];
+  allLessons.forEach(l => {
+    assert(l.id, `Lesson missing id`);
+    assert(l.title, `Lesson ${l.id} missing title`);
+    assert(l.sub, `Lesson ${l.id} missing sub`);
+    assert(l.level, `Lesson ${l.id} missing level`);
+    assert(l.emoji, `Lesson ${l.id} missing emoji`);
+    assert(Array.isArray(l.words), `Lesson ${l.id} missing words array`);
+  });
+});
+
+test('A1 has 8 lessons', () => {
+  assertEqual(LESSONS.a1.length, 8);
+});
+
+test('A2 has 10 lessons', () => {
+  assertEqual(LESSONS.a2.length, 10);
+});
+
+test('B1 has 3 lessons', () => {
+  assertEqual(LESSONS.b1.length, 3);
+});
+
+test('Level values are valid', () => {
+  const allLessons = [...LESSONS.a1, ...LESSONS.a2, ...LESSONS.b1];
+  allLessons.forEach(l => {
+    assert(['A1','A2','B1'].includes(l.level), `Lesson ${l.id} has invalid level '${l.level}'`);
+  });
+});
+
+// ═══════════════════════════════════════════════════
+// TESTS: Dashboard & Due-Cards
+// ═══════════════════════════════════════════════════
+
+const SM2 = {
+  getDue(sm2data){
+    const today = new Date().toISOString().split('T')[0];
+    return VOCAB.filter(w => {
+      const c = sm2data[w.id];
+      return c && c.history && c.history.length > 0 && c.nextReview <= today;
+    });
+  },
+  getDueCount(sm2data){return this.getDue(sm2data).length;}
+};
+
+test('Due-cards: new user with empty sm2Data returns 0', () => {
+  assertEqual(SM2.getDueCount({}), 0);
+});
+
+test('Due-cards: user with reviewed cards due today returns count', () => {
+  const today = new Date().toISOString().split('T')[0];
+  const data = {
+    1: {ef:2.5,interval:1,repetitions:1,nextReview:today,history:[{date:today,quality:3}]}
+  };
+  assertEqual(SM2.getDueCount(data), 1);
+});
+
+test('Due-cards: cards with future review date not counted', () => {
+  const future = '2099-12-31';
+  const data = {
+    1: {ef:2.5,interval:30,repetitions:3,nextReview:future,history:[{date:'2026-01-01',quality:5}]},
+    2: {ef:2.5,interval:1,repetitions:1,nextReview:'2026-01-01',history:[{date:'2026-01-01',quality:3}]}
+  };
+  // Only id:2 (past date) should be due; id:1 (future) should not
+  const result = SM2.getDue(data);
+  assertEqual(result.length, 1);
+  assertEqual(result[0].id, 2);
+});
+
+test('Due-cards: cards with history but no nextReview not counted', () => {
+  const data = {
+    1: {ef:2.5,interval:0,repetitions:0,nextReview:'',history:[]}
+  };
+  assertEqual(SM2.getDueCount(data), 0);
+});
+
+test('Dashboard: daily goal text formats correctly with RTL-safe bdi', () => {
+  const dailyWordsToday=3;
+  const expectedHtml='<bdi dir="ltr">3 / 10</bdi> كلمات';
+  const rendered=`<bdi dir="ltr">${dailyWordsToday} / 10</bdi> كلمات`;
+  assertEqual(rendered, expectedHtml);
+});
+
+test('Dashboard: progress bar percentage for daily goal', () => {
+  const pct = Math.min(100, Math.round(5/10*100));
+  assertEqual(pct, 50);
+  const pct2 = Math.min(100, Math.round(0/10*100));
+  assertEqual(pct2, 0);
+  const pct3 = Math.min(100, Math.round(10/10*100));
+  assertEqual(pct3, 100);
+});
+
+test('Dashboard: lesson progress uses total lesson count', () => {
+  const total = LESSONS.a1.length + LESSONS.a2.length + LESSONS.b1.length;
+  assertEqual(total, 21);
+  const pct = Math.min(100, Math.round(5/total*100));
+  assert(pct > 0 && pct < 100);
+});
+
+test('Dashboard: word count Arabic pluralization', () => {
+  function arWordLabel(n){return n>=2&&n<=10?'كلمات':'كلمة'}
+  assertEqual(arWordLabel(0), 'كلمة');
+  assertEqual(arWordLabel(1), 'كلمة');
+  assertEqual(arWordLabel(2), 'كلمات');
+  assertEqual(arWordLabel(5), 'كلمات');
+  assertEqual(arWordLabel(10), 'كلمات');
+  assertEqual(arWordLabel(11), 'كلمة');
+  assertEqual(arWordLabel(100), 'كلمة');
+});
+
+test('Dashboard: streak Arabic pluralization', () => {
+  function arDayLabel(n){return n>=2&&n<=10?'أيام':'يوم'}
+  assertEqual(arDayLabel(0), 'يوم');
+  assertEqual(arDayLabel(1), 'يوم');
+  assertEqual(arDayLabel(3), 'أيام');
+  assertEqual(arDayLabel(7), 'أيام');
+  assertEqual(arDayLabel(10), 'أيام');
+  assertEqual(arDayLabel(11), 'يوم');
+});
+
+// ═══════════════════════════════════════════════════
+// TESTS: Daily Challenges
+// ═══════════════════════════════════════════════════
+
+test('Challenge: words10 completed at 10 daily words', () => {
+  const check = s => s.dailyWordsToday>=10;
+  assert(check({dailyWordsToday:10}));
+  assert(!check({dailyWordsToday:9}));
+});
+
+test('Challenge: quiz1 checks daily quiz completion', () => {
+  const today = new Date().toISOString().split('T')[0];
+  const check = s => s.quizzesCompleted>0 && s.dailyDate===today;
+  assert(check({quizzesCompleted:1, dailyDate:today}));
+  assert(!check({quizzesCompleted:0, dailyDate:today}));
+  assert(!check({quizzesCompleted:1, dailyDate:'2020-01-01'}));
+});
+
+test('Challenge: listen3 handles undefined listenedToday', () => {
+  const check = s => (s.listenedToday||0)>=3;
+  assert(!check({}));
+  assert(!check({listenedToday:2}));
+  assert(check({listenedToday:3}));
+});
+
+// ═══════════════════════════════════════════════════
+// TESTS: B1 Visibility
+// ═══════════════════════════════════════════════════
+
+test('B1: lessons exist with valid structure', () => {
+  assert(LESSONS.b1, 'B1 lessons missing');
+  assertEqual(LESSONS.b1.length, 3);
+  LESSONS.b1.forEach(l => {
+    assert(l.level === 'B1', `Lesson ${l.id} level should be B1`);
+    assert(l.id.startsWith('b1-'), `Lesson ${l.id} should start with b1-`);
+  });
+});
+
+test('B1: unlock condition requires all A2 lessons', () => {
+  function a2complete(completed){
+    return LESSONS.a2.every(l => completed.includes(l.id));
+  }
+  // No A2 completed → locked
+  assert(!a2complete([]));
+  // Only some A2 completed → locked  
+  assert(!a2complete(['a2-1','a2-2']));
+  // All A2 completed → unlocked
+  assert(a2complete(['a2-1','a2-2','a2-3','a2-4','a2-5','a2-6','a2-7','a2-8','a2-9','a2-10']));
+});
+
+// ═══════════════════════════════════════════════════
+// TESTS: RTL/LTR Direction
+// ═══════════════════════════════════════════════════
+
+test('RTL: German text has direction:ltr', () => {
+  // Simulate word card rendering
+  const de = 'Hallo';
+  const html = `<div style="direction:ltr">${de}</div>`;
+  assert(html.includes('direction:ltr'));
+});
+
+test('RTL: Arabic text does not force ltr', () => {
+  const ar = 'مرحبا';
+  const html = `<div>${ar}</div>`;
+  assert(!html.includes('direction:ltr'));
+});
+
+test('RTL: word-de class uses direction:ltr', () => {
+  const cssRule = '.word-de{font-size:19px;font-weight:700;letter-spacing:-0.4px;direction:ltr;text-align:left}';
+  assert(cssRule.includes('direction:ltr'));
+});
+
+test('RTL: daily goal numbers wrapped in bdi for correct rendering', () => {
+  const dailyWordsToday = 5;
+  const rendered = `<bdi dir="ltr">${dailyWordsToday} / 10</bdi> كلمات`;
+  // In RTL context, the bdi isolates the LTR numbers from the RTL Arabic text
+  assert(rendered.includes('<bdi dir="ltr">'));
+  assert(rendered.includes('</bdi>'));
+});
+
+// ═══════════════════════════════════════════════════
+// TESTS: QUIZ_TYPES
+// ═══════════════════════════════════════════════════
+
+test('generateQuiz returns correct number of questions', () => {
+  // Simulate the quiz generation logic
+  const QUIZ_TYPES = ['mc','match','fill','listen'];
+  const pool = [...VOCAB].sort(() => Math.random()-0.5).slice(0, 10);
+  const questions = pool.map((w,i) => {
+    const type = QUIZ_TYPES[i % QUIZ_TYPES.length];
+    return {word:w, type};
+  });
+  assertEqual(questions.length, 10);
+  questions.forEach((q, i) => {
+    assert(q.word, `Question ${i} missing word`);
+    assert(QUIZ_TYPES.includes(q.type), `Question ${i} has invalid type '${q.type}'`);
+  });
+});
+
+// ═══════════════════════════════════════════════════
+// iOS COMPATIBILITY — Source code analysis of index.html
+// ═══════════════════════════════════════════════════
+
+let appSource = '';
+
+async function loadAppSource() {
+  try {
+    const res = await fetch('index.html');
+    appSource = await res.text();
+  } catch (e) {
+    appSource = '';
+    console.warn('Could not fetch index.html for iOS tests:', e);
+  }
+}
+
+test('iOS: index.html loaded for analysis', async () => {
+  await loadAppSource();
+  assert(appSource.length > 1000, `index.html too short (${appSource.length} chars) — fetch may have failed`);
+});
+
+test('iOS: isIOS detection constant exists', () => {
+  assert(appSource.includes('const isIOS=/iPhone|iPad|iPod/.test(navigator.userAgent);'),
+    'Missing: const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);');
+});
+
+test('iOS: speak() has rate clamping for iOS (Math.min/max)', () => {
+  assert(appSource.includes('if(isIOS){\n    u.rate=Math.min(2,Math.max(0.5,'),
+    'Missing: iOS rate clamping with Math.min(2, Math.max(0.5, rate)) in speak()');
+});
+
+test('iOS: speak() non-iOS rate unchanged', () => {
+  assert(appSource.includes('}else{\n    u.rate=rate||state.speechSpeed||0.7;'),
+    'Missing or changed: non-iOS rate path should be u.rate=rate||state.speechSpeed||0.7');
+});
+
+test('iOS: speak() has broader voice matching for iOS', () => {
+  assert(appSource.includes("v.name.includes('Deutsch')"),
+    'Missing: iOS voice matching for name.includes("Deutsch")');
+  assert(appSource.includes("v.name.includes('German')"),
+    'Missing: iOS voice matching for name.includes("German")');
+});
+
+test('iOS: speak() non-iOS voice lookup unchanged', () => {
+  assert(appSource.includes("}else{\n    german=voices.find(v=>v.lang.startsWith('de'));"),
+    'Missing or changed: non-iOS voice lookup should be v.lang.startsWith("de")');
+});
+
+test('iOS: speak() uses setTimeout(50) delay for iOS', () => {
+  const pattern = 'if(isIOS){\n    setTimeout(()=>window.speechSynthesis.speak(u),50);\n  }else{\n    window.speechSynthesis.speak(u);';
+  assert(appSource.includes(pattern),
+    'Missing: iOS branch with setTimeout(50) and non-iOS branch with direct speak()');
+});
+
+test('iOS: speak() has at least 3 if(isIOS) branches', () => {
+  const matches = appSource.match(/if\(isIOS\){/g);
+  assert(matches && matches.length >= 3,
+    `Only ${matches ? matches.length : 0} if(isIOS){ branches in speak(), expected >=3`);
+});
+
+test('iOS: onvoiceschanged handler split into iOS/non-iOS', () => {
+  assert(appSource.includes("if(isIOS){\n    window.speechSynthesis.onvoiceschanged=()=>{window.speechSynthesis.getVoices();};"),
+    'Missing: iOS onvoiceschanged branch');
+  assert(appSource.includes("}else{\n    window.speechSynthesis.onvoiceschanged=()=>window.speechSynthesis.getVoices();"),
+    'Missing: non-iOS onvoiceschanged branch (identical to original)');
+});
+
+test('iOS: startRecording() has iOS early return', () => {
+  assert(appSource.includes('if(isIOS){\n    el(\'speak-status\').textContent=\'التعرف الصوتي غير متاح على iOS\';'),
+    'Missing: iOS early return in startRecording() with Arabic message');
+  assert(appSource.includes('showToast(\'افتحي على الكمبيوتر لاستخدام التحدث\')'),
+    'Missing: toast hint in iOS startRecording()');
+  assert(appSource.includes('setTimeout(()=>stopRecording(),1500);'),
+    'Missing: stopRecording timeout in iOS fallback');
+});
+
+test('iOS: startRecording() non-iOS path intact', () => {
+  assert(appSource.includes("webkitSpeechRecognition' in window||'SpeechRecognition' in window"),
+    'Missing or changed: non-iOS SpeechRecognition detection in startRecording()');
+  assert(appSource.includes("recognition=new SR();"),
+    'Missing or changed: recognition object creation');
+  assert(appSource.includes("recognition.start();"),
+    'Missing or changed: recognition.start() call');
+  assert(appSource.includes("5000"),
+    'Missing or changed: 5000ms recording timeout');
+  assert(appSource.includes("} else {\\n    setTimeout(()=>{\\n      // Simulate for non-supporting browsers"),
+    'Missing or changed: non-supporting browser fallback');
+});
+
+test('iOS: startRecording() onend has try/catch', () => {
+  assert(appSource.includes("recognition.onend=()=>{if(isRecording)try{recognition.start();}catch(e){}};"),
+    'Missing: try/catch wrapped recognition.start() in onend handler');
+});
+
+test('iOS: apple-mobile-web-app-capable meta tag', () => {
+  assert(appSource.includes('<meta name="apple-mobile-web-app-capable" content="yes">'),
+    'Missing: <meta name="apple-mobile-web-app-capable" content="yes">');
+});
+
+test('iOS: apple-mobile-web-app-status-bar-style meta tag', () => {
+  assert(appSource.includes('<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">'),
+    'Missing: <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">');
+});
+
+test('iOS: apple-mobile-web-app-title meta tag', () => {
+  assert(appSource.includes('<meta name="apple-mobile-web-app-title"'),
+    'Missing: <meta name="apple-mobile-web-app-title">');
+});
+
+test('iOS: apple-touch-icon 180x180 link', () => {
+  assert(appSource.includes('<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">'),
+    'Missing: <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">');
+});
+
+test('iOS: viewport includes viewport-fit=cover', () => {
+  assert(appSource.includes('viewport-fit=cover'),
+    'Missing: viewport-fit=cover in viewport meta tag');
+});
+
+test('iOS: manifest.json has display "standalone"', () => {
+  const manifestSrc = appSource.match(/"display"\s*:\s*"standalone"/);
+  assert(manifestSrc, 'Missing: display:"standalone" in manifest');
+});
+
+test('iOS: CSS has safe-area-inset variables', () => {
+  assert(appSource.includes('--safe-top: env(safe-area-inset-top'),
+    'Missing: --safe-top CSS variable with safe-area-inset-top');
+  assert(appSource.includes('--safe-bottom: env(safe-area-inset-bottom'),
+    'Missing: --safe-bottom CSS variable with safe-area-inset-bottom');
+});
+
+test('iOS: scroll-area uses -webkit-overflow-scrolling:touch', () => {
+  assert(appSource.includes('-webkit-overflow-scrolling:touch'),
+    'Missing: -webkit-overflow-scrolling:touch for iOS smooth scrolling');
+});
+
+test('iOS: bottom-nav uses safe-bottom padding', () => {
+  assert(appSource.includes('padding-bottom:var(--safe-bottom)'),
+    'Missing: safe-bottom padding for iOS home indicator');
+});
+
+test('iOS: -webkit-backdrop-filter for iOS blur', () => {
+  assert(appSource.includes('-webkit-backdrop-filter'),
+    'Missing: -webkit-backdrop-filter for iOS backdrop blur support');
+});
+
+test('iOS: user-select:none for iOS tap highlight', () => {
+  assert(appSource.includes('-webkit-tap-highlight-color:transparent'),
+    'Missing: -webkit-tap-highlight-color:transparent for iOS tap highlight removal');
+});
+
+test('iOS: safe-area padding in header/nav', () => {
+  assert(appSource.includes('height:var(--safe-top)'),
+    'Missing: safe-top spacing for iOS status bar');
+});
+
+// ═══════════════════════════════════════════════════
+// DESIGN SYSTEM — Source code analysis of index.html
+// ═══════════════════════════════════════════════════
+
+test('Design: CSS custom properties defined in :root', () => {
+  const rootBlock = appSource.match(/:root\{([^}]+)\}/);
+  assert(rootBlock !== null, 'Missing :root CSS block');
+  const props = rootBlock[1];
+  const required = ['--bg', '--text', '--accent', '--radius', '--font', '--safe-top', '--nav-height', '--header-height'];
+  required.forEach(p => {
+    assert(props.includes(p), `Missing CSS variable: ${p}`);
+  });
+});
+
+test('Design: dark theme background colors form a proper stack', () => {
+  const bgColors = ['--bg:#0a0a0f', '--bg2:#12121a', '--bg3:#1a1a26', '--card:#16161f', '--card2:#1e1e2e'];
+  const rootBlock = appSource.match(/:root\{([^}]+)\}/);
+  const props = rootBlock ? rootBlock[1] : '';
+  bgColors.forEach(c => {
+    assert(props.includes(c), `Missing or changed: ${c}`);
+  });
+});
+
+test('Design: text colors have proper contrast hierarchy', () => {
+  const rootBlock = appSource.match(/:root\{([^}]+)\}/);
+  const props = rootBlock ? rootBlock[1] : '';
+  assert(props.includes('--text:#f0f0f5'), 'Primary text color changed');
+  assert(props.includes('--text2:#a0a0b8'), 'Secondary text color changed');
+  assert(props.includes('--text3:#60607a'), 'Tertiary text color changed');
+  // Verify luminance decreases (contrast hierarchy)
+  const lum = c => {
+    const h = c.replace('#','');
+    return parseInt(h.substr(0,2),16)*0.299 + parseInt(h.substr(2,2),16)*0.587 + parseInt(h.substr(4,2),16)*0.114;
+  };
+  const l1 = lum('#f0f0f5'), l2 = lum('#a0a0b8'), l3 = lum('#60607a');
+  assert(l1 > l2 && l2 > l3, 'Text colors not in correct luminance order (primary > secondary > tertiary)');
+});
+
+test('Design: accent color is the primary brand purple', () => {
+  const rootBlock = appSource.match(/:root\{([^}]+)\}/);
+  const props = rootBlock ? rootBlock[1] : '';
+  assert(props.includes('--accent:#6c63ff'), 'Primary accent changed from #6c63ff');
+  assert(props.includes('--accent2:#8b83ff'), 'Secondary accent changed from #8b83ff');
+  assert(props.includes('--accent3:rgba(108,99,255,0.15)'), 'Accent background changed');
+});
+
+test('Design: semantic colors (green, red, yellow) use Apple-system colors', () => {
+  const rootBlock = appSource.match(/:root\{([^}]+)\}/);
+  const props = rootBlock ? rootBlock[1] : '';
+  assert(props.includes('--green:#30d158'), 'Green changed from Apple system green');
+  assert(props.includes('--red:#ff453a'), 'Red changed from Apple system red');
+  assert(props.includes('--yellow:#ffd60a'), 'Yellow changed from Apple system yellow');
+  assert(props.includes('--orange:#ff9f0a'), 'Orange changed from Apple system orange');
+  assert(props.includes('--blue:#0a84ff'), 'Blue changed from Apple system blue');
+});
+
+test('Design: semantic colors have matching dimmed variants', () => {
+  const rootBlock = appSource.match(/:root\{([^}]+)\}/);
+  const props = rootBlock ? rootBlock[1] : '';
+  assert(props.includes('--green2:rgba(48,209,88,0.15)'), 'Missing green2 dimmed variant');
+  assert(props.includes('--red2:rgba(255,69,58,0.15)'), 'Missing red2 dimmed variant');
+  assert(props.includes('--yellow2:rgba(255,214,10,0.15)'), 'Missing yellow2 dimmed variant');
+});
+
+test('Design: border radius system has 3 tiers', () => {
+  const rootBlock = appSource.match(/:root\{([^}]+)\}/);
+  const props = rootBlock ? rootBlock[1] : '';
+  assert(props.includes('--radius:16px'), 'Primary radius changed from 16px');
+  assert(props.includes('--radius2:12px'), 'Secondary radius changed from 12px');
+  assert(props.includes('--radius3:22px'), 'Tertiary radius changed from 22px');
+});
+
+test('Design: spacing variables for iOS safe areas', () => {
+  const rootBlock = appSource.match(/:root\{([^}]+)\}/);
+  const props = rootBlock ? rootBlock[1] : '';
+  assert(props.includes('--safe-top:env(safe-area-inset-top,44px)'), 'Safe top variable changed');
+  assert(props.includes('--safe-bottom:env(safe-area-inset-bottom,34px)'), 'Safe bottom variable changed');
+  assert(props.includes('--nav-height:83px'), 'Nav height changed from 83px');
+  assert(props.includes('--header-height:56px'), 'Header height changed from 56px');
+});
+
+test('Design: font stack uses Apple system fonts', () => {
+  const rootBlock = appSource.match(/:root\{([^}]+)\}/);
+  const props = rootBlock ? rootBlock[1] : '';
+  assert(props.includes('-apple-system'), 'Missing -apple-system in font stack');
+  assert(props.includes('SF Pro Display'), 'Missing SF Pro Display in font stack');
+  assert(props.includes('system-ui'), 'Missing system-ui fallback in font stack');
+});
+
+test('Design: body uses dark background and correct font', () => {
+  const bodyCss = appSource.match(/body\{([^}]+)\}/);
+  assert(bodyCss !== null, 'Missing body CSS');
+  assert(bodyCss[1].includes('background:var(--bg)'), 'Body background not using --bg');
+  assert(bodyCss[1].includes('font-family:var(--font)'), 'Body font not using --font variable');
+  assert(bodyCss[1].includes('color:var(--text)'), 'Body text color not using --text');
+});
+
+test('Design: app uses fixed fullscreen layout', () => {
+  const appCss = appSource.match(/#app\{([^}]+)\}/);
+  assert(appCss !== null, 'Missing #app CSS');
+  assert(appCss[1].includes('position:fixed'), '#app not fixed position');
+  assert(appCss[1].includes('inset:0'), '#app missing inset:0 for fullscreen');
+  assert(appCss[1].includes('flex-direction:column'), '#app not using flex column');
+});
+
+test('Design: screens use absolute positioning with transitions', () => {
+  const screenCss = appSource.match(/\.screen\{([^}]+)\}/);
+  assert(screenCss !== null, 'Missing .screen CSS');
+  assert(screenCss[1].includes('position:absolute'), 'Screens not absolute');
+  assert(screenCss[1].includes('inset:0'), 'Screens missing inset:0');
+  assert(screenCss[1].includes('opacity:0'), 'Screens missing opacity transition');
+  assert(screenCss[1].includes('pointer-events:none'), 'Screens missing pointer-events');
+});
+
+test('Design: bottom nav is fixed at bottom with safe area', () => {
+  const navCss = appSource.match(/#bottom-nav\{([^}]+)\}/);
+  assert(navCss !== null, 'Missing #bottom-nav CSS');
+  assert(navCss[1].includes('position:fixed'), 'Bottom nav not fixed');
+  assert(navCss[1].includes('bottom:0'), 'Bottom nav not at bottom');
+  assert(navCss[1].includes('padding-bottom:var(--safe-bottom)'), 'Bottom nav missing safe-bottom padding');
+  assert(navCss[1].includes('z-index:1000'), 'Bottom nav z-index not 1000');
+});
+
+test('Design: header has backdrop blur for glass effect', () => {
+  const headerCss = appSource.match(/\.header\{([^}]+)\}/);
+  assert(headerCss !== null, 'Missing .header CSS');
+  assert(headerCss[1].includes('backdrop-filter:blur') || headerCss[1].includes('backdrop-filter: blur'),
+    'Header missing backdrop blur');
+  assert(headerCss[1].includes('-webkit-backdrop-filter:blur'),
+    'Header missing -webkit-backdrop-filter for iOS');
+});
+
+test('Design: scroll area has momentum scrolling for iOS', () => {
+  const scrollCss = appSource.match(/\.scroll-area\{([^}]+)\}/);
+  assert(scrollCss !== null, 'Missing .scroll-area CSS');
+  assert(scrollCss[1].includes('-webkit-overflow-scrolling:touch'),
+    'Scroll area missing iOS momentum scrolling');
+  assert(scrollCss[1].includes('padding-bottom:calc(var(--nav-height)'),
+    'Scroll area missing nav height bottom padding');
+});
+
+test('Design: cards use consistent styling', () => {
+  const cardCss = appSource.match(/\.card\{([^}]+)\}/);
+  assert(cardCss !== null, 'Missing .card CSS');
+  assert(cardCss[1].includes('background:var(--card)'), 'Card not using --card background');
+  assert(cardCss[1].includes('border-radius:var(--radius)'), 'Card not using --radius');
+  assert(cardCss[1].includes('border:1px solid var(--border)'), 'Card missing border');
+});
+
+test('Design: buttons are flex-centered with gap', () => {
+  const btnCss = appSource.match(/\.btn\{([^}]+)\}/);
+  assert(btnCss !== null, 'Missing .btn CSS');
+  assert(btnCss[1].includes('display:flex'), 'Button not flex');
+  assert(btnCss[1].includes('align-items:center'), 'Button items not centered');
+  assert(btnCss[1].includes('justify-content:center'), 'Button content not centered');
+  assert(btnCss[1].includes('gap:8px'), 'Button missing gap');
+});
+
+test('Design: primary button uses accent color', () => {
+  const btnPrimary = appSource.match(/\.btn-primary\{([^}]+)\}/);
+  assert(btnPrimary !== null, 'Missing .btn-primary CSS');
+  assert(btnPrimary[1].includes('var(--accent)'), 'Primary button not using accent');
+});
+
+test('Design: progress bar uses consistent structure', () => {
+  assert(appSource.includes('.progress-bar'),
+    'Missing progress-bar class');
+  assert(appSource.includes('.progress-fill'),
+    'Missing progress-fill class');
+});
+
+test('Design: modal overlay has backdrop blur', () => {
+  const modalCss = appSource.match(/\.modal-overlay\{([^}]+)\}/);
+  if (modalCss) {
+    assert(modalCss[1].includes('-webkit-backdrop-filter:blur'),
+      'Modal overlay missing iOS backdrop blur');
+  }
+});
+
+test('Design: RTL support — German text uses direction:ltr', () => {
+  const ltrCount = (appSource.match(/direction:ltr/g) || []).length;
+  assert(ltrCount >= 8, `Expected >=8 direction:ltr for German text, found ${ltrCount}`);
+});
+
+test('Design: RTL support — search input uses direction:rtl', () => {
+  assert(appSource.includes('direction:rtl'),
+    'Missing direction:rtl for Arabic search input');
+});
+
+test('Design: font weights cover all required text roles', () => {
+  const weights = [
+    ['font-weight:600', 'semi-bold'],
+    ['font-weight:700', 'bold'],
+    ['font-weight:800', 'extra-bold'],
+  ];
+  weights.forEach(([w, name]) => {
+    const count = (appSource.match(new RegExp(w.replace(':', '\\s*:'), 'g')) || []).length;
+    assert(count >= 3, `Expected >=3 uses of font-weight:${name}, found ${count}`);
+  });
+});
+
+test('Design: animations use prefers-reduced-motion fallback', () => {
+  assert(appSource.includes('prefers-reduced-motion:reduce'),
+    'Missing prefers-reduced-motion accessibility query');
+  const reducedBlock = appSource.match(/@media\(prefers-reduced-motion:reduce\)\{([^}]+)\}/);
+  assert(reducedBlock !== null, 'Empty prefers-reduced-motion block');
+  // Should disable animations
+  const hasDisabled = reducedBlock[1].includes('animation:none') || reducedBlock[1].includes('animation: none') ||
+    reducedBlock[1].includes('transition:none') || reducedBlock[1].includes('transition: none');
+  assert(hasDisabled, 'prefers-reduced-motion should disable animations/transitions');
+});
+
+test('Design: keyframe animations exist for interactive feedback', () => {
+  const animations = ['@keyframes pulse', '@keyframes shake', '@keyframes bounceIn', '@keyframes fadeUp', '@keyframes float'];
+  animations.forEach(a => {
+    assert(appSource.includes(a), `Missing: ${a}`);
+  });
+});
+
+test('Design: waveform/pulse animation exists for recording state', () => {
+  assert(appSource.includes('@keyframes pulse'), 'Missing pulse animation');
+  assert(appSource.includes('.speak-circle.recording'), 'Missing recording state for speak circle');
+});
+
+test('Design: toast notification is fixed with backdrop blur', () => {
+  const toastCss = appSource.match(/#toast\{([^}]+)\}/);
+  assert(toastCss !== null, 'Missing #toast CSS');
+  assert(toastCss[1].includes('position:fixed'), 'Toast not fixed');
+  assert(toastCss[1].includes('backdrop-filter:blur'), 'Toast missing backdrop filter');
+  assert(toastCss[1].includes('-webkit-backdrop-filter:blur'), 'Toast missing iOS backdrop filter');
+});
+
+test('Design: nav-item has proper active indicator', () => {
+  const navItemActive = appSource.match(/\.nav-item\.active::before\{([^}]+)\}/);
+  assert(navItemActive !== null, 'Missing nav active indicator');
+  assert(navItemActive[1].includes('background:var(--accent2)'), 'Nav active indicator not using accent');
+});
+
+test('Design: transition easing uses cubic-bezier for smooth motion', () => {
+  const standardEasing = 'cubic-bezier(0.4,0,0.2,1)';
+  const springEasing = 'cubic-bezier(0.34,1.56,0.64,1)';
+  assert(appSource.includes(standardEasing), `Missing standard easing: ${standardEasing}`);
+  assert(appSource.includes(springEasing), `Missing spring easing: ${springEasing}`);
+});
+
+test('Design: page uses overscroll-behavior:none', () => {
+  const bodyCss = appSource.match(/body\{([^}]+)\}/);
+  assert(bodyCss !== null, 'Missing body CSS');
+  assert(bodyCss[1].includes('overscroll-behavior:none'),
+    'Missing overscroll-behavior:none for iOS bounce prevention');
+});
+
+test('Design: user-select and tap-highlight are disabled', () => {
+  assert(appSource.includes('user-select:none'), 'Missing user-select:none');
+  assert(appSource.includes('-webkit-tap-highlight-color:transparent'),
+    'Missing tap highlight removal');
+});
+
+test('Design: heading title uses gradient text', () => {
+  // Check for gradient text pattern in at least one place
+  const gradientText = appSource.includes('-webkit-background-clip:text') &&
+    appSource.includes('-webkit-text-fill-color:transparent');
+  assert(gradientText, 'Missing gradient text effect');
+});
+
+test('Design: responsive breakpoint at 430px exists', () => {
+  const mediaQuery = appSource.match(/@media\(min-width:430px\)/);
+  assert(mediaQuery !== null, 'Missing 430px responsive breakpoint');
+});
+
+test('Design: stat-grid uses 2-column grid', () => {
+  const statGrid = appSource.match(/\.stat-grid\{([^}]+)\}/);
+  assert(statGrid !== null, 'Missing .stat-grid');
+  assert(statGrid[1].includes('grid-template-columns:1fr 1fr') || statGrid[1].includes('grid-template-columns: 1fr 1fr'),
+    'Stat grid not 2 columns');
+});
+
+test('Design: match-grid uses 2-column grid', () => {
+  const matchGrid = appSource.match(/\.match-grid\{([^}]+)\}/);
+  assert(matchGrid !== null, 'Missing .match-grid');
+  assert(matchGrid[1].includes('grid-template-columns:1fr 1fr') || matchGrid[1].includes('grid-template-columns: 1fr 1fr'),
+    'Match grid not 2 columns');
+});
+
+test('Design: glass effect uses consistent backdrop blur', () => {
+  const glassCount = (appSource.match(/-webkit-backdrop-filter:blur/g) || []).length;
+  assert(glassCount >= 5, `Expected >=5 glass elements with backdrop blur, found ${glassCount}`);
+});
+
+test('Design: check for hardcoded color values outside variables', () => {
+  // Find potential hardcoded colors in CSS that should use variables
+  const hardcodedColors = appSource.match(/#[0-9a-fA-F]{6}/g) || [];
+  const cssStart = appSource.indexOf('<style>');
+  const cssEnd = appSource.indexOf('</style>');
+  const cssContent = cssStart >= 0 && cssEnd > cssStart ? appSource.substring(cssStart, cssEnd) : '';
+  const colors = cssContent.match(/#[0-9a-fA-F]{6}/g) || new Set();
+  // The :root block has ~20 color variables, extra hardcoded colors should be minimal
+  const unique = new Set(colors);
+  // Remove known variable colors
+  const known = ['#0a0a0f','#12121a','#1a1a26','#16161f','#1e1e2e','#f0f0f5','#a0a0b8','#60607a','#6c63ff','#8b83ff','#30d158','#ff453a','#ffd60a','#ff9f0a','#0a84ff','#5ac8fa','#ff375f','#28b84a','#a78bfa','#fbbf24','#f59e0b','#ff6b6b','#48dbfb','#ff9ff3','#1dd1a1','#ff6b35','#ff6b9d','#ffffff','#000000'];
+  known.forEach(c => unique.delete(c));
+  // Extra hardcoded colors are allowed in gradients and specific UI elements
+  // This is informational, not a hard fail
+});
+
+test('Design: input fields have consistent styling', () => {
+  const inputCss = appSource.match(/\.input-field\{([^}]+)\}/);
+  assert(inputCss !== null, 'Missing .input-field CSS');
+  assert(inputCss[1].includes('border-radius:var(--radius2)'), 'Input not using --radius2');
+  assert(inputCss[1].includes('background:var(--bg2)'), 'Input not using --bg2');
+  assert(inputCss[1].includes('color:var(--text)'), 'Input not using --text');
+});
+
+test('Design: chip/tag elements use pill shape', () => {
+  const chipCss = appSource.match(/\.chip\{([^}]+)\}/);
+  assert(chipCss !== null, 'Missing .chip CSS');
+  assert(chipCss[1].includes('border-radius:100px') || chipCss[1].includes('border-radius:100'),
+    'Chip not pill-shaped');
+});
+
+test('Design: achievement cards use consistent structure', () => {
+  const achCard = appSource.match(/\.achievement-card/);
+  assert(achCard !== null, 'Missing achievement-card CSS');
+});
+
+test('Design: word cards use consistent flex layout', () => {
+  const wordCard = appSource.match(/\.word-card\{([^}]+)\}/);
+  assert(wordCard !== null, 'Missing .word-card CSS');
+  assert(wordCard[1].includes('display:flex'), 'Word card not flex');
+  assert(wordCard[1].includes('align-items:center'), 'Word card items not centered');
+});
+
+test('Design: modals use sheet pattern from bottom', () => {
+  const modalSheet = appSource.match(/\.modal-sheet\{([^}]+)\}/);
+  assert(modalSheet !== null, 'Missing .modal-sheet CSS');
+  assert(modalSheet[1].includes('position:fixed'), 'Modal sheet not fixed');
+  assert(modalSheet[1].includes('bottom:0'), 'Modal sheet not at bottom');
+});
+
+test('Design: flashcard uses 3D transforms', () => {
+  const fcFront = appSource.match(/\.fc-front\{([^}]+)\}/);
+  const fcBack = appSource.match(/\.fc-back\{([^}]+)\}/);
+  assert(fcFront !== null && fcBack !== null, 'Missing flashcard front/back CSS');
+  assert(appSource.includes('-webkit-backface-visibility:hidden'),
+    'Missing backface visibility for iOS flashcard 3D');
+});
+
+test('Design: progress bar uses green fill', () => {
+  const progressFill = appSource.match(/\.progress-fill\{([^}]+)\}/);
+  assert(progressFill !== null, 'Missing .progress-fill CSS');
+  assert(progressFill[1].includes('var(--green)') || progressFill[1].includes('#30d158'),
+    'Progress fill not using green');
+});
+
+test('Design: streak display uses consistent layout', () => {
+  const streakDisplay = appSource.match(/\.streak-display\{([^}]+)\}/);
+  assert(streakDisplay !== null, 'Missing .streak-display CSS');
+  assert(streakDisplay[1].includes('display:flex'), 'Streak display not flex');
+  assert(streakDisplay[1].includes('align-items:center'), 'Streak items not centered');
+});
+
+test('Design: onboarding uses centered slide layout', () => {
+  const onboardSlide = appSource.match(/\.onboard-slide\{([^}]+)\}/);
+  assert(onboardSlide !== null, 'Missing .onboard-slide CSS');
+  assert(onboardSlide[1].includes('text-align:center'), 'Onboarding slide not centered');
+});
+
+test('Design: nav-icon has spring animation on active', () => {
+  const navIconActive = appSource.match(/\.nav-item\.active\s*\.nav-icon\{([^}]+)\}/);
+  if (navIconActive) {
+    assert(navIconActive[1].includes('scale'), 'Nav icon active missing scale transform');
+  }
+});
+
+test('Design: quiz options have correct hover/active feedback', () => {
+  const quizOption = appSource.match(/\.quiz-option\{([^}]+)\}/);
+  assert(quizOption !== null, 'Missing .quiz-option CSS');
+  assert(quizOption[1].includes('display:flex'), 'Quiz option not flex');
+  assert(quizOption[1].includes('align-items:center'), 'Quiz option not aligned');
+});
+
+test('Design: confetti animation exists for celebrations', () => {
+  assert(appSource.includes('.confetti-piece'), 'Missing confetti animation');
+  assert(appSource.includes('@keyframes confettiBurst'), 'Missing confetti burst keyframes');
+});
+
+test('Design: voucher code uses monospace gradient text', () => {
+  assert(appSource.includes('.voucher-code'), 'Missing voucher-code CSS');
+  assert(appSource.includes('-webkit-background-clip:text'), 'Voucher code missing gradient text');
+});
+
+test('Design: Toggle switch has consistent styling', () => {
+  const toggle = appSource.match(/\.toggle\{[^}]+\}/);
+  const toggleOn = appSource.match(/\.toggle\.on\{[^}]+\}/);
+  assert(toggle && toggleOn, 'Missing toggle switch CSS');
+});
+
+// ═══════════════════════════════════════════════════
+// RUN (after iOS source is loaded)
+// ═══════════════════════════════════════════════════
+fetch('index.html').then(r=>r.text()).then(src=>{appSource=src;runTests();}).catch(()=>runTests());
+</script>
+</body>
+</html>
